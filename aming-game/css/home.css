@@ -1,0 +1,383 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+    font-family: "Microsoft JhengHei", sans-serif;
+}
+
+#home-screen {
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #f4efe5;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    font-family:
+        "Microsoft JhengHei",
+        "Noto Sans TC",
+        sans-serif;
+}
+
+button {
+    font: inherit;
+}
+
+
+/* ==========================
+   整體畫面
+========================== */
+
+#home-screen {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    color: #4a4037;
+}
+
+
+/* ==========================
+   背景
+========================== */
+
+.home-background {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background-image: url("../images/home-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    z-index: 0;
+}
+
+/* ==========================
+   Logo
+========================== */
+
+.game-logo {
+    position: absolute;
+
+    top: 5%;
+    left: 5%;
+
+    z-index: 5;
+
+    color: white;
+
+    text-shadow:
+        0 2px 10px rgba(40, 30, 20, 0.35);
+}
+
+.logo-main {
+    font-size: clamp(30px, 3vw, 52px);
+
+    letter-spacing: 0.18em;
+
+    font-weight: 500;
+}
+
+.logo-sub {
+    margin-top: 4px;
+
+    font-size: clamp(12px, 1.1vw, 17px);
+
+    letter-spacing: 0.25em;
+
+    opacity: 0.9;
+}
+
+
+/* ==========================
+   玩家資訊
+========================== */
+
+.player-panel {
+    position: absolute;
+
+    top: 4%;
+    right: 4%;
+
+    z-index: 10;
+
+    min-width: 190px;
+
+    padding: 12px 15px;
+
+    border: 1px solid rgba(255, 255, 255, 0.45);
+
+    border-radius: 18px;
+
+    background:
+        rgba(255, 250, 240, 0.78);
+
+    backdrop-filter: blur(8px);
+
+    box-shadow:
+        0 5px 20px rgba(60, 45, 30, 0.15);
+}
+
+
+/* 頭像＋名字 */
+
+.player-profile {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    color: #493f36;
+
+    cursor: pointer;
+}
+
+.avatar {
+    width: 43px;
+    height: 43px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background:
+        rgba(199, 176, 142, 0.55);
+
+    color: white;
+
+    font-size: 17px;
+}
+
+.player-name {
+    margin-left: 10px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.08em;
+}
+
+
+/* 數值 */
+
+.player-stats {
+    display: flex;
+
+    gap: 7px;
+
+    margin-top: 9px;
+}
+
+.stat-item {
+    flex: 1;
+
+    border: none;
+
+    border-radius: 10px;
+
+    padding: 6px 8px;
+
+    background:
+        rgba(255, 255, 255, 0.55);
+
+    color: #66584c;
+
+    font-size: 12px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+
+    background:
+        rgba(255, 255, 255, 0.9);
+}
+
+.stat-icon {
+    margin-right: 3px;
+}
+
+
+/* ==========================
+   阿明
+========================== */
+
+/* 阿明整層 */
+.aming-layer {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 4;
+}
+
+
+/* 阿明圖片：只負責顯示 */
+.aming-character {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    pointer-events: none;
+}
+
+
+/* 真正可以戳的阿明區域 */
+.aming-click-area {
+    position: absolute;
+
+    left: 18%;
+    top: 34%;
+
+    width: 62%;
+    height: 48%;
+
+    border: none;
+	background: transparent;
+	left: 47%;    /* 左右位置 */
+	top: 34%;     /* 上下位置 */
+	width: 25%;   /* 多寬 */
+	height: 42%;  /* 多高 */
+
+    cursor: pointer;
+
+    z-index: 5;
+
+    pointer-events: auto;
+}
+
+/* 阿明台詞 */
+
+.aming-dialogue {
+    position: absolute;
+
+    left: 48%;
+    top: 33%;
+
+    max-width: 260px;
+
+    padding: 13px 18px;
+
+    border-radius: 16px 16px 5px 16px;
+
+    background: rgba(255, 252, 244, 0.95);
+
+    color: #4a4037;
+
+    box-shadow:
+        0 4px 18px rgba(60, 45, 30, 0.18);
+
+    font-size: 14px;
+    line-height: 1.7;
+
+    z-index: 50;
+
+    opacity: 0;
+    transform: translateY(8px);
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+
+    pointer-events: none;
+}
+
+.aming-dialogue.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+
+
+/* ==========================
+   小螢幕
+========================== */
+
+@media (max-width: 700px) {
+
+    .player-panel {
+        top: 3%;
+        right: 3%;
+
+        transform: scale(0.9);
+
+        transform-origin: top right;
+    }
+
+    .game-logo {
+        top: 4%;
+        left: 4%;
+    }
+
+    .aming-area {
+        right: 4%;
+
+        width: 55vw;
+    }
+
+    .bottom-nav {
+        width: 94vw;
+
+        bottom: 2%;
+
+        border-radius: 20px;
+    }
+
+}

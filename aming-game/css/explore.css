@@ -1,0 +1,1876 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    font-family:
+        "Microsoft JhengHei",
+        "Noto Sans TC",
+        sans-serif;
+}
+
+#explore-screen {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    color: #4a4037;
+
+    background:
+        linear-gradient(
+            rgba(247, 241, 226, 0.82),
+            rgba(235, 225, 204, 0.82)
+        );
+}
+/*更換路線背景
+#explore-screen {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    color: #4a4037;
+
+    background-image:
+        linear-gradient(
+            rgba(247, 241, 226, 0.55),
+            rgba(235, 225, 204, 0.55)
+        ),
+        url("../images/explore-bg.jpg");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+*/
+/* ==========================
+   探索內容
+========================== */
+
+.explore-content {
+    position: absolute;
+    inset: 0;
+
+    padding: 7vh 8vw 130px;
+}
+
+.explore-title {
+    position: relative;
+
+    z-index: 2;
+}
+
+.title-small {
+    font-size: 13px;
+
+    letter-spacing: 0.25em;
+
+    color: #8d7e6d;
+}
+
+.explore-title h1 {
+    margin: 6px 0 5px;
+
+    font-size: clamp(30px, 4vw, 55px);
+
+    font-weight: 500;
+
+    letter-spacing: 0.12em;
+}
+
+.explore-title p {
+    margin: 0;
+
+    color: #786b5e;
+
+    font-size: 14px;
+}
+
+/* ==========================
+   旅程路線
+========================== */
+
+.rail-route {
+    position: absolute;
+
+    left: 5%;
+    top: 37%;
+
+    width: 90%;
+    height: 30vh;
+
+    z-index: 5;
+}
+
+
+/* SVG */
+
+.route-map {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: visible;
+
+    pointer-events: none;
+}
+
+
+/* 折線 */
+
+.route-line {
+    fill: none;
+
+    stroke: rgba(103, 116, 108, 0.55);
+    stroke-width: 3;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    vector-effect: non-scaling-stroke;
+}
+
+
+/* ==========================
+   車站共同樣式
+========================== */
+
+.station {
+    position: absolute;
+
+    width: 20px;
+    height: 20px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+
+    transform: translate(-50%, -50%);
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    z-index: 10;
+
+    transition:
+        opacity .2s ease,
+        transform .2s ease;
+}
+
+.dot {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: 15px;
+    height: 15px;
+
+    border: 4px solid #f4efe3;
+    border-radius: 50%;
+
+    background: #9ba59f;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(103, 116, 108, .6);
+}
+
+.name {
+    position: absolute;
+
+    left: 50%;
+
+    white-space: nowrap;
+
+    font-size: 14px;
+
+    letter-spacing: .1em;
+
+    color: #71685f;
+}
+
+.label-up .name {
+    bottom: calc(100% + 13px);
+
+    transform: translateX(-50%);
+}
+
+.label-down .name {
+    top: calc(100% + 13px);
+
+    transform: translateX(-50%);
+}
+
+/* ==========================
+   位置
+   必須跟 SVG points 完全一致
+========================== */
+
+.station-1 {
+    left: 4%;
+    top: 57.69%;
+}
+
+.station-2 {
+    left: 19%;
+    top: 40.38%;
+}
+
+.station-3 {
+    left: 34%;
+    top: 44.23%;
+}
+
+.station-4 {
+    left: 48.5%;
+    top: 59.62%;
+}
+
+.station-5 {
+    left: 62.5%;
+    top: 51.92%;
+}
+
+.station-6 {
+    left: 79%;
+    top: 67.31%;
+}
+
+.station-7 {
+    left: 95%;
+    top: 55.77%;
+}
+
+
+/* ==========================
+   距離過遠
+========================== */
+
+.station.too-far {
+    opacity: .55;
+
+    cursor: not-allowed;
+}
+
+.station.too-far:hover {
+    opacity: .95;
+
+    background:
+        rgba(255, 252, 244, .75);
+}
+
+
+/* ==========================
+   瑞穗
+========================== */
+
+.station.current {
+    color: #4e6a5d;
+
+    font-weight: 600;
+}
+
+.station.current .dot {
+    background: #617f70;
+
+    box-shadow:
+        0 0 0 5px rgba(97, 127, 112, .17),
+        0 0 0 11px rgba(97, 127, 112, .07);
+
+    animation: locationPulse 1.8s infinite;
+}
+
+.station.current:hover {
+    transform:
+        translate(-50%, -50%)
+
+    background:
+        rgba(255, 252, 244, .8);
+}
+
+
+.current-label {
+    margin-left: 6px;
+
+    padding: 3px 7px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(97, 127, 112, .14);
+
+    color: #617f70;
+
+    font-size: 9px;
+}
+
+
+/* ==========================
+   Tooltip
+========================== */
+
+.station-tooltip {
+    position: absolute;
+
+    left: 50%;
+    bottom: calc(100% + 9px);
+
+    transform:
+        translateX(-50%)
+        translateY(5px);
+
+    width: 200px;
+
+    padding: 10px 13px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(61, 56, 50, .93);
+
+    color: white;
+
+    box-shadow:
+        0 5px 18px
+        rgba(45, 35, 25, .18);
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    text-align: center;
+
+    opacity: 0;
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity .18s ease,
+        transform .18s ease;
+
+    z-index: 30;
+}
+
+.station-tooltip small {
+    display: block;
+
+    color:
+        rgba(255, 255, 255, .65);
+
+    font-size: 10px;
+}
+
+.station:hover .station-tooltip {
+    opacity: 1;
+    visibility: visible;
+
+    transform: translateX(-50%);
+}
+
+.current-tooltip {
+    background:
+        rgba(70, 91, 81, .95);
+}
+
+
+@keyframes locationPulse {
+
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 5px
+            rgba(97, 127, 112, .17),
+            0 0 0 10px
+            rgba(97, 127, 112, .08);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 8px
+            rgba(97, 127, 112, .10),
+            0 0 0 16px
+            rgba(97, 127, 112, 0);
+    }
+}
+
+/* 鐵道路線 */
+
+.rail-line {
+    position: absolute;
+
+    left: 25px;
+    top: 0;
+
+    width: 3px;
+    height: 100%;
+
+    border-radius: 10px;
+
+    background:
+        rgba(108, 124, 114, 0.45);
+}
+
+
+/* 每個車站 */
+
+.station-marker {
+    position: absolute;
+
+	left: var(--x);
+	top: var(--y);
+
+	transform:
+		translate(-50%, -50%);
+
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 7px 12px 7px 7px;
+
+    border: none;
+    border-radius: 14px;
+
+    background: transparent;
+
+    color: #5f554b;
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+
+/* 車站圓點 */
+
+.station-dot {
+    position: relative;
+
+    width: 17px;
+    height: 17px;
+
+    flex-shrink: 0;
+
+    border: 4px solid #eee7da;
+
+    border-radius: 50%;
+
+    background: #8f9b93;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(105, 120, 111, 0.65);
+
+    z-index: 2;
+}
+
+
+/* 車站名字 */
+
+.station-name {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    white-space: nowrap;
+
+    font-size: 14px;
+
+    letter-spacing: 0.12em;
+}
+
+
+/* ==========================
+   距離過遠
+========================== */
+
+.station-marker.too-far {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+}
+
+.station-marker.too-far:hover {
+    opacity: 0.9;
+
+    background:
+        rgba(255, 252, 244, 0.65);
+}
+
+
+/* ==========================
+   瑞穗目前位置
+========================== */
+
+.station-marker.current {
+    color: #43594f;
+
+    font-weight: 600;
+}
+
+.station-marker.current .station-dot {
+    background: #607d70;
+
+    box-shadow:
+        0 0 0 5px rgba(96, 125, 112, 0.17),
+        0 0 0 10px rgba(96, 125, 112, 0.08);
+
+    animation:
+        locationPulse 1.8s infinite;
+}
+
+.station-marker.current:hover {
+    transform:
+        translate(-50%, -50%)
+        translateY(-4px);
+
+    background:
+        rgba(255, 252, 244, 0.8);
+}
+
+/* 目前位置小標籤 */
+
+.current-label {
+    padding: 3px 7px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(96, 125, 112, 0.13);
+
+    color: #607d70;
+
+    font-size: 9px;
+
+    letter-spacing: 0.05em;
+}
+
+
+/* ==========================
+   Hover 提示
+========================== */
+
+.station-tooltip {
+    position: absolute;
+
+    left: 38px;
+    bottom: calc(100% + 7px);
+
+    width: 205px;
+
+    padding: 10px 13px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(62, 56, 50, 0.92);
+
+    color: #fff;
+
+    box-shadow:
+        0 5px 18px
+        rgba(45, 35, 25, 0.2);
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    text-align: left;
+
+    letter-spacing: 0.03em;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transform: translateY(5px);
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease,
+        visibility 0.18s ease;
+
+    z-index: 30;
+}
+
+.station-tooltip small {
+    display: block;
+
+    margin-top: 2px;
+
+    color:
+        rgba(255, 255, 255, 0.67);
+
+    font-size: 10px;
+}
+
+.station-marker:hover .station-tooltip {
+    opacity: 1;
+    visibility: visible;
+
+    transform: translateY(0);
+}
+
+
+/* 瑞穗提示稍微不同 */
+
+.current-tooltip {
+    background:
+        rgba(70, 91, 81, 0.95);
+}
+
+
+/* 定位脈衝 */
+
+@keyframes locationPulse {
+
+    0% {
+        box-shadow:
+            0 0 0 4px
+            rgba(96, 125, 112, 0.20),
+            0 0 0 8px
+            rgba(96, 125, 112, 0.10);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 8px
+            rgba(96, 125, 112, 0.12),
+            0 0 0 15px
+            rgba(96, 125, 112, 0);
+    }
+
+    100% {
+        box-shadow:
+            0 0 0 4px
+            rgba(96, 125, 112, 0.20),
+            0 0 0 8px
+            rgba(96, 125, 112, 0.10);
+    }
+}
+
+/* ==========================
+   底部導覽
+========================== */
+
+.bottom-nav {
+    position: absolute;
+
+    left: 50%;
+    bottom: 2.5%;
+
+    transform: translateX(-50%);
+
+    z-index: 20;
+
+    width: min(760px, 88vw);
+    height: 74px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    padding: 7px 12px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.5);
+
+    border-radius: 24px;
+
+    background:
+        rgba(255, 250, 240, 0.84);
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 8px 25px
+        rgba(55, 40, 25, 0.18);
+}
+
+.nav-item {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 3px;
+
+    border-radius: 17px;
+
+    color: #8a7d70;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.nav-item:hover {
+    transform: translateY(-3px);
+
+    background:
+        rgba(255, 255, 255, 0.6);
+}
+
+.nav-item.active {
+    color: #574a3e;
+
+    background:
+        rgba(214, 195, 166, 0.35);
+}
+
+.nav-icon {
+    font-size: 23px;
+
+    line-height: 1;
+}
+
+.nav-label {
+    font-size: 12px;
+
+    letter-spacing: 0.08em;
+}
+
+.notification-dot {
+    position: absolute;
+
+    top: 8px;
+    left: calc(50% + 9px);
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #b95f58;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(255, 250, 240, 0.9);
+}
+
+/* ==========================
+   定位確認
+========================== */
+
+.location-check {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        translateY(10px);
+
+    z-index: 50;
+
+    width: 260px;
+
+    padding: 25px 22px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 7px;
+
+    border:
+        1px solid rgba(255, 255, 255, .65);
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 252, 244, .93);
+
+    backdrop-filter: blur(10px);
+
+    box-shadow:
+        0 10px 35px
+        rgba(55, 45, 35, .17);
+
+    color: #51483f;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity .25s ease,
+        transform .25s ease;
+}
+
+.location-check.show {
+    opacity: 1;
+    visibility: visible;
+
+    transform:
+        translate(-50%, -50%)
+        translateY(0);
+}
+
+.location-check strong {
+    margin-top: 7px;
+
+    font-size: 14px;
+    letter-spacing: .06em;
+}
+
+.location-check small {
+    color: #94887b;
+
+    font-size: 11px;
+}
+
+
+/* 定位動畫 */
+
+.location-spinner {
+    position: relative;
+
+    width: 46px;
+    height: 46px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background:
+        rgba(96, 125, 112, .1);
+}
+
+.location-spinner::before,
+.location-spinner::after {
+    content: "";
+
+    position: absolute;
+
+    border:
+        1px solid
+        rgba(96, 125, 112, .35);
+
+    border-radius: 50%;
+
+    animation:
+        locationSearch 1.5s infinite;
+}
+
+.location-spinner::before {
+    width: 46px;
+    height: 46px;
+}
+
+.location-spinner::after {
+    width: 46px;
+    height: 46px;
+
+    animation-delay: .7s;
+}
+
+.location-spinner span {
+    width: 10px;
+    height: 10px;
+
+    border-radius: 50%;
+
+    background: #617f70;
+}
+
+@keyframes locationSearch {
+
+    0% {
+        transform: scale(.6);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.7);
+        opacity: 0;
+    }
+}
+
+
+/* ==========================
+   任務卡
+========================== */
+
+.mission-card {
+    position: absolute;
+
+    left: 50%;
+    bottom: 110px;
+
+    transform:
+        translate(-50%, 40px);
+
+    z-index: 45;
+
+    width: min(420px, 88vw);
+
+    padding: 25px 27px 23px;
+
+    border:
+        1px solid rgba(255, 255, 255, .6);
+
+    border-radius: 22px;
+
+    background:
+        rgba(255, 252, 244, .96);
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 12px 40px
+        rgba(55, 43, 31, .2);
+
+    color: #4d443c;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity .35s ease,
+        transform .35s ease;
+}
+
+.mission-card.show {
+    opacity: 1;
+    visibility: visible;
+
+    transform:
+        translate(-50%, 0);
+}
+
+
+.mission-close {
+    position: absolute;
+
+    right: 16px;
+    top: 13px;
+
+    border: none;
+
+    background: transparent;
+
+    color: #978a7e;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+
+.mission-arrival {
+    margin-bottom: 13px;
+
+    color: #617f70;
+
+    font-size: 12px;
+
+    letter-spacing: .06em;
+}
+
+
+.mission-tag {
+    display: inline-block;
+
+    margin-bottom: 7px;
+
+    padding: 3px 8px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(97, 127, 112, .12);
+
+    color: #617f70;
+
+    font-size: 9px;
+
+    letter-spacing: .12em;
+}
+
+
+.mission-card h2 {
+    margin: 3px 0 8px;
+
+    font-size: 22px;
+
+    font-weight: 500;
+
+    letter-spacing: .08em;
+}
+
+
+.mission-story {
+    margin: 0 0 18px;
+
+    color: #81756a;
+
+    font-size: 13px;
+
+    line-height: 1.7;
+}
+
+
+/* 任務目標 */
+
+.mission-goal {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    margin-bottom: 18px;
+
+    padding: 13px 15px;
+
+    border-radius: 14px;
+
+    background:
+        rgba(226, 216, 197, .35);
+}
+
+.goal-icon {
+    font-size: 25px;
+
+    color: #617f70;
+}
+
+.mission-goal div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.mission-goal small {
+    color: #9b8e81;
+
+    font-size: 10px;
+}
+
+.mission-goal strong {
+    font-size: 13px;
+
+    font-weight: 500;
+}
+
+
+/* 開始探索 */
+
+.start-mission {
+    width: 100%;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 13px;
+
+    background: #667e72;
+
+    color: white;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    letter-spacing: .12em;
+
+    cursor: pointer;
+
+    transition:
+        transform .2s ease,
+        opacity .2s ease;
+}
+
+.start-mission:hover {
+    transform: translateY(-2px);
+
+    opacity: .9;
+}
+/* ==========================
+   瑞穗站探索模式
+========================== */
+
+.station-explore {
+    position: absolute;
+    inset: 0;
+
+    z-index: 15;
+
+    padding: 5vh 6vw 115px;
+
+    background: #eee7d8;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: opacity .4s ease;
+
+    overflow: hidden;
+
+    /* 很重要 */
+    pointer-events: none;
+}
+
+.station-explore.show {
+    opacity: 1;
+    visibility: visible;
+
+    /* 進探索後才准操作 */
+    pointer-events: auto;
+}
+
+/* 上方 */
+
+.station-header {
+    position: relative;
+
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+
+    gap: 20px;
+	pointer-events: none;
+}
+
+.leave-station {
+    padding: 9px 14px;
+
+    border:
+        1px solid
+        rgba(85, 72, 60, .15);
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 252, 244, .75);
+
+    color: #665b51;
+
+    font-family: inherit;
+
+    cursor: pointer;
+	
+	pointer-events: auto;
+}
+
+.station-title {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+
+    padding: 10px 18px;
+
+    border-radius: 14px;
+
+    background:
+        rgba(255, 252, 244, .88);
+
+    backdrop-filter: blur(8px);
+
+    box-shadow:
+        0 4px 18px
+        rgba(45, 35, 25, .14);
+
+    border:
+        1px solid
+        rgba(255, 255, 255, .55);
+		
+	position: relative;
+}
+
+
+.station-title small {
+    color: #7f8f86;
+
+    font-size: 9px;
+
+    letter-spacing: .16em;
+}
+
+
+.station-title strong {
+    color: #463e37;
+
+    font-size: 21px;
+
+    font-weight: 600;
+
+    letter-spacing: .15em;
+}
+
+.station-title::before {
+    content: "●";
+
+    position: absolute;
+
+    margin-left: -9px;
+    margin-top: 23px;
+
+    color: #617f70;
+
+    font-size: 7px;
+}
+
+
+/* 任務 */
+
+.explore-mission {
+    position: absolute;
+
+    left: 6vw;
+    top: 14vh;
+
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 12px 16px;
+
+    border-radius: 16px;
+
+    background:
+        rgba(255, 252, 244, .88);
+
+    box-shadow:
+        0 5px 20px
+        rgba(55, 43, 31, .12);
+		
+	pointer-events: none;
+}
+
+.mission-icon {
+    color: #617f70;
+
+    font-size: 24px;
+}
+
+.explore-mission div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+.explore-mission small {
+    color: #9a8d80;
+
+    font-size: 9px;
+}
+
+.explore-mission strong {
+    color: #554b42;
+
+    font-size: 12px;
+
+    font-weight: 500;
+}
+
+.mission-progress {
+    margin-left: 15px;
+
+    color: #617f70;
+
+    font-size: 12px;
+}
+
+
+/* ==========================
+   場景
+========================== */
+
+.station-scene {
+    position: absolute;
+    inset: 0;
+
+    z-index: 1;
+
+    overflow: hidden;
+
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+
+    pointer-events: auto;
+}
+
+.station-scene.dragging {
+    cursor: grabbing;
+}
+
+.scene-world {
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 150vw;
+    height: 100%;
+
+    will-change: transform;
+
+    transform: translate3d(0, 0, 0);
+}
+
+.scene-background {
+    position: absolute;
+
+    inset: 0;
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.scene-placeholder {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 8px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #d9e1dc 0%,
+            #eee5cf 60%,
+            #d2c3a7 100%
+        );
+
+    color: #74695e;
+}
+
+.scene-placeholder span {
+    font-size: 25px;
+
+    letter-spacing: .15em;
+}
+
+.scene-placeholder small {
+    opacity: .6;
+}
+
+
+/* 操作提示 */
+
+.explore-hint {
+    position: absolute;
+
+    left: 50%;
+    bottom: 105px;
+
+    transform: translateX(-50%);
+
+    z-index: 10;
+
+    padding: 7px 14px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(50, 45, 40, .65);
+
+    color: white;
+
+    font-size: 10px;
+
+    letter-spacing: .08em;
+
+    pointer-events: none;
+}
+
+.cow-target {
+    position: absolute;
+
+    left: 90%;
+    top: 60%;
+
+    width: 80px;
+
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    transform: translate(-50%, -50%);
+
+    cursor: pointer;
+
+    z-index: 5;
+
+    /* 不要讓瀏覽器把它當成可拖曳物 */
+    user-select: none;
+    touch-action: none;
+}
+
+.cow-target img {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* ==========================
+   拍照模式
+========================== */
+
+.camera-mode {
+    position: absolute;
+    inset: 0;
+
+    z-index: 50;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition: opacity .25s ease;
+}
+
+.camera-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-mode.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+
+/* 牛的近景 */
+
+.camera-photo {
+    position: absolute;
+    inset: 0;
+
+    overflow: hidden;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.camera-photo img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    user-select: none;
+    pointer-events: none;
+    -webkit-user-drag: none;
+
+    transform: scale(1.08);
+}
+
+
+/* ==========================
+   相機取景粗框
+========================== */
+
+.focus-frame {
+    position: absolute;
+
+    left: 6vw;
+    right: 6vw;
+    top: 7vh;
+    bottom: 110px;
+
+    z-index: 3;
+
+    pointer-events: none;
+}
+
+.corner {
+    position: absolute;
+
+    width: 85px;
+    height: 85px;
+
+    box-sizing: border-box;
+}
+
+.top-left {
+    left: 0;
+    top: 0;
+    border-left: 7px solid #fff;
+    border-top: 7px solid #fff;
+}
+
+.top-right {
+    right: 0;
+    top: 0;
+    border-right: 7px solid #fff;
+    border-top: 7px solid #fff;
+}
+
+.bottom-left {
+    left: 0;
+    bottom: 0;
+    border-left: 7px solid #fff;
+    border-bottom: 7px solid #fff;
+}
+
+.bottom-right {
+    right: 0;
+    bottom: 0;
+    border-right: 7px solid #fff;
+    border-bottom: 7px solid #fff;
+}
+
+/* 提示 */
+
+.camera-text {
+    position: absolute;
+
+    left: 50%;
+    bottom: 115px;
+
+    transform: translateX(-50%);
+
+    color: rgba(255,255,255,.85);
+
+    font-size: 12px;
+    letter-spacing: .12em;
+
+    text-shadow: 0 2px 5px rgba(0,0,0,.5);
+}
+
+
+/* 快門 */
+
+.shutter-button {
+    position: absolute;
+
+    left: 50%;
+    bottom: 35px;
+
+    transform: translateX(-50%);
+
+    width: 64px;
+    height: 64px;
+
+    padding: 5px;
+
+    border: 3px solid white;
+    border-radius: 50%;
+
+    background: transparent;
+
+    cursor: pointer;
+}
+
+.shutter-button span {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    background: white;
+}
+
+.shutter-button:active {
+    transform:
+        translateX(-50%)
+        scale(.9);
+}
+
+
+/* 關閉 */
+
+.close-camera {
+    position: absolute;
+
+    right: 35px;
+    top: 30px;
+
+    z-index: 5;
+
+    width: 42px;
+    height: 42px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(0,0,0,.4);
+
+    color: white;
+
+    font-size: 28px;
+
+    cursor: pointer;
+}
+
+
+/* 快門閃光 */
+
+.focus-frame {
+    position: absolute;
+    inset: 7vh 6vw 105px;
+
+    pointer-events: none;
+}
+
+.corner {
+    position: absolute;
+
+    width: 85px;
+    height: 85px;
+
+    border-color: rgba(255,255,255,.92);
+}
+
+.top-left {
+    left: 0;
+    top: 0;
+    border-left: 7px solid;
+    border-top: 7px solid;
+}
+
+.top-right {
+    right: 0;
+    top: 0;
+    border-right: 7px solid;
+    border-top: 7px solid;
+}
+
+.bottom-left {
+    left: 0;
+    bottom: 0;
+    border-left: 7px solid;
+    border-bottom: 7px solid;
+}
+
+.bottom-right {
+    right: 0;
+    bottom: 0;
+    border-right: 7px solid;
+    border-bottom: 7px solid;
+}
+
+.camera-flash {
+    position: absolute;
+    inset: 0;
+
+    z-index: 100;
+
+    background: #fff;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.camera-flash.flash {
+    animation: cameraFlash .35s ease;
+}
+
+.shutter-button.shot {
+    transform:
+        translateX(-50%)
+        scale(.86);
+}
+
+@keyframes cameraFlash {
+    0% {
+        opacity: 0;
+    }
+
+    15% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/*底部導覽消失*/
+.bottom-nav {
+    transition:
+        opacity .3s ease,
+        transform .3s ease,
+        visibility .3s ease;
+}
+
+.bottom-nav.explore-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transform:
+        translateX(-50%)
+        translateY(25px);
+}
+
+.photo-success {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -45%)
+        scale(.95);
+
+    z-index: 20;
+
+    width: min(360px, 82vw);
+
+    padding: 28px 30px;
+
+    border-radius: 22px;
+
+    background: rgba(255, 252, 244, .95);
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 15px 45px
+        rgba(30, 25, 20, .25);
+
+    text-align: center;
+
+    color: #51483f;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity .3s ease,
+        transform .3s ease;
+}
+
+.photo-success.show {
+    opacity: 1;
+    visibility: visible;
+
+    transform:
+        translate(-50%, -50%)
+        scale(1);
+}
+
+.success-check {
+    width: 48px;
+    height: 48px;
+
+    margin: 0 auto 12px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: #617f70;
+    color: white;
+
+    font-size: 25px;
+}
+
+.photo-success small {
+    color: #96897d;
+
+    font-size: 10px;
+    letter-spacing: .12em;
+}
+
+.photo-success h2 {
+    margin: 8px 0 15px;
+
+    font-size: 20px;
+    font-weight: 500;
+
+    letter-spacing: .08em;
+}
+
+.success-progress {
+    margin-bottom: 18px;
+
+    color: #617f70;
+
+    font-size: 12px;
+}
+
+.view-memory {
+    width: 100%;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 13px;
+
+    background: #617f70;
+    color: white;
+
+    font-family: inherit;
+
+    letter-spacing: .12em;
+
+    cursor: pointer;
+}

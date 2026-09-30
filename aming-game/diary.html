@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>阿明的日記｜尋軌</title>
+
+    <link
+        rel="stylesheet"
+        href="css/diary.css"
+    >
+	<link rel="stylesheet" href="css/common.css">
+
+</head>
+
+<body>
+
+    <main id="diary-screen">
+
+        <!-- =====================
+             日記標題
+        ====================== -->
+
+        <header class="diary-header">
+
+            <div>
+                <small>MEMORY JOURNAL</small>
+                <h1>阿明的日記</h1>
+            </div>
+
+		<button id="memory-count" class="memory-count">
+			<span class="memory-diamond">◇</span>
+
+			<div>
+				<small>回憶碎片</small>
+				<strong>4 / 30</strong>
+			</div>
+		</button>
+
+        </header>
+
+		<!-- =====================
+			 回憶碎片匣
+		====================== -->
+
+		<div id="memory-overlay" class="memory-overlay"></div>
+
+		<aside id="memory-drawer" class="memory-drawer">
+
+			<div class="drawer-header">
+
+				<div>
+					<small>MEMORY FRAGMENTS</small>
+					<h2>回憶碎片</h2>
+				</div>
+
+				<button
+					id="close-memory"
+					class="close-memory"
+					aria-label="關閉"
+				>
+					×
+				</button>
+
+			</div>
+
+
+			<div class="fragment-summary">
+
+				<span class="summary-diamond">◇</span>
+
+				<div>
+					<strong>4 / 30</strong>
+					<small>已找回的回憶</small>
+				</div>
+
+			</div>
+
+
+			<div class="fragment-list">
+
+				<div class="fragment-item found">
+					<span class="fragment-symbol">◇</span>
+
+					<div>
+						<small>板橋</small>
+						<strong>回憶・01</strong>
+					</div>
+
+					<span class="fragment-status">✓</span>
+				</div>
+
+
+				<div class="fragment-item found">
+					<span class="fragment-symbol">◇</span>
+
+					<div>
+						<small>福隆</small>
+						<strong>回憶・01</strong>
+					</div>
+
+					<span class="fragment-status">✓</span>
+				</div>
+
+
+				<div class="fragment-item found">
+					<span class="fragment-symbol">◇</span>
+
+					<div>
+						<small>台南</small>
+						<strong>回憶・01</strong>
+					</div>
+
+					<span class="fragment-status">✓</span>
+				</div>
+
+
+				<div class="fragment-item found new">
+					<span class="fragment-symbol">◇</span>
+
+					<div>
+						<small>瑞穗</small>
+						<strong>回憶・01</strong>
+					</div>
+
+					<span class="fragment-status">NEW</span>
+				</div>
+
+
+				<div class="fragment-item locked">
+					<span class="fragment-symbol">◇</span>
+
+					<div>
+						<small>？？？</small>
+						<strong>尚未尋回</strong>
+					</div>
+
+					<span class="fragment-status">?</span>
+				</div>
+
+
+				<div class="fragment-item locked">
+					<span class="fragment-symbol">◇</span>
+
+					<div>
+						<small>？？？</small>
+						<strong>尚未尋回</strong>
+					</div>
+
+					<span class="fragment-status">?</span>
+				</div>
+
+			</div>
+
+		</aside>
+		<!-- =====================
+			 日記目錄
+		====================== -->
+
+		<section id="diary-index" class="diary-index">
+
+			<div class="index-title">
+				<small>JOURNEY ARCHIVE</small>
+				<h2>旅程日誌</h2>
+				<p>沿著鐵道，翻閱曾經找回的記憶。</p>
+			</div>
+
+			<div class="station-journals">
+
+				<button class="station-journal unlocked">
+					<span class="station-number">01</span>
+
+					<div>
+						<small>TAIWAN</small>
+						<strong>板橋</strong>
+						<span>1 段回憶</span>
+					</div>
+
+					<span class="journal-check">✓</span>
+				</button>
+
+
+				<button class="station-journal unlocked">
+					<span class="station-number">02</span>
+
+					<div>
+						<small>NEW TAIPEI</small>
+						<strong>福隆</strong>
+						<span>1 段回憶</span>
+					</div>
+
+					<span class="journal-check">✓</span>
+				</button>
+
+
+				<button class="station-journal unlocked">
+					<span class="station-number">03</span>
+
+					<div>
+						<small>TAINAN</small>
+						<strong>台南</strong>
+						<span>1 段回憶</span>
+					</div>
+
+					<span class="journal-check">✓</span>
+				</button>
+
+
+				<button
+					id="ruisui-journal"
+					class="station-journal unlocked new"
+				>
+					<span class="station-number">04</span>
+
+					<div>
+						<small>HUALIEN</small>
+						<strong>瑞穗</strong>
+						<span>1 段新回憶</span>
+					</div>
+
+					<span class="journal-new">NEW</span>
+				</button>
+
+
+				<button class="station-journal locked" disabled>
+					<span class="station-number">05</span>
+
+					<div>
+						<small>UNKNOWN</small>
+						<strong>？？？</strong>
+						<span>尚未尋回</span>
+					</div>
+
+					<span>◇</span>
+				</button>
+
+
+				<button class="station-journal locked" disabled>
+					<span class="station-number">06</span>
+
+					<div>
+						<small>UNKNOWN</small>
+						<strong>？？？</strong>
+						<span>尚未尋回</span>
+					</div>
+
+					<span>◇</span>
+				</button>
+
+			</div>
+
+		</section>
+		<section id="station-diary" class="station-diary">
+
+			<div class="station-diary-toolbar">
+
+				<button
+					id="back-to-index"
+					class="back-to-index"
+				>
+					← 返回旅程日誌
+				</button>
+
+				<div class="diary-tabs">
+
+					<button
+						id="aming-tab"
+						class="diary-tab active"
+					>
+						阿明的記憶
+					</button>
+
+					<button
+						id="player-tab"
+						class="diary-tab"
+					>
+						我的旅程
+					</button>
+
+				</div>
+
+			</div>
+				<!-- =====================
+					 日記本
+				====================== -->
+
+				<section
+					id="aming-journal"
+					class="journal journal-content active"
+				>
+
+					<!-- 左頁 -->
+					<article class="journal-page left-page">
+
+						<div class="page-date">
+							瑞穗・第一段記憶
+						</div>
+
+						<div class="photo-card">
+
+							<img
+								src="images/ruisui-cow-closeup.png"
+								alt="瑞穗站乳牛裝置"
+							>
+
+							<span>
+								瑞穗站，乳牛裝置
+							</span>
+
+						</div>
+
+						<div class="memory-found">
+							◇ NEW MEMORY
+						</div>
+
+					</article>
+
+
+					<!-- 右頁 -->
+					<article class="journal-page right-page">
+
+						<div class="diary-entry">
+
+							<small>阿明的日記</small>
+
+							<h2>
+								瑞穗
+							</h2>
+
+							<p>
+								…
+							</p>
+
+							<p>
+								我好像來過這裡。
+							</p>
+
+							<p>
+								看到那隻乳牛的時候，
+								突然想起了一點什麼。
+							</p>
+
+						</div>
+
+						<div class="memory-fragment">
+
+							<img
+								src="images/ruisui-memory-01.png"
+								alt="瑞穗回憶碎片"
+								class="memory-fragment-image"
+							>
+
+							<div class="memory-fragment-info">
+								<span>◇</span>
+
+								<div>
+									<small>獲得記憶碎片</small>
+									<strong>瑞穗・01</strong>
+								</div>
+							</div>
+
+						</div>
+
+					</article>
+					
+				</section>
+
+				<section
+					id="player-journal"
+					class="journal journal-content"
+				>
+						<!-- 左頁：玩家照片 -->
+
+						<article class="journal-page left-page">
+
+							<div class="page-date">
+								MY TRIP・瑞穗
+							</div>
+
+							<label class="player-photo">
+
+								<input
+									id="player-photo-input"
+									type="file"
+									accept="image/*"
+								>
+
+								<div id="photo-placeholder">
+									<span>＋</span>
+									<strong>加入旅行照片</strong>
+									<small>記錄今天看見的風景</small>
+								</div>
+
+								<img
+									id="player-photo-preview"
+									alt="我的旅行照片"
+								>
+
+							</label>
+
+						</article>
+
+
+						<!-- 右頁：旅行心得 -->
+
+						<article class="journal-page right-page">
+
+							<div class="travel-entry">
+
+								<small>MY TRAVEL NOTE</small>
+
+								<h2>瑞穗</h2>
+
+								<textarea
+									id="travel-note"
+									placeholder="寫下今天的旅行回憶……"
+								></textarea>
+
+								<button
+									id="save-travel"
+									class="save-travel"
+								>
+									儲存這段旅程
+								</button>
+
+							</div>
+
+						</article>
+				</section>
+
+		</section>
+        <!-- =====================
+             底部導覽
+        ====================== -->
+
+        <nav class="bottom-nav">
+
+            <a
+                href="home.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label">首頁</span>
+            </a>
+
+            <a
+                href="explore.html"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌖</span>
+                <span class="nav-label">探索</span>
+            </a>
+
+            <a
+                href="diary.html"
+                class="nav-item active"
+            >
+                <span class="nav-icon">▤</span>
+                <span class="nav-label">日記</span>
+            </a>
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">☆</span>
+                <span class="nav-label">活動</span>
+            </a>
+
+            <a
+                href="#"
+                class="nav-item"
+            >
+                <span class="nav-icon">♙</span>
+                <span class="nav-label">旅團</span>
+            </a>
+
+        </nav>
+
+    </main>
+
+    <script src="js/diary.js"></script>
+
+</body>
+
+</html>

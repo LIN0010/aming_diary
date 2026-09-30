@@ -1,0 +1,1762 @@
+/* ==========================
+   基本設定
+========================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    font-family:
+        "Microsoft JhengHei",
+        "Noto Sans TC",
+        sans-serif;
+}
+
+body {
+    background: #d8cbb7;
+}
+
+
+/* ==========================
+   日記頁背景
+========================== */
+
+#diary-screen {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    padding: 5vh 7vw 120px;
+
+    color: #51473e;
+
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(255,255,255,.45),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #d8cbb7,
+            #b9aa94
+        );
+}
+
+
+/* ==========================
+   上方標題
+========================== */
+
+.diary-header {
+    position: relative;
+    z-index: 5;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+
+    margin-bottom: 2vh;
+}
+
+.diary-header small {
+    color: rgba(81,71,62,.55);
+
+    font-size: 10px;
+    letter-spacing: .25em;
+}
+
+.diary-header h1 {
+    margin: 4px 0 0;
+
+    font-family: serif;
+    font-size: clamp(25px, 3vw, 38px);
+    font-weight: 500;
+
+    letter-spacing: .15em;
+}
+
+/* ==========================
+   回憶碎片入口
+========================== */
+
+.memory-count {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 8px 16px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.5);
+
+    border-radius: 18px;
+
+    background:
+        rgba(255,250,240,.72);
+
+    color: #617f70;
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 3px 12px
+        rgba(60,45,30,.08);
+
+    transition:
+        transform .2s ease,
+        background .2s ease;
+}
+
+.memory-count:hover {
+    transform: translateY(-2px);
+
+    background:
+        rgba(255,250,240,.95);
+}
+
+.memory-diamond {
+    font-size: 25px;
+}
+
+.memory-count div {
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-start;
+}
+
+.memory-count small {
+    font-size: 8px;
+
+    letter-spacing: .14em;
+
+    opacity: .65;
+}
+
+.memory-count strong {
+    margin-top: 1px;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
+/* ==========================
+   背景遮罩
+========================== */
+
+.memory-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 80;
+
+    background:
+        rgba(48, 40, 32, .18);
+
+    backdrop-filter: blur(2px);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity .3s ease,
+        visibility .3s ease;
+}
+
+.memory-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* ==========================
+   回憶碎片抽屜
+========================== */
+
+.memory-drawer {
+    position: absolute;
+
+    right: 0;
+    top: 0;
+
+    z-index: 90;
+
+    width: min(390px, 90vw);
+    height: 100%;
+
+    padding:
+        6vh
+        32px
+        110px;
+
+    background:
+        rgba(249, 243, 229, .97);
+
+    box-shadow:
+        -15px 0 45px
+        rgba(55, 40, 25, .18);
+
+    transform:
+        translateX(105%);
+
+    transition:
+        transform .4s
+        cubic-bezier(.22,.8,.25,1);
+
+    overflow-y: auto;
+}
+
+.memory-drawer.show {
+    transform: translateX(0);
+}
+
+
+/* ==========================
+   抽屜標題
+========================== */
+
+.drawer-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+
+    margin-bottom: 25px;
+}
+
+.drawer-header small {
+    color: #998b7a;
+
+    font-size: 8px;
+
+    letter-spacing: .18em;
+}
+
+.drawer-header h2 {
+    margin: 4px 0 0;
+
+    font-family: serif;
+
+    font-size: 25px;
+    font-weight: 500;
+
+    letter-spacing: .12em;
+}
+
+.close-memory {
+    width: 38px;
+    height: 38px;
+
+    border: none;
+    border-radius: 50%;
+
+    background:
+        rgba(108, 94, 78, .08);
+
+    color: #786b5e;
+
+    font-size: 24px;
+
+    cursor: pointer;
+}
+
+
+/* ==========================
+   碎片總進度
+========================== */
+
+.fragment-summary {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 27px;
+
+    padding: 16px 18px;
+
+    border:
+        1px solid
+        rgba(97,127,112,.15);
+
+    border-radius: 15px;
+
+    background:
+        rgba(255,255,255,.38);
+
+    color: #617f70;
+}
+
+.summary-diamond {
+    font-size: 34px;
+}
+
+.fragment-summary div {
+    display: flex;
+    flex-direction: column;
+}
+
+.fragment-summary strong {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.fragment-summary small {
+    margin-top: 2px;
+
+    color: #8d8174;
+
+    font-size: 9px;
+
+    letter-spacing: .08em;
+}
+
+
+/* ==========================
+   碎片列表
+========================== */
+
+.fragment-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 9px;
+}
+
+.fragment-item {
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+        35px
+        1fr
+        auto;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-height: 65px;
+
+    padding: 11px 14px;
+
+    border-radius: 13px;
+
+    background:
+        rgba(255,255,255,.38);
+
+    border:
+        1px solid
+        rgba(100,85,70,.07);
+}
+
+.fragment-symbol {
+    color: #71877a;
+
+    font-size: 25px;
+}
+
+.fragment-item div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.fragment-item small {
+    color: #9a8c7e;
+
+    font-size: 9px;
+
+    letter-spacing: .12em;
+}
+
+.fragment-item strong {
+    color: #5a5047;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    letter-spacing: .06em;
+}
+
+.fragment-status {
+    color: #71877a;
+
+    font-size: 9px;
+
+    letter-spacing: .08em;
+}
+
+
+/* 新獲得 */
+
+.fragment-item.new {
+    background:
+        rgba(97,127,112,.10);
+
+    border:
+        1px solid
+        rgba(97,127,112,.25);
+}
+
+.fragment-item.new::before {
+    content: "";
+
+    position: absolute;
+
+    left: -4px;
+    top: 12px;
+    bottom: 12px;
+
+    width: 3px;
+
+    border-radius: 10px;
+
+    background: #71877a;
+}
+
+
+/* 未解鎖 */
+
+.fragment-item.locked {
+    opacity: .42;
+}
+
+.fragment-item.locked .fragment-symbol {
+    color: #948a7f;
+}
+
+
+/* ==========================
+   攤開的日記本
+========================== */
+
+.journal {
+    position: relative;
+
+    width: min(1050px, 84vw);
+    height: min(600px, 68vh);
+
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    filter:
+        drop-shadow(
+            0 20px 25px
+            rgba(55,40,25,.22)
+        );
+}
+
+
+/* 書頁 */
+
+.journal-page {
+    position: relative;
+
+    padding: clamp(25px, 3vw, 48px);
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            rgba(255,252,241,.93),
+            rgba(245,237,217,.96)
+        );
+
+    border:
+        1px solid
+        rgba(117,94,67,.12);
+}
+
+
+/* 左頁 */
+
+.left-page {
+    border-radius:
+        15px 3px 3px 15px;
+
+    transform:
+        perspective(1000px)
+        rotateY(1.5deg);
+
+    transform-origin: right;
+}
+
+
+/* 右頁 */
+
+.right-page {
+    border-radius:
+        3px 15px 15px 3px;
+
+    transform:
+        perspective(1000px)
+        rotateY(-1.5deg);
+
+    transform-origin: left;
+}
+
+
+/* 書中縫 */
+
+.journal::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 1%;
+
+    width: 20px;
+    height: 98%;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(70,50,30,.10),
+            rgba(255,255,255,.25),
+            rgba(70,50,30,.08),
+            transparent
+        );
+
+    pointer-events: none;
+
+    z-index: 10;
+}
+
+
+/* ==========================
+   左頁：照片
+========================== */
+
+.page-date {
+    margin-bottom: 18px;
+
+    color: #887967;
+
+    font-size: 11px;
+    letter-spacing: .18em;
+}
+
+
+/* 拍立得 */
+
+.photo-card {
+    position: relative;
+
+    width: min(330px, 90%);
+
+    margin: 5px auto 15px;
+
+    padding:
+        11px
+        11px
+        38px;
+
+    background: #fffdf7;
+
+    box-shadow:
+        2px 7px 18px
+        rgba(65,48,31,.17);
+
+    transform: rotate(-2.5deg);
+}
+
+
+/* 膠帶 */
+
+.photo-card::before {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: -13px;
+
+    width: 85px;
+    height: 27px;
+
+    transform:
+        translateX(-50%)
+        rotate(2deg);
+
+    background:
+        rgba(199,180,143,.48);
+
+    backdrop-filter: blur(1px);
+
+    z-index: 2;
+}
+
+.photo-card img {
+    display: block;
+
+    width: 100%;
+    height: 230px;
+
+    object-fit: cover;
+
+    filter:
+        saturate(.88)
+        contrast(.94);
+}
+
+.photo-card span {
+    position: absolute;
+
+    left: 17px;
+    bottom: 12px;
+
+    color: #6d6156;
+
+    font-family: serif;
+    font-size: 12px;
+
+    letter-spacing: .08em;
+}
+
+
+/* 小小的記憶標記 */
+
+.memory-found {
+    width: fit-content;
+
+    margin:
+        25px
+        8%
+        0
+        auto;
+
+    color: #72877b;
+
+    font-size: 10px;
+
+    letter-spacing: .18em;
+
+    transform: rotate(2deg);
+}
+
+
+/* ==========================
+   右頁：阿明的文字
+========================== */
+
+.diary-entry {
+    position: relative;
+
+    height: 100%;
+}
+
+.diary-entry small {
+    color: #8e806f;
+
+    font-size: 10px;
+
+    letter-spacing: .18em;
+}
+
+.diary-entry h2 {
+    margin:
+        13px
+        0
+        25px;
+
+    font-family: serif;
+
+    font-size: 28px;
+    font-weight: 500;
+
+    letter-spacing: .18em;
+}
+
+.diary-entry p {
+
+    margin: 0;
+
+    color: #5d534a;
+
+    font-family:
+        "DFKai-SB",
+        "KaiTi",
+        serif;
+
+    font-size: clamp(13px, 1.2vw, 17px);
+
+    line-height: 35px;
+    letter-spacing: .08em;
+}
+
+
+/* 淡淡橫線 */
+
+#aming-journal .right-page::before {
+    content: "";
+
+    position: absolute;
+
+    left: 9%;
+    right: 9%;
+    top: 145px;
+    bottom: 45px;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 34px,
+            rgba(117, 104, 86, .10) 35px
+        );
+
+    pointer-events: none;
+}
+
+#player-journal .right-page::before {
+    display: none;
+}
+
+#travel-note {
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 33px,
+            rgba(117, 104, 86, .11) 34px
+        );
+}
+
+
+/* ==========================
+   記憶碎片
+========================== */
+
+/* ==========================
+   回憶碎片
+   透明 PNG 直接貼在日記上
+========================== */
+
+.memory-fragment {
+    position: absolute;
+
+    right: 32px;
+    bottom: 25px;
+
+    width: 170px;
+
+    /* 全部拔掉 */
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+
+    transform: rotate(-3deg);
+}
+
+
+/* 摳好的透明碎片圖 */
+
+.memory-fragment-image {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    object-fit: contain;
+
+    /* 不要把透明 PNG 塞進矩形 */
+    background: transparent;
+
+    filter:
+        drop-shadow(
+            0 6px 7px
+            rgba(55, 42, 30, .16)
+        );
+}
+
+
+/* 圖下面的小標 */
+
+.memory-fragment-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-top: 5px;
+
+    color: #71877a;
+}
+
+.memory-fragment-info > span {
+    font-size: 15px;
+}
+
+.memory-fragment-info > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.memory-fragment-info small {
+    font-size: 7px;
+    letter-spacing: .08em;
+    opacity: .7;
+}
+
+.memory-fragment-info strong {
+    margin-top: 1px;
+
+    font-size: 9px;
+    font-weight: 500;
+
+    letter-spacing: .06em;
+}
+
+
+/* ==========================
+   底部導覽
+========================== */
+
+.bottom-nav {
+    position: absolute;
+
+    left: 50%;
+    bottom: 2.5%;
+
+    transform: translateX(-50%);
+
+    z-index: 50;
+
+    width: min(760px, 88vw);
+    height: 74px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    padding: 7px 12px;
+
+    border:
+        1px solid
+        rgba(255,255,255,.5);
+
+    border-radius: 24px;
+
+    background:
+        rgba(255,250,240,.88);
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 8px 25px
+        rgba(55,40,25,.18);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 3px;
+
+    border-radius: 17px;
+
+    color: #8a7d70;
+
+    text-decoration: none;
+
+    transition:
+        transform .2s ease,
+        background .2s ease;
+}
+
+.nav-item:hover {
+    transform: translateY(-3px);
+
+    background:
+        rgba(255,255,255,.6);
+}
+
+.nav-item.active {
+    color: #574a3e;
+
+    background:
+        rgba(214,195,166,.35);
+}
+
+.nav-icon {
+    font-size: 23px;
+
+    line-height: 1;
+}
+
+.nav-label {
+    font-size: 12px;
+
+    letter-spacing: .08em;
+}
+
+/* ==========================
+   日記分類頁籤
+========================== */
+
+.diary-tabs {
+    position: relative;
+    z-index: 15;
+
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+
+    width: fit-content;
+
+    margin:
+        -4px
+        auto
+        12px;
+
+    padding: 5px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(255, 250, 240, .55);
+
+    backdrop-filter: blur(8px);
+}
+
+.diary-tab {
+    padding: 8px 20px;
+
+    border: none;
+    border-radius: 14px;
+
+    background: transparent;
+
+    color: #8b7e70;
+
+    font-family: inherit;
+    font-size: 11px;
+
+    letter-spacing: .1em;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        transform .2s ease;
+}
+
+.diary-tab:hover {
+    transform: translateY(-1px);
+}
+
+.diary-tab.active {
+    background:
+        rgba(255, 253, 246, .92);
+
+    color: #5d5146;
+
+    box-shadow:
+        0 3px 10px
+        rgba(70, 50, 30, .08);
+}
+
+
+/* ==========================
+   日記內容切換
+========================== */
+
+.journal.journal-content {
+    display: none;
+}
+
+.journal.journal-content.active {
+    display: grid;
+}
+
+
+/* ==========================
+   玩家旅行照片
+========================== */
+
+.player-photo {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: min(330px, 90%);
+    height: 300px;
+
+    margin:
+        10px
+        auto
+        0;
+
+    padding: 11px;
+
+    background: #fffdf7;
+
+    box-shadow:
+        2px 7px 18px
+        rgba(65, 48, 31, .17);
+
+    transform: rotate(-2deg);
+
+    cursor: pointer;
+
+    overflow: hidden;
+}
+
+
+/* 膠帶 */
+
+.player-photo::before {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: -7px;
+
+    z-index: 5;
+
+    width: 90px;
+    height: 28px;
+
+    transform:
+        translateX(-50%)
+        rotate(2deg);
+
+    background:
+        rgba(199, 180, 143, .55);
+}
+
+
+/* 真正的 input 隱藏 */
+
+.player-photo input {
+    display: none;
+}
+
+
+/* 還沒放照片 */
+
+#photo-placeholder {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    width: 100%;
+    height: 100%;
+
+    border:
+        1px dashed
+        rgba(105, 89, 72, .25);
+
+    color: #8d8175;
+
+    background:
+        rgba(235, 226, 208, .28);
+
+    text-align: center;
+}
+
+#photo-placeholder > span {
+    font-family: serif;
+
+    font-size: 36px;
+
+    color: #75887c;
+}
+
+#photo-placeholder strong {
+    font-size: 12px;
+    font-weight: 500;
+
+    letter-spacing: .08em;
+}
+
+#photo-placeholder small {
+    font-size: 9px;
+
+    opacity: .65;
+
+    letter-spacing: .05em;
+}
+
+
+/* 玩家選擇的照片 */
+
+#player-photo-preview {
+    display: none;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.player-photo.has-photo
+#player-photo-preview {
+    display: block;
+}
+
+.player-photo.has-photo
+#photo-placeholder {
+    display: none;
+}
+
+
+/* ==========================
+   玩家旅行心得
+========================== */
+
+.travel-entry {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+}
+
+.travel-entry > small {
+    color: #918373;
+
+    font-size: 9px;
+
+    letter-spacing: .18em;
+}
+
+.travel-entry h2 {
+    margin:
+        10px
+        0
+        18px;
+
+    font-family: serif;
+
+    font-size: 28px;
+    font-weight: 500;
+
+    letter-spacing: .15em;
+}
+
+
+/* 手帳心得輸入 */
+
+#travel-note {
+    position: relative;
+    z-index: 2;
+
+    width: 100%;
+    flex: 1;
+
+    min-height: 180px;
+
+    padding:
+        4px
+        2px;
+
+    border: none;
+    outline: none;
+
+    resize: none;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 33px,
+            rgba(117, 104, 86, .11) 34px
+        );
+
+    color: #5d534a;
+
+    font-family:
+        "DFKai-SB",
+        "KaiTi",
+        serif;
+
+    font-size: 15px;
+
+    line-height: 34px;
+
+    letter-spacing: .06em;
+}
+
+#travel-note::placeholder {
+    color:
+        rgba(93, 83, 74, .35);
+}
+
+
+/* 儲存按鈕 */
+
+.save-travel {
+    align-self: flex-end;
+
+    margin-top: 16px;
+
+    padding:
+        9px
+        17px;
+
+    border:
+        1px solid
+        rgba(97, 127, 112, .28);
+
+    border-radius: 16px;
+
+    background:
+        rgba(97, 127, 112, .10);
+
+    color: #617f70;
+
+    font-family: inherit;
+
+    font-size: 10px;
+
+    letter-spacing: .1em;
+
+    cursor: pointer;
+
+    transition:
+        transform .2s ease,
+        background .2s ease;
+}
+
+.save-travel:hover {
+    transform: translateY(-2px);
+
+    background:
+        rgba(97, 127, 112, .18);
+}
+
+
+/* 儲存後的小提示 */
+
+.travel-saved {
+    position: absolute;
+
+    right: 0;
+    bottom: 45px;
+
+    color: #71877a;
+
+    font-size: 9px;
+
+    letter-spacing: .1em;
+
+    opacity: 0;
+
+    transform: translateY(5px);
+
+    transition:
+        opacity .25s ease,
+        transform .25s ease;
+}
+
+.travel-saved.show {
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+/* ==========================
+   日記目錄 / 詳細頁切換
+========================== */
+
+.diary-index {
+    display: block;
+}
+
+.diary-index.hidden {
+    display: none;
+}
+
+.station-diary {
+    display: none;
+}
+
+.station-diary.show {
+    display: block;
+}
+
+/* ==========================
+   車站日記上方工具列
+========================== */
+
+.station-diary-toolbar {
+    position: relative;
+
+    width: min(1050px, 84vw);
+
+    margin:
+        0 auto
+        12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* 返回目錄 */
+
+.back-to-index {
+    position: absolute;
+    left: 0;
+
+    padding: 9px 16px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, .55);
+
+    border-radius: 999px;
+
+    background:
+        rgba(255, 253, 246, .82);
+
+    color: #75695d;
+
+    font-family: inherit;
+    font-size: 10px;
+
+    letter-spacing: .08em;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 3px 10px
+        rgba(70, 50, 30, .08);
+
+    backdrop-filter: blur(8px);
+
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        box-shadow .2s ease;
+}
+
+.back-to-index:hover {
+    transform: translateX(-4px);
+
+    background:
+        rgba(255, 253, 246, .98);
+
+    box-shadow:
+        0 5px 14px
+        rgba(70, 50, 30, .12);
+}
+
+/* 頁籤現在交給 toolbar 置中 */
+
+.station-diary-toolbar .diary-tabs {
+    margin: 0;
+}
+
+/* ==========================
+   車票目錄
+========================== */
+
+.diary-index {
+    width: min(1050px, 84vw);
+    margin: 3vh auto 0;
+}
+
+.index-title {
+    margin-bottom: 25px;
+}
+
+.index-title small {
+    color: rgba(81, 71, 62, .48);
+    font-size: 9px;
+    letter-spacing: .24em;
+}
+
+.index-title h2 {
+    margin: 7px 0 5px;
+
+    color: #51473e;
+
+    font-family: serif;
+    font-size: 25px;
+    font-weight: 500;
+
+    letter-spacing: .12em;
+}
+
+.index-title p {
+    margin: 0;
+
+    color: rgba(81, 71, 62, .55);
+
+    font-size: 11px;
+    letter-spacing: .06em;
+}
+
+
+/* ==========================
+   車票排列
+========================== */
+
+.station-journals {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 20px;
+
+    width: 100%;
+}
+
+
+/* ==========================
+   車票本體
+========================== */
+
+.station-journal {
+    position: relative;
+
+    min-height: 145px;
+
+    display: grid;
+
+    grid-template-columns:
+        58px
+        1fr
+        auto;
+
+    align-items: center;
+
+    gap: 18px;
+
+    padding:
+        18px
+        20px
+        18px
+        14px;
+
+    border:
+        1px solid
+        rgba(115, 95, 72, .16);
+
+    border-radius: 4px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffdf5,
+            #f2ead9
+        );
+
+    color: #554b42;
+
+    font-family: inherit;
+    text-align: left;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 18px
+        rgba(65, 48, 31, .12);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+
+/* ==========================
+   車票左右半圓缺口
+========================== */
+
+.station-journal::before,
+.station-journal::after {
+    content: "";
+
+    position: absolute;
+
+    top: 50%;
+
+    width: 16px;
+    height: 30px;
+
+    background: #c9bba4;
+
+    transform: translateY(-50%);
+
+    pointer-events: none;
+}
+
+
+/* 左缺口 */
+
+.station-journal::before {
+    left: -1px;
+
+    border-radius:
+        0
+        20px
+        20px
+        0;
+}
+
+
+/* 右缺口 */
+
+.station-journal::after {
+    right: -1px;
+
+    border-radius:
+        20px
+        0
+        0
+        20px;
+}
+
+
+/* ==========================
+   車票編號區
+========================== */
+
+.station-number {
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    height: 100%;
+
+    color: #71877a;
+
+    font-family: serif;
+    font-size: 24px;
+
+    border-right:
+        1px dashed
+        rgba(97, 127, 112, .35);
+}
+
+
+/* ==========================
+   車站內容
+========================== */
+
+.station-journal > div {
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 5px;
+}
+
+.station-journal small {
+    color:
+        rgba(81, 71, 62, .48);
+
+    font-size: 8px;
+
+    letter-spacing: .18em;
+}
+
+.station-journal strong {
+    color: #51473e;
+
+    font-family: serif;
+    font-size: 23px;
+    font-weight: 500;
+
+    letter-spacing: .13em;
+}
+
+.station-journal div > span {
+    color:
+        rgba(81, 71, 62, .55);
+
+    font-size: 9px;
+
+    letter-spacing: .08em;
+}
+
+
+/* ==========================
+   已解鎖
+========================== */
+
+.station-journal.unlocked:hover {
+    transform:
+        translateY(-5px)
+        rotate(-.4deg);
+
+    box-shadow:
+        0 13px 25px
+        rgba(65, 48, 31, .17);
+}
+
+.journal-check {
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(97, 127, 112, .13);
+
+    color: #617f70;
+
+    font-size: 14px;
+}
+
+
+/* ==========================
+   瑞穗 NEW 車票
+========================== */
+
+.station-journal.new {
+    border-color:
+        rgba(97, 127, 112, .30);
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffdf5,
+            #edf0df
+        );
+
+    transform: rotate(.5deg);
+}
+
+.journal-new {
+    position: relative;
+
+    z-index: 3;
+
+    padding: 5px 7px;
+
+    border:
+        1px solid
+        rgba(97, 127, 112, .5);
+
+    border-radius: 3px;
+
+    color: #617f70;
+
+    font-size: 8px;
+
+    letter-spacing: .14em;
+
+    transform: rotate(-7deg);
+}
+
+
+/* ==========================
+   未解鎖車票
+========================== */
+
+.station-journal.locked {
+    opacity: .42;
+
+    cursor: default;
+
+    filter: grayscale(.45);
+
+    box-shadow:
+        0 4px 10px
+        rgba(65, 48, 31, .05);
+}
+
+.station-journal.locked .station-number {
+    color: #91877d;
+
+    border-right-color:
+        rgba(100, 90, 80, .22);
+}
+
+
+/* ==========================
+   每張票稍微歪一點
+========================== */
+
+.station-journal:nth-child(1) {
+    transform: rotate(-.3deg);
+}
+
+.station-journal:nth-child(2) {
+    transform: rotate(.25deg);
+}
+
+.station-journal:nth-child(3) {
+    transform: rotate(-.2deg);
+}
+
+.station-journal:nth-child(4) {
+    transform: rotate(.5deg);
+}
+
+.station-journal:nth-child(5) {
+    transform: rotate(-.25deg);
+}
+
+.station-journal:nth-child(6) {
+    transform: rotate(.2deg);
+}

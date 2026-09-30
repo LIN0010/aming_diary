@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尋軌：阿明的日記</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- ① 遊戲開始畫面 -->
+    <div id="start-screen">
+
+        <div class="background"></div>
+        <div class="dark-overlay"></div>
+
+        <div class="start-content">
+
+
+            <button id="start-btn">
+                開始遊戲
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- ② Loading 畫面 -->
+    <div id="loading-screen">
+
+        <div class="background"></div>
+        <div class="dark-overlay"></div>
+
+        <div class="loading-content">
+
+            <div class="rail-area">
+
+                <div id="train" class="train">
+
+                    <div class="train-body">
+                        <div class="window"></div>
+                        <div class="window"></div>
+                    </div>
+
+                    <div class="train-front"></div>
+
+                    <div class="wheel wheel-left"></div>
+                    <div class="wheel wheel-right"></div>
+
+                </div>
+
+                <div class="rail">
+                    <div class="rail-line"></div>
+                    <div class="sleepers"></div>
+                </div>
+
+            </div>
+
+            <div class="loading-text">
+                LOADING
+                <span id="percentage">0</span>%
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ③ 正式遊戲 -->
+    <div id="game-screen">
+
+        <h1>旅程開始</h1>
+
+    </div>
+
+
+    <script src="js/script.js"></script>
+
+</body>
+</html>

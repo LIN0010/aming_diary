@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>尋軌：阿明的日記</title>
+
+    <link rel="stylesheet" href="css/home.css">
+	<link rel="stylesheet" href="css/common.css">
+</head>
+
+<body>
+
+    <main id="home-screen">
+
+        <!-- 背景 -->
+        <div class="home-background"></div>
+
+        <!-- 左上 Logo >
+        <div class="game-logo">
+            <div class="logo-main">尋軌</div>
+            <div class="logo-sub">阿明的日記</div>
+        </div-->
+
+
+        <!-- ======================
+             右上玩家資訊
+        ======================= -->
+
+        <section class="player-panel">
+
+            <button class="player-profile" id="player-profile">
+
+                <div class="avatar">
+                    <span>馨</span>
+                </div>
+
+                <div class="player-name">
+                    馨
+                </div>
+
+            </button>
+
+
+            <div class="player-stats">
+
+                <button class="stat-item" id="memory-btn">
+                    <span class="stat-icon">◇</span>
+
+                    <span>
+                        <strong id="memory-count">4</strong>
+                        / 30
+                    </span>
+                </button>
+
+
+                <button class="stat-item" id="bond-btn">
+                    <span class="stat-icon">♥</span>
+
+                    <span>
+                        <strong id="bond-count">10</strong>
+                        :Lv.1
+                    </span>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ======================
+             阿明互動區
+        ======================= -->
+		<div class="aming-layer">
+
+			<img
+				src="images/aming.png"
+				class="aming-character"
+				alt="阿明"
+			>
+
+			<button
+				id="aming-click-area"
+				class="aming-click-area"
+				aria-label="和阿明互動">
+			</button>
+
+		</div>
+		
+		<div id="aming-dialogue" class="aming-dialogue">
+		</div>
+
+        <!-- ======================
+             底部導覽列
+        ======================= -->
+
+		<nav class="bottom-nav">
+
+			<a class="nav-item active" href="home.html">
+				<span class="nav-icon">⌂</span>
+				<span class="nav-label">首頁</span>
+			</a>
+
+			<a class="nav-item" href="explore.html">
+				<span class="notification-dot"></span>
+				<span class="nav-icon">⌖</span>
+				<span class="nav-label">探索</span>
+			</a>
+
+			<a class="nav-item" href="diary.html">
+				<span class="nav-icon">▤</span>
+				<span class="nav-label">日記</span>
+			</a>
+
+			<a class="nav-item notification-item" href="event.html">
+				<!-- span class="notification-dot"></span-->
+				<span class="nav-icon">☆</span>
+				<span class="nav-label">活動</span>
+			</a>
+
+			<a class="nav-item notification-item" href="group.html">
+				<span class="nav-icon">♙</span>
+				<span class="nav-label">旅團</span>
+			</a>
+
+		</nav>
+
+    </main>
+
+
+    <script src="js/home.js"></script>
+
+</body>
+
+</html>

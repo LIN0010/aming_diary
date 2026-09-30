@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>探索｜尋軌：阿明的日記</title>
+
+    <link rel="stylesheet" href="css/explore.css">
+	<link rel="stylesheet" href="css/common.css">
+
+</head>
+
+<body>
+
+    <main id="explore-screen">
+
+        <!-- 探索頁主要內容 -->
+        <section class="explore-content">
+
+            <div class="explore-title">
+                <span class="title-small">鐵道探索</span>
+                <h1>旅程地圖</h1>
+                <p>沿著鐵道，尋找散落在各地的回憶。</p>
+            </div>
+
+
+			<!-- 東部鐵道路線 -->
+			<div class="rail-route">
+
+				<svg
+					class="route-map"
+					viewBox="0 0 1000 260"
+					preserveAspectRatio="none"
+				>
+
+					<!-- 鐵道路線 -->
+					<polyline
+						class="route-line"
+						points="
+							40,150
+							190,105
+							340,115
+							485,155
+							625,135
+							790,175
+							950,145
+						"
+					/>
+
+				</svg>
+
+
+				<!-- 花蓮 -->
+				<button class="station station-1 too-far label-down">
+					<span class="dot"></span>
+					<span class="name">花蓮</span>
+
+					<span class="station-tooltip">
+						距離探索區域過遠
+						<small>請抵達車站附近後再探索</small>
+					</span>
+				</button>
+
+
+				<!-- 壽豐 -->
+				<button class="station station-2 too-far label-up">
+					<span class="dot"></span>
+					<span class="name">壽豐</span>
+
+					<span class="station-tooltip">
+						距離探索區域過遠
+						<small>請抵達車站附近後再探索</small>
+					</span>
+				</button>
+
+
+				<!-- 鳳林 -->
+				<button class="station station-3 too-far label-up">
+					<span class="dot"></span>
+					<span class="name">鳳林</span>
+
+					<span class="station-tooltip">
+						距離探索區域過遠
+						<small>請抵達車站附近後再探索</small>
+					</span>
+				</button>
+
+
+				<!-- 光復 -->
+				<button class="station station-4 too-far label-down">
+					<span class="dot"></span>
+					<span class="name">光復</span>
+
+					<span class="station-tooltip">
+						距離探索區域過遠
+						<small>請抵達車站附近後再探索</small>
+					</span>
+				</button>
+
+
+				<!-- 瑞穗 -->
+				<button id="ruisui-station"
+						class="station station-5 current label-up">
+
+					<span class="dot"></span>
+
+					<span class="name">
+						瑞穗
+						<small class="current-label">目前位置</small>
+					</span>
+
+					<span class="station-tooltip current-tooltip">
+						📍 已進入探索範圍
+						<small>點擊確認目前位置</small>
+					</span>
+
+				</button>
+
+
+				<!-- 玉里 -->
+				<button class="station station-6 too-far label-down">
+					<span class="dot"></span>
+					<span class="name">玉里</span>
+
+					<span class="station-tooltip">
+						距離探索區域過遠
+						<small>請抵達車站附近後再探索</small>
+					</span>
+				</button>
+
+
+				<!-- 富里 -->
+				<button class="station station-7 too-far label-up">
+					<span class="dot"></span>
+					<span class="name">富里</span>
+
+					<span class="station-tooltip">
+						距離探索區域過遠
+						<small>請抵達車站附近後再探索</small>
+					</span>
+				</button>
+
+			</div>
+        </section>
+
+		<!-- 定位確認畫面 -->
+		<div id="location-check" class="location-check">
+
+			<div class="location-spinner">
+				<span></span>
+			</div>
+
+			<strong>正在確認目前位置…</strong>
+			<small>搜尋附近的車站探索區域</small>
+
+		</div>
+
+
+		<!-- 到站任務卡 -->
+		<div id="mission-card" class="mission-card">
+
+			<button
+				id="mission-close"
+				class="mission-close"
+				aria-label="關閉"
+			>
+				×
+			</button>
+
+			<div class="mission-arrival">
+				<span>📍</span>
+				已抵達・瑞穗站
+			</div>
+
+			<div class="mission-tag">
+				NEW MISSION
+			</div>
+
+			<h2>瑞穗・第一段記憶</h2>
+
+			<p class="mission-story">
+				阿明似乎對車站裡的某樣東西有印象……
+			</p>
+
+			<div class="mission-goal">
+				<span class="goal-icon">⌕</span>
+
+				<div>
+					<small>探索任務</small>
+					<strong>尋找瑞穗站的乳牛裝置</strong>
+				</div>
+			</div>
+
+			<button
+				id="start-mission"
+				class="start-mission"
+			>
+				開始探索
+			</button>
+
+		</div>
+
+		<!-- 瑞穗站探索模式 -->
+		<section id="station-explore" class="station-explore">
+
+			<!-- 上方資訊 -->
+			<div class="station-header">
+
+				<button
+					id="leave-station"
+					class="leave-station"
+				>
+					← 返回地圖
+				</button>
+
+				<div class="station-title">
+					<small>目前探索區域</small>
+					<strong>瑞穗站</strong>
+				</div>
+
+			</div>
+
+
+			<!-- 任務提示 -->
+			<div class="explore-mission">
+
+				<div class="mission-icon">
+					⌕
+				</div>
+
+				<div>
+					<small>目前任務</small>
+
+					<strong>
+						尋找瑞穗站的乳牛裝置
+					</strong>
+				</div>
+
+				<span class="mission-progress">
+					0 / 1
+				</span>
+
+			</div>
+
+
+			<!-- 場景 -->
+			<div id="station-scene" class="station-scene">
+
+				<div id="scene-world" class="scene-world">
+
+					<!-- 瑞穗站大景 -->
+					<img
+						src="images/ruisui-bg.jpg"
+						class="scene-background"
+						alt="瑞穗站探索場景"
+						draggable="false"
+					>
+
+					<div id="scene-world" class="scene-world">
+
+						<img
+							src="images/ruisui-bg.jpg"
+							class="scene-background"
+							alt="瑞穗站探索場景"
+							draggable="false"
+						>
+
+						<button
+							id="cow-target"
+							class="cow-target"
+							aria-label="乳牛裝置"
+						>
+							<img
+								src="images/cow.png"
+								alt="乳牛裝置"
+								draggable="false"
+							>
+						</button>
+
+					</div>
+
+				</div>
+
+			</div>
+
+			<!-- 拍照模式 -->
+			<div id="camera-mode" class="camera-mode">
+
+				<button id="close-camera" class="close-camera">
+					×
+				</button>
+
+				<div class="camera-photo">
+					<img
+						src="images/ruisui-cow-closeup.png"
+						alt="瑞穗站乳牛裝置"
+						draggable="false"
+					>
+				</div>
+
+				<div class="focus-frame">
+					<span class="corner top-left"></span>
+					<span class="corner top-right"></span>
+					<span class="corner bottom-left"></span>
+					<span class="corner bottom-right"></span>
+				</div>
+
+				<div class="camera-text">
+					將目標置於取景框中
+				</div>
+
+				<button id="shutter-button" class="shutter-button">
+					<span></span>
+				</button>
+				<div id="photo-success" class="photo-success">
+
+					<div class="success-check">✓</div>
+
+					<small>探索目標已記錄</small>
+
+					<h2>瑞穗站乳牛裝置</h2>
+
+					<div class="success-progress">
+						任務完成　1 / 1
+					</div>
+
+					<button id="view-memory" class="view-memory">
+						查看日記
+					</button>
+
+				</div>
+			</div>
+
+			<div id="camera-flash" class="camera-flash"></div>
+			<!-- 下方操作提示 -->
+			<div class="explore-hint">
+				移動畫面尋找任務目標
+			</div>
+
+		</section>
+
+        <!-- 底部固定導覽 -->
+        <nav class="bottom-nav">
+
+            <a class="nav-item" href="home.html">
+                <span class="nav-icon">⌂</span>
+                <span class="nav-label">首頁</span>
+            </a>
+
+            <a class="nav-item active" href="explore.html">
+                <span class="nav-icon">⌖</span>
+                <span class="nav-label">探索</span>
+            </a>
+
+            <a class="nav-item" href="diary.html">
+                <span class="nav-icon">▤</span>
+                <span class="nav-label">日記</span>
+            </a>
+
+            <a class="nav-item notification-item" href="event.html">
+                <span class="nav-icon">☆</span>
+                <span class="nav-label">活動</span>
+            </a>
+
+            <a class="nav-item notification-item" href="group.html">
+                <span class="nav-icon">♙</span>
+                <span class="nav-label">旅團</span>
+            </a>
+
+        </nav>
+
+    </main>
+
+    <script src="js/explore.js"></script>
+
+</body>
+</html>
