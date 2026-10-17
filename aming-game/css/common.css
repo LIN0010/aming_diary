@@ -120,3 +120,21 @@
     box-shadow:
         0 0 0 2px rgba(255, 250, 240, 0.9);
 }
+
+/* 僅在存檔受限時顯示，不遮住遊戲的操作按鈕。 */
+.progress-warning {
+    position: fixed;
+    left: 50%;
+    bottom: 112px;
+    transform: translateX(-50%);
+    z-index: 200;
+    width: min(520px, 88vw);
+    padding: 10px 14px;
+    border: 1px solid #b99370;
+    border-radius: 12px;
+    background: #fff7e8;
+    color: #6c4932;
+    font: 13px/1.6 "Microsoft JhengHei", sans-serif;
+    box-shadow: 0 3px 15px rgba(60, 45, 30, .15);
+    pointer-events: none;
+}

@@ -55,12 +55,10 @@ const station =
    從探索頁直接開啟指定車站
 ========================== */
 
-if (station === "ruisui") {
-
+function openStationDiary() {
     diaryIndex.classList.add("hidden");
-
     stationDiary.classList.add("show");
-
+    markVisibleMemoryRead();
 }
 
 /* 打開回憶碎片 */
@@ -105,6 +103,7 @@ amingTab.addEventListener("click", () => {
 
     amingJournal.classList.add("active");
     playerJournal.classList.remove("active");
+    markVisibleMemoryRead();
 
 });
 
@@ -134,16 +133,21 @@ const playerPhoto =
     document.querySelector(".player-photo");
 
 
+let previewURL;
+
 photoInput.addEventListener("change", () => {
 
     const file = photoInput.files[0];
 
     if (!file) return;
 
-    const imageURL =
-        URL.createObjectURL(file);
-
-    photoPreview.src = imageURL;
+    if (!file.type.startsWith("image/")) {
+        window.alert("請選擇圖片檔案。");
+        return;
+    }
+    if (previewURL) URL.revokeObjectURL(previewURL);
+    previewURL = URL.createObjectURL(file);
+    photoPreview.src = previewURL;
 
     playerPhoto.classList.add("has-photo");
 
@@ -165,41 +169,25 @@ document
     .appendChild(savedMessage);
 
 
+let noteDirty = false;
+let savedTimer;
+travelNote.addEventListener("input", () => { noteDirty = true; });
+savedMessage.setAttribute("role", "status");
+
 saveTravel.addEventListener("click", () => {
-
-    /*
-       Prototype：
-       先把文字存在瀏覽器裡
-    */
-
-    localStorage.setItem(
-        "ruisui-travel-note",
-        travelNote.value
-    );
-
+    clearTimeout(savedTimer);
+    const saved = GameProgress.saveNote("ruisui", travelNote.value);
+    noteDirty = !saved;
+    savedMessage.textContent = saved ? "✓ 已記錄這段旅程" : "尚未儲存，請查看下方提示";
     savedMessage.classList.add("show");
-
-    setTimeout(() => {
-
-        savedMessage.classList.remove("show");
-
-    }, 2000);
-
+    if (saved) {
+        savedTimer = setTimeout(() => savedMessage.classList.remove("show"), 2000);
+    }
 });
 
-
-/* 重新進入頁面時讀取 */
-
-const savedNote =
-    localStorage.getItem(
-        "ruisui-travel-note"
-    );
-
-if (savedNote) {
-
-    travelNote.value = savedNote;
-
-}
+window.addEventListener("pagehide", event => {
+    if (!event.persisted && previewURL) URL.revokeObjectURL(previewURL);
+});
 
 /* ==========================
    日記目錄
@@ -209,9 +197,7 @@ if (savedNote) {
 
 ruisuiJournal.addEventListener("click", () => {
 
-    diaryIndex.classList.add("hidden");
-
-    stationDiary.classList.add("show");
+    openStationDiary();
 
 });
 
@@ -231,3 +217,37 @@ backToIndex.addEventListener("click", () => {
     );
 
 });
+
+function markVisibleMemoryRead() {
+    if (stationDiary.classList.contains("show") && amingJournal.classList.contains("active")) {
+        GameProgress.readMemory("ruisui-01");
+    }
+}
+
+GameProgress.enterScene("diary");
+GameProgress.subscribe(state => {
+    const found = state.collectedMemories.includes("ruisui-01");
+    const fresh = found && !state.readMemories.includes("ruisui-01");
+    document.querySelectorAll("[data-memory-total]").forEach(total => {
+        total.textContent = `${state.collectedMemories.length} / 30`;
+    });
+    document.querySelectorAll("[data-memory-id]").forEach(item => {
+        const id = item.dataset.memoryId;
+        const collected = state.collectedMemories.includes(id);
+        const unread = collected && !state.readMemories.includes(id);
+        item.classList.toggle("found", collected);
+        item.classList.toggle("locked", !collected);
+        item.classList.toggle("new", unread);
+        item.querySelector(".fragment-status").textContent = collected ? (unread ? "NEW" : "✓") : "?";
+    });
+    ruisuiJournal.classList.toggle("new", fresh);
+    ruisuiJournal.querySelector("[data-ruisui-summary]").textContent = found ? (fresh ? "1 段新回憶" : "1 段回憶") : "尚未尋回";
+    ruisuiJournal.querySelector(".journal-new").textContent = fresh ? "NEW" : (found ? "✓" : "◇");
+    amingJournal.classList.toggle("memory-locked", !found);
+    document.querySelector(".memory-found").hidden = !fresh;
+    if (!noteDirty) travelNote.value = state.notes.ruisui ?? "";
+    markVisibleMemoryRead();
+});
+
+if (station === "ruisui") openStationDiary();
+if (params.get("memories") === "1") memoryCount.click();

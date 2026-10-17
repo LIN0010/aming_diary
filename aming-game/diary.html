@@ -39,7 +39,7 @@
 
 			<div>
 				<small>回憶碎片</small>
-				<strong>4 / 30</strong>
+				<strong data-memory-total>0 / 30</strong>
 			</div>
 		</button>
 
@@ -76,7 +76,7 @@
 				<span class="summary-diamond">◇</span>
 
 				<div>
-					<strong>4 / 30</strong>
+					<strong data-memory-total>0 / 30</strong>
 					<small>已找回的回憶</small>
 				</div>
 
@@ -85,7 +85,7 @@
 
 			<div class="fragment-list">
 
-				<div class="fragment-item found">
+				<div class="fragment-item locked" data-memory-id="banqiao-01">
 					<span class="fragment-symbol">◇</span>
 
 					<div>
@@ -93,11 +93,11 @@
 						<strong>回憶・01</strong>
 					</div>
 
-					<span class="fragment-status">✓</span>
+					<span class="fragment-status">?</span>
 				</div>
 
 
-				<div class="fragment-item found">
+				<div class="fragment-item locked" data-memory-id="fulong-01">
 					<span class="fragment-symbol">◇</span>
 
 					<div>
@@ -105,11 +105,11 @@
 						<strong>回憶・01</strong>
 					</div>
 
-					<span class="fragment-status">✓</span>
+					<span class="fragment-status">?</span>
 				</div>
 
 
-				<div class="fragment-item found">
+				<div class="fragment-item locked" data-memory-id="tainan-01">
 					<span class="fragment-symbol">◇</span>
 
 					<div>
@@ -117,11 +117,11 @@
 						<strong>回憶・01</strong>
 					</div>
 
-					<span class="fragment-status">✓</span>
+					<span class="fragment-status">?</span>
 				</div>
 
 
-				<div class="fragment-item found new">
+				<div class="fragment-item locked" data-memory-id="ruisui-01">
 					<span class="fragment-symbol">◇</span>
 
 					<div>
@@ -129,7 +129,7 @@
 						<strong>回憶・01</strong>
 					</div>
 
-					<span class="fragment-status">NEW</span>
+					<span class="fragment-status">?</span>
 				</div>
 
 
@@ -173,58 +173,58 @@
 
 			<div class="station-journals">
 
-				<button class="station-journal unlocked">
+				<button class="station-journal locked" disabled>
 					<span class="station-number">01</span>
 
 					<div>
 						<small>TAIWAN</small>
 						<strong>板橋</strong>
-						<span>1 段回憶</span>
+						<span>尚未開放</span>
 					</div>
 
-					<span class="journal-check">✓</span>
+					<span class="journal-check">◇</span>
 				</button>
 
 
-				<button class="station-journal unlocked">
+				<button class="station-journal locked" disabled>
 					<span class="station-number">02</span>
 
 					<div>
 						<small>NEW TAIPEI</small>
 						<strong>福隆</strong>
-						<span>1 段回憶</span>
+						<span>尚未開放</span>
 					</div>
 
-					<span class="journal-check">✓</span>
+					<span class="journal-check">◇</span>
 				</button>
 
 
-				<button class="station-journal unlocked">
+				<button class="station-journal locked" disabled>
 					<span class="station-number">03</span>
 
 					<div>
 						<small>TAINAN</small>
 						<strong>台南</strong>
-						<span>1 段回憶</span>
+						<span>尚未開放</span>
 					</div>
 
-					<span class="journal-check">✓</span>
+					<span class="journal-check">◇</span>
 				</button>
 
 
 				<button
 					id="ruisui-journal"
-					class="station-journal unlocked new"
+					class="station-journal unlocked"
 				>
 					<span class="station-number">04</span>
 
 					<div>
 						<small>HUALIEN</small>
 						<strong>瑞穗</strong>
-						<span>1 段新回憶</span>
+						<span data-ruisui-summary>尚未尋回</span>
 					</div>
 
-					<span class="journal-new">NEW</span>
+					<span class="journal-new">◇</span>
 				</button>
 
 
@@ -292,8 +292,15 @@
 
 				<section
 					id="aming-journal"
-					class="journal journal-content active"
+					class="journal journal-content active memory-locked"
 				>
+
+                        <div class="locked-memory-message">
+                            <span>◇</span>
+                            <p>這段記憶尚未尋回。</p>
+                            <a href="explore.html">前往瑞穗站探索</a>
+                            <small>也可以切換到「我的旅程」，先寫下旅行心得。</small>
+                        </div>
 
 					<!-- 左頁 -->
 					<article class="journal-page left-page">
@@ -485,6 +492,7 @@
 
     </main>
 
+    <script src="js/progress.js"></script>
     <script src="js/diary.js"></script>
 
 </body>

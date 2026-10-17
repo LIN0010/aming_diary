@@ -1760,3 +1760,35 @@ body {
 .station-journal:nth-child(6) {
     transform: rotate(.2deg);
 }
+
+/* 故事保留在原處；尋回碎片後才顯示。玩家心得仍可隨時開啟。 */
+.locked-memory-message { display: none; }
+.journal-content.memory-locked > .journal-page { display: none; }
+.journal-content.memory-locked > .locked-memory-message {
+    display: flex;
+    grid-column: 1 / -1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    border-radius: 15px;
+    background: #f9f2e3;
+    color: #75695d;
+    text-align: center;
+}
+.locked-memory-message > span { font-size: 40px; color: #71877a; }
+.locked-memory-message p { margin: 0; }
+.locked-memory-message a { color: #617f70; }
+.locked-memory-message small { font-size: 11px; line-height: 1.7; }
+
+
+/* 窄螢幕保留返回按鈕與頁籤各自的操作空間。 */
+@media (max-width: 700px) {
+    .station-diary-toolbar {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .back-to-index { position: static; }
+}

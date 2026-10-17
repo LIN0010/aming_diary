@@ -108,9 +108,9 @@ missionClose.addEventListener("click", () => {
 
 /* 開始探索 */
 
-/* 開始探索 */
-
 startMission.addEventListener("click", () => {
+
+    GameProgress.visitRuisui();
 
     // 收起任務卡
     missionCard.classList.remove("show");
@@ -125,81 +125,57 @@ startMission.addEventListener("click", () => {
 
 leaveStation.addEventListener("click", () => {
 
+    resetCamera();
+    endDrag();
+    GameProgress.enterScene("explore");
     stationExplore.classList.remove("show");
 
     bottomNav.classList.remove("explore-hidden");
 
 });
 
-/*let isDragging = false;
+/* 拖曳只處理場景背景，保留乳牛按鈕的點擊。 */
+let activePointerId = null;
 
-let startX = 0;
-let startWorldX = 0;
+function clampWorld() {
+    const overflow = Math.max(0, sceneWorld.scrollWidth - stationScene.clientWidth);
+    worldX = Math.max(-overflow, Math.min(0, worldX));
+    sceneWorld.style.transform = `translate3d(${worldX}px, 0, 0)`;
+}
 
-let worldX = 0;*/
+function endDrag() {
+    if (activePointerId !== null && stationScene.hasPointerCapture(activePointerId)) {
+        stationScene.releasePointerCapture(activePointerId);
+    }
+    activePointerId = null;
+    isDragging = false;
+    stationScene.classList.remove("dragging");
+}
 
-
-/* 開始拖 */
-
-stationScene.addEventListener("pointerdown", (event) => {
-
-    console.log("抓到了！");
-
+stationScene.addEventListener("pointerdown", event => {
+    if (!event.isPrimary || event.button !== 0 || event.target.closest("button")) return;
     isDragging = true;
-
+    activePointerId = event.pointerId;
     startX = event.clientX;
     startWorldX = worldX;
-
+    stationScene.setPointerCapture(event.pointerId);
     stationScene.classList.add("dragging");
-
     event.preventDefault();
 });
 
-
-/* 拖動 */
-
-window.addEventListener("pointermove", (event) => {
-
-    if (!isDragging) return;
-
-    const movedX = event.clientX - startX;
-
-    const overflow =
-        sceneWorld.scrollWidth -
-        stationScene.clientWidth;
-
-    let nextX = startWorldX + movedX;
-
-    // 左邊不能超過圖片盡頭
-    if (nextX < -overflow) {
-        nextX = -overflow;
-    }
-
-    // 右邊不能超過起點
-    if (nextX > 0) {
-        nextX = 0;
-    }
-
-    worldX = nextX;
-
-    sceneWorld.style.transform =
-        `translate3d(${worldX}px, 0, 0)`;
-
-    /*console.log("worldX:", worldX);*/
+window.addEventListener("pointermove", event => {
+    if (!isDragging || event.pointerId !== activePointerId) return;
+    worldX = startWorldX + event.clientX - startX;
+    clampWorld();
 });
 
-
-/* 放開 */
-
-window.addEventListener("pointerup", () => {
-
-    if (!isDragging) return;
-
-    isDragging = false;
-
-    stationScene.classList.remove("dragging");
-
-});
+for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    window.addEventListener(type, event => {
+        if (event.pointerId === activePointerId) endDrag();
+    });
+}
+window.addEventListener("blur", endDrag);
+window.addEventListener("resize", () => { endDrag(); clampWorld(); });
 
 /* ==========================
    乳牛拍照
@@ -211,6 +187,7 @@ cowTarget.addEventListener("click", (event) => {
 
     event.stopPropagation();
 
+    resetCamera();
     cameraMode.classList.add("show");
 
 });
@@ -220,7 +197,7 @@ cowTarget.addEventListener("click", (event) => {
 
 closeCamera.addEventListener("click", () => {
 
-    cameraMode.classList.remove("show");
+    resetCamera();
 
 });
 
@@ -229,7 +206,7 @@ closeCamera.addEventListener("click", () => {
 
 shutterButton.addEventListener("click", () => {
 
-    console.log("📸 按下快門");
+    if (shutterButton.disabled) return;
 
     // 防止連續狂按
     shutterButton.disabled = true;
@@ -242,16 +219,14 @@ shutterButton.addEventListener("click", () => {
     // 快門按壓
     shutterButton.classList.add("shot");
 
-    setTimeout(() => {
+    pressTimer = setTimeout(() => {
         shutterButton.classList.remove("shot");
     }, 180);
 
     // 拍攝成功
-    setTimeout(() => {
+    shotTimer = setTimeout(() => {
 
-        console.log("🐄 拍攝成功卡出現");
-
-        missionProgress.textContent = "1 / 1";
+        GameProgress.completeRuisui();
         photoSuccess.classList.add("show");
 
     }, 600);
@@ -260,4 +235,22 @@ shutterButton.addEventListener("click", () => {
 
 viewMemory.addEventListener("click", () => {
     window.location.href = "diary.html?station=ruisui";
+});
+
+let shotTimer;
+let pressTimer;
+
+function resetCamera() {
+    clearTimeout(shotTimer);
+    clearTimeout(pressTimer);
+    cameraMode.classList.remove("show");
+    photoSuccess.classList.remove("show");
+    cameraFlash.classList.remove("flash");
+    shutterButton.classList.remove("shot");
+    shutterButton.disabled = false;
+}
+
+GameProgress.enterScene("explore");
+GameProgress.subscribe(state => {
+    missionProgress.textContent = state.completedMissions.includes("ruisui-cow") ? "1 / 1" : "0 / 1";
 });
