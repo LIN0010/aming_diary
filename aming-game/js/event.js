@@ -138,10 +138,10 @@ GameScenes.register("event", ctx => {
     function render() {
         const state = store.snapshot();
         content.innerHTML = view === "photo" ? photo(state) : view === "race" ? race(state) : home(state);
-        if (startPrompt && view === "race" && raceStage === "intro" && !state.team && store.phase("race") === "active") {
+        if (startPrompt && (view === "race" || (view === "home" && category === "race")) && raceStage === "intro" && !state.team && store.phase("race") === "active") {
             // SPA 完成掛載後才開啟，避免換場搬移 DOM 使對話框掉出浮層。
             ctx.delay(() => {
-                if (!disposed && startPrompt && view === "race" && raceStage === "intro" && !store.snapshot().team && !startModal.open) startModal.showModal();
+                if (!disposed && startPrompt && (view === "race" || (view === "home" && category === "race")) && raceStage === "intro" && !store.snapshot().team && !startModal.open) startModal.showModal();
             }, 0);
         } else if (startModal.open) startModal.close();
         const warning = ctx.id("ev-storage-warning");
@@ -184,12 +184,15 @@ GameScenes.register("event", ctx => {
         const target = event.target.closest("button"); if (!target || target.disabled) return;
         if (target.dataset.category) { category = target.dataset.category; route(); render(); ctx.id("ev-tab-" + category).focus(); }
         if (target.dataset.action === "open-photo") switchView("photo");
-        if (target.dataset.action === "open-race") switchView("race");
+        if (target.dataset.action === "open-race") {
+            if (!store.snapshot().team && store.phase("race") === "active") { startPrompt = true; raceStage = "intro"; render(); }
+            else switchView("race");
+        }
         if (target.dataset.action === "back") switchView("home");
         if (target.dataset.action === "start-quiz" && !store.snapshot().team && store.phase("race") === "active") { startPrompt = true; render(); }
-        if (target.dataset.action === "close-start") { startPrompt = false; render(); ctx.query('[data-action="start-quiz"]')?.focus(); }
+        if (target.dataset.action === "close-start") { startPrompt = false; render(); ctx.query('[data-action="start-quiz"], [data-action="open-race"]')?.focus(); }
         if (target.dataset.action === "begin-quiz" && startModal.open && !store.snapshot().team && store.phase("race") === "active") {
-            startPrompt = false; quizRevision++; answers = []; questionIndex = 0; answering = false; raceStage = "quiz"; raceScreen();
+            startPrompt = false; quizRevision++; answers = []; questionIndex = 0; answering = false; raceStage = "quiz"; view = "race"; category = "race"; route(); raceScreen();
         }
         if (target.dataset.action === "race-intro") { quizRevision++; answering = false; raceStage = "intro"; raceScreen(); }
         if (target.dataset.action === "enter-race" && store.snapshot().team) { raceStage = "hub"; raceScreen(); }
@@ -232,7 +235,7 @@ GameScenes.register("event", ctx => {
         }
 
     });
-    ctx.on(startModal, "cancel", event => { event.preventDefault(); startPrompt = false; render(); ctx.query('[data-action="start-quiz"]')?.focus(); });
+    ctx.on(startModal, "cancel", event => { event.preventDefault(); startPrompt = false; render(); ctx.query('[data-action="start-quiz"], [data-action="open-race"]')?.focus(); });
     ctx.on(ctx.id("ev-lightbox-close"), "click", () => modal.close());
     ctx.on(modal, "click", event => { if (event.target === modal) { const rect = modal.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) modal.close(); } });
     ctx.on(ctx.id("ev-reset"), "click", () => {
