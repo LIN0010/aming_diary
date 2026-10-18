@@ -36,7 +36,7 @@
             return next;
         } catch (_) {
             protectedSave = true;
-            issue = "活動存檔無法讀取，原資料已保留。請恢復瀏覽器儲存權限，或使用活動 Demo 重置。";
+            issue = "活動存檔無法讀取，原資料已保留。請恢復瀏覽器儲存權限，或重置活動紀錄。";
             return null;
         }
     }
@@ -96,7 +96,7 @@
             return transact(s => {
                 requireActive("photo");
                 if (!s.photoJoined) throw new Error("請先參加攝影祭。");
-                if (s.photos.length >= C.maxPhotos) throw new Error("本機 Demo 相簿已滿，請先重置活動 Demo。");
+                if (s.photos.length >= C.maxPhotos) throw new Error("本機相簿已滿，請先重置活動紀錄。");
                 if (typeof title !== "string" || !title.trim()) throw new Error("請為照片寫一個標題。");
                 if (typeof image !== "string" || !/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(image) || image.length > C.maxImageBytes) throw new Error("照片格式或大小不符合本機相簿限制。");
                 s.photos.push({ id: "local-" + Date.now() + "-" + s.photos.length, title: title.trim().slice(0, 60), description: String(description).trim().slice(0, 180), image });

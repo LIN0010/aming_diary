@@ -36,7 +36,14 @@ try:
   main=page.evaluate("localStorage.getItem('aming-diary-progress')")
   nav(page,'event');ready(page)
   assert page.evaluate('window.token')=='same-document'
-  expect(page.locator('.ev-demo')).to_contain_text('未連線')
+  assert 'demo' not in page.locator('#event-screen').inner_text().lower()
+  assert page.locator('.ev-scroll').evaluate('(e)=>Math.abs(e.getBoundingClientRect().right-innerWidth)<1')
+  assert page.locator('.ev-scroll').evaluate('(e)=>getComputedStyle(e).scrollbarWidth')=='thin'
+  before_scroll=page.locator('.ev-scroll').evaluate('(e)=>e.scrollTop')
+  page.locator('.ev-scroll').evaluate('(e)=>e.scrollTop=200')
+  assert page.locator('.ev-scroll').evaluate('(e)=>e.scrollTop')>before_scroll
+  page.locator('.ev-scroll').evaluate('(e)=>e.scrollTop=0')
+  expect(page.locator('.ev-data-note')).to_contain_text('尚未連線')
   page.locator('#ev-tab-race').click()
   expect(page.locator('#ev-cards')).to_contain_text('鐵道旅行陣營戰')
   page.locator('#ev-tab-race').press('ArrowLeft')
@@ -62,6 +69,7 @@ try:
   page.keyboard.press('Escape')
   expect(page.locator('#ev-lightbox')).not_to_be_visible()
   page.reload();ready(page)
+  assert 'demo' not in page.locator('#event-screen').inner_text().lower()
   expect(page.locator('#ev-photo-count')).to_contain_text('10')
   expect(page.locator('[data-claim="collection"]')).to_have_text('已領取')
   assert page.evaluate("localStorage.getItem('aming-diary-progress')")==main
@@ -74,6 +82,7 @@ try:
   for i in range(3): page.locator(f'input[name="ev-answer-{i}"][value="0"]').check()
   page.locator('#ev-quiz button[type="submit"]').click()
   expect(page.locator('#ev-team-result')).to_contain_text('逐風列車')
+  assert 'demo' not in page.locator('#event-screen').inner_text().lower()
   expect(page.locator('#ev-quiz')).to_have_count(0)
   expect(page.locator('#ev-team-result')).to_have_class('ev-team-result ev-reveal')
   expect(page.locator('#ev-leader')).to_contain_text('拾光月台')
