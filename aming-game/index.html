@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>尋軌：阿明的日記</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/common.css">
 </head>
 
 <body>
@@ -57,10 +58,12 @@
 
             </div>
 
-            <div class="loading-text">
+            <div class="loading-text" id="loading-progress" role="progressbar" aria-label="遊戲內容載入進度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 LOADING
                 <span id="percentage">0</span>%
             </div>
+            <p id="loading-status" role="status">正在準備旅程…</p>
+            <button id="retry-loading" type="button" hidden>重新載入</button>
 
         </div>
 
@@ -75,6 +78,8 @@
     </div>
 
 
+    <script src="js/progress.js"></script>
+    <script src="js/loader.js"></script>
     <script src="js/script.js"></script>
 
 </body>

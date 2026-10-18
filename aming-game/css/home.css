@@ -381,3 +381,28 @@ button {
     }
 
 }
+
+.journey-next {
+    display: block;
+    margin-top: 12px;
+    color: #617f70;
+    font-size: 11px;
+    text-decoration: none;
+}
+.save-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+.save-controls button {
+    padding: 4px 8px;
+    border: 1px solid rgba(97,127,112,.25);
+    border-radius: 8px;
+    color: #617f70;
+    background: rgba(255,255,255,.55);
+    font-size: 10px;
+    cursor: pointer;
+}
+.save-controls small { color: #8a7d70; font-size: 9px; }

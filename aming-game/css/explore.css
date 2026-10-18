@@ -1874,3 +1874,14 @@ body {
 
     cursor: pointer;
 }
+
+.mission-diary {
+    display: block;
+    margin-top: 12px;
+    text-align: center;
+    color: #617f70;
+    font-size: 13px;
+}
+.mission-diary[hidden], .scene-diary[hidden] { display: none; }
+.scene-diary { pointer-events: auto; color: #617f70; font-size: 11px; }
+.explore-mission { max-width: 88vw; flex-wrap: wrap; }

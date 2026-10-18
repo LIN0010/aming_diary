@@ -9,7 +9,7 @@ const KEY = 'aming-diary-progress';
 
 function app({ data = new Map(), failRead = false, failWrite = false } = {}) {
     const events = {};
-    const warning = { setAttribute() {}, hidden: true };
+    const warning = { setAttribute() {}, addEventListener() {}, appendChild() {}, hidden: true };
     const storage = {
         getItem(key) {
             if (failRead) throw new Error('storage blocked');
@@ -23,7 +23,7 @@ function app({ data = new Map(), failRead = false, failWrite = false } = {}) {
     const context = vm.createContext({
         localStorage: storage,
         document: {
-            createElement: () => warning,
+            createElement: tag => tag === 'div' ? warning : { addEventListener() {} },
             getElementById: () => warning,
             querySelectorAll: () => [],
             body: { appendChild() {} }
@@ -132,4 +132,78 @@ test('對外提供的資料是複本，無法直接改壞共用進度', () => {
     unsubscribe();
     current.api.visitRuisui();
     assert.equal(calls, 1);
+});
+
+test('瑞穗階段從未開始、探索中、取得回憶到完成，重新讀檔保持完成', () => {
+    const current = app();
+    assert.equal(current.api.ruisuiStage(), 'unvisited');
+    current.api.visitRuisui();
+    assert.equal(current.api.ruisuiStage(), 'exploring');
+    current.api.completeRuisui();
+    assert.equal(current.api.ruisuiStage(), 'memory-found');
+    current.api.readMemory('ruisui-01');
+    assert.equal(app({ data: current.data }).api.ruisuiStage(), 'complete');
+});
+
+test('開始入口可回到首頁、地圖、探索場景及日記原頁籤', () => {
+    const current = app();
+    assert.equal(current.api.saveStatus().canResume, false);
+    for (const [scene, view, url] of [
+        ['home', undefined, 'home.html'],
+        ['explore', undefined, 'explore.html'],
+        ['ruisui', undefined, 'explore.html?station=ruisui'],
+        ['diary', 'index', 'diary.html'],
+        ['diary', 'ruisui-memory', 'diary.html?station=ruisui&tab=aming'],
+        ['diary', 'ruisui-player', 'diary.html?station=ruisui&tab=player']
+    ]) {
+        current.api.enterScene(scene, view);
+        const restored = app({ data: current.data });
+        assert.equal(restored.api.resumeUrl(), url);
+        assert.equal(restored.api.saveStatus().canResume, true);
+    }
+});
+
+test('舊版 version 1 存檔缺少日記頁籤仍相容，不改動既有心得與碎片', () => {
+    const old = app();
+    old.api.completeRuisui();
+    old.api.saveNote('ruisui', '舊版心得');
+    old.api.enterScene('diary');
+    const saved = JSON.parse(old.data.get(KEY));
+    delete saved.diaryView;
+    old.data.set(KEY, JSON.stringify(saved));
+    const restored = app({ data: old.data });
+    assert.equal(restored.api.resumeUrl(), 'diary.html');
+    assert.equal(restored.state().notes.ruisui, '舊版心得');
+    assert.deepEqual(restored.state().collectedMemories, ['ruisui-01']);
+});
+
+test('入口讀到另一分頁最新儲存的位置，不使用開啟入口時的舊位置', () => {
+    const data = new Map();
+    const entrance = app({ data });
+    const game = app({ data });
+    game.api.enterScene('diary', 'ruisui-player');
+    assert.equal(entrance.api.resumeUrl(), 'diary.html?station=ruisui&tab=player');
+});
+
+test('儲存狀態與手動重試會如實反映寫入結果', () => {
+    const current = app({ failWrite: true });
+    const savedStates = [];
+    current.api.subscribe((_, status) => savedStates.push(status.saved));
+    current.api.completeRuisui();
+    assert.equal(current.api.saveStatus().saved, false);
+    current.allowWrites();
+    assert.equal(current.api.save(), true);
+    assert.equal(current.api.saveStatus().saved, true);
+    assert.deepEqual(savedStates, [false, false, true]);
+    assert.equal(app({ data: current.data }).api.ruisuiStage(), 'memory-found');
+});
+
+test('損壞或未知版本的存檔不能藉手動儲存被覆寫，也不提供繼續入口', () => {
+    for (const raw of ['{bad', '{"version":99}']) {
+        const current = app({ data: new Map([[KEY, raw]]) });
+        assert.equal(current.api.save(), false);
+        assert.equal(current.data.get(KEY), raw);
+        assert.equal(current.api.saveStatus().canResume, false);
+        assert.equal(current.api.resumeUrl(), 'home.html');
+    }
 });

@@ -490,3 +490,23 @@ body {
 #game-screen {
     display: none;
 }
+
+#loading-status {
+    margin: 12px 0 0;
+    color: rgba(255,255,255,.9);
+    font-size: 12px;
+    line-height: 1.8;
+}
+#retry-loading {
+    margin-top: 12px;
+    padding: 8px 18px;
+    border: 1px solid rgba(255,255,255,.7);
+    border-radius: 18px;
+    background: rgba(255,255,255,.9);
+    color: #40382f;
+    font: inherit;
+    cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+    #loading-screen, .train { transition: none; }
+}

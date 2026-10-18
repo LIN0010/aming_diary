@@ -108,26 +108,22 @@ missionClose.addEventListener("click", () => {
 
 /* 開始探索 */
 
-startMission.addEventListener("click", () => {
-
+function enterStation() {
     GameProgress.visitRuisui();
-
-    // 收起任務卡
     missionCard.classList.remove("show");
-
-    // 進入瑞穗站探索模式
     stationExplore.classList.add("show");
-
-    // 隱藏底部導覽
     bottomNav.classList.add("explore-hidden");
+    history.replaceState({}, "", "explore.html?station=ruisui");
+}
 
-});
+startMission.addEventListener("click", enterStation);
 
 leaveStation.addEventListener("click", () => {
 
     resetCamera();
     endDrag();
     GameProgress.enterScene("explore");
+    history.replaceState({}, "", "explore.html");
     stationExplore.classList.remove("show");
 
     bottomNav.classList.remove("explore-hidden");
@@ -226,16 +222,25 @@ shutterButton.addEventListener("click", () => {
     // 拍攝成功
     shotTimer = setTimeout(() => {
 
-        GameProgress.completeRuisui();
+        const alreadyFound = GameProgress.hasMemory("ruisui-01");
+        const saved = GameProgress.completeRuisui();
+        document.getElementById("photo-result").textContent = saved
+            ? (alreadyFound ? "這段回憶已收藏" : "已找回一段新記憶")
+            : "已找到回憶，尚未儲存";
         photoSuccess.classList.add("show");
 
     }, 600);
 
 });
 
-viewMemory.addEventListener("click", () => {
+function openRuisuiMemory(event) {
+    event.preventDefault();
+    if (!GameProgress.saveStatus().saved && !GameProgress.save()) return;
     window.location.href = "diary.html?station=ruisui";
-});
+}
+for (const link of [viewMemory, document.getElementById("scene-diary"), document.getElementById("mission-diary")]) {
+    link.addEventListener("click", openRuisuiMemory);
+}
 
 let shotTimer;
 let pressTimer;
@@ -250,7 +255,34 @@ function resetCamera() {
     shutterButton.disabled = false;
 }
 
-GameProgress.enterScene("explore");
-GameProgress.subscribe(state => {
-    missionProgress.textContent = state.completedMissions.includes("ruisui-cow") ? "1 / 1" : "0 / 1";
+GameProgress.subscribe((state, status) => {
+    const stage = GameProgress.ruisuiStage();
+    const found = stage === "memory-found" || stage === "complete";
+    const complete = stage === "complete";
+    missionProgress.textContent = found ? "1 / 1" : "0 / 1";
+    document.querySelector(".mission-tag").textContent = {
+        unvisited: "NEW MISSION", exploring: "IN PROGRESS",
+        "memory-found": "MEMORY FOUND", complete: "JOURNEY COMPLETE"
+    }[stage];
+    document.querySelector(".mission-story").textContent = found
+        ? (complete ? "阿明的記憶已記錄在日記中，隨時可以回來重溫。" : "你已找回瑞穗的第一段記憶，翻開日記看看吧。")
+        : "阿明似乎對車站裡的某樣東西有印象……";
+    document.querySelector(".mission-goal strong").textContent = found
+        ? (complete ? "這段旅程已完成" : "閱讀瑞穗・第一段記憶") : "尋找瑞穗站的乳牛裝置";
+    startMission.textContent = found ? "再次探索" : (stage === "exploring" ? "繼續探索" : "開始探索");
+    const diaryLink = document.getElementById("mission-diary");
+    diaryLink.hidden = !found;
+    diaryLink.textContent = complete ? "重溫日記" : "閱讀新回憶";
+    document.getElementById("scene-mission-label").textContent = found
+        ? (complete ? "瑞穗・第一段記憶已完成" : "已尋回瑞穗・01") : "尋找瑞穗站的乳牛裝置";
+    document.getElementById("scene-diary").hidden = !found;
+    viewMemory.textContent = status.saved ? (complete ? "重溫日記" : "查看新回憶") : "儲存並查看日記";
+    if (photoSuccess.classList.contains("show")) {
+        document.getElementById("photo-result").textContent = status.saved ? "這段回憶已儲存" : "已找到回憶，尚未儲存";
+    }
 });
+if (new URLSearchParams(window.location.search).get("station") === "ruisui") {
+    enterStation();
+} else {
+    GameProgress.enterScene("explore");
+}

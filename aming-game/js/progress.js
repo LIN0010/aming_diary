@@ -10,6 +10,8 @@
     const pendingNotes = {};
     let issue = "";
     let protectedSave = false;
+    let hasSavedProgress = false;
+    let pendingChanges = false;
 
     function emptyState() {
         return {
@@ -19,7 +21,8 @@
             collectedMemories: [],
             readMemories: [],
             notes: {},
-            lastScene: "home"
+            lastScene: "home",
+            diaryView: "index"
         };
     }
 
@@ -47,6 +50,8 @@
         }
         if (Object.hasOwn(value.notes, "ruisui")) result.notes.ruisui = value.notes.ruisui;
         if (["home", "explore", "ruisui", "diary"].includes(value.lastScene)) result.lastScene = value.lastScene;
+        // 新增欄位採用預設值，既有 version 1 存檔仍可直接讀取。
+        if (["index", "ruisui-memory", "ruisui-player"].includes(value.diaryView)) result.diaryView = value.diaryView;
         return result;
     }
 
@@ -61,6 +66,7 @@
         }
         if (raw === null) {
             protectedSave = false;
+            hasSavedProgress = false;
             return emptyState();
         }
         try {
@@ -72,6 +78,7 @@
             }
             const result = normalize(parsed);
             protectedSave = false;
+            hasSavedProgress = true;
             return result;
         } catch (_) {
             issue = "既有存檔無法讀取，原始資料已保留；本次進度暫時無法儲存。";
@@ -86,6 +93,7 @@
         if (!Object.hasOwn(state.notes, "ruisui") && legacyNote !== null) {
             state.notes.ruisui = legacyNote;
             pendingNotes.ruisui = legacyNote;
+            pendingChanges = true;
         }
     } catch (_) {
         issue = "無法讀取瀏覽器存檔；離開或重新整理頁面後，本次進度可能遺失。";
@@ -105,18 +113,56 @@
         if (warning) {
             warning.textContent = issue;
             warning.hidden = !issue;
+            if (issue) {
+                const retry = document.createElement("button");
+                retry.type = "button";
+                retry.textContent = "重試儲存";
+                retry.addEventListener("click", () => update(() => {}));
+                warning.appendChild(retry);
+            }
         }
-        for (const listener of listeners) listener(copy(state));
+        for (const listener of listeners) listener(copy(state), saveStatus());
+    }
+
+    function saveStatus() {
+        return {
+            saved: hasSavedProgress && !pendingChanges && !issue,
+            canResume: hasSavedProgress && !protectedSave,
+            message: issue
+        };
+    }
+
+    function resumeUrl() {
+        // 入口開著時，另一分頁也可能有新進度；繼續遊戲以已成功儲存的版本為準。
+        const saved = readStoredState();
+        if (!saved || !saveStatus().canResume) return "home.html";
+        if (saved.lastScene === "ruisui") return "explore.html?station=ruisui";
+        if (saved.lastScene === "explore") return "explore.html";
+        if (saved.lastScene === "diary") {
+            if (saved.diaryView === "ruisui-player") return "diary.html?station=ruisui&tab=player";
+            if (saved.diaryView === "ruisui-memory") return "diary.html?station=ruisui&tab=aming";
+            return "diary.html";
+        }
+        return "home.html";
+    }
+
+    function ruisuiStage() {
+        if (state.readMemories.includes("ruisui-01")) return "complete";
+        if (state.collectedMemories.includes("ruisui-01")) return "memory-found";
+        return state.visitedStations.includes("ruisui") ? "exploring" : "unvisited";
     }
 
     function update(change) {
         mergeStored();
         change(state);
+        pendingChanges = true;
         let saved = false;
         if (!protectedSave) {
             try {
                 localStorage.setItem(SAVE_KEY, JSON.stringify(state));
                 issue = "";
+                hasSavedProgress = true;
+                pendingChanges = false;
                 for (const key of Object.keys(pendingNotes)) delete pendingNotes[key];
                 saved = true;
             } catch (_) {
@@ -146,15 +192,24 @@
 
     window.GameProgress = Object.freeze({
         snapshot: () => copy(state),
+        saveStatus,
+        resumeUrl,
+        ruisuiStage,
+        save: () => update(() => {}),
         subscribe(listener) {
             listeners.add(listener);
-            listener(copy(state));
+            listener(copy(state), saveStatus());
             return () => listeners.delete(listener);
         },
         hasMemory: id => state.collectedMemories.includes(id),
-        enterScene(scene) {
+        enterScene(scene, diaryView) {
             if (!["home", "explore", "ruisui", "diary"].includes(scene)) return false;
-            return update(current => { current.lastScene = scene; });
+            return update(current => {
+                current.lastScene = scene;
+                if (scene === "diary" && ["index", "ruisui-memory", "ruisui-player"].includes(diaryView)) {
+                    current.diaryView = diaryView;
+                }
+            });
         },
         visitRuisui() {
             return update(current => {

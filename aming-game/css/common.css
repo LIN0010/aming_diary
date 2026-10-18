@@ -127,7 +127,7 @@
     left: 50%;
     bottom: 112px;
     transform: translateX(-50%);
-    z-index: 200;
+    z-index: 10010;
     width: min(520px, 88vw);
     padding: 10px 14px;
     border: 1px solid #b99370;
@@ -137,4 +137,17 @@
     font: 13px/1.6 "Microsoft JhengHei", sans-serif;
     box-shadow: 0 3px 15px rgba(60, 45, 30, .15);
     pointer-events: none;
+}
+
+
+.progress-warning button {
+    pointer-events: auto;
+    margin-left: 10px;
+    border: 1px solid #b99370;
+    border-radius: 8px;
+    padding: 3px 8px;
+    background: #fffdf7;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
 }

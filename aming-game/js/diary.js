@@ -58,6 +58,7 @@ const station =
 function openStationDiary() {
     diaryIndex.classList.add("hidden");
     stationDiary.classList.add("show");
+    rememberDiaryView();
     markVisibleMemoryRead();
 }
 
@@ -96,28 +97,26 @@ memoryOverlay.addEventListener(
    日記頁籤
 ========================== */
 
-amingTab.addEventListener("click", () => {
-
-    amingTab.classList.add("active");
-    playerTab.classList.remove("active");
-
-    amingJournal.classList.add("active");
-    playerJournal.classList.remove("active");
+function selectJournalTab(tab, remember = true) {
+    const player = tab === "player";
+    amingTab.classList.toggle("active", !player);
+    playerTab.classList.toggle("active", player);
+    amingJournal.classList.toggle("active", !player);
+    playerJournal.classList.toggle("active", player);
+    if (remember) rememberDiaryView();
     markVisibleMemoryRead();
+}
 
-});
+function rememberDiaryView() {
+    const open = stationDiary.classList.contains("show");
+    const player = playerJournal.classList.contains("active");
+    const view = open ? (player ? "ruisui-player" : "ruisui-memory") : "index";
+    GameProgress.enterScene("diary", view);
+    history.replaceState({}, "", open ? "diary.html?station=ruisui&tab=" + (player ? "player" : "aming") : "diary.html");
+}
 
-
-playerTab.addEventListener("click", () => {
-
-    playerTab.classList.add("active");
-    amingTab.classList.remove("active");
-
-    playerJournal.classList.add("active");
-    amingJournal.classList.remove("active");
-
-});
-
+amingTab.addEventListener("click", () => selectJournalTab("aming"));
+playerTab.addEventListener("click", () => selectJournalTab("player"));
 
 /* ==========================
    玩家照片
@@ -171,21 +170,37 @@ document
 
 let noteDirty = false;
 let savedTimer;
-travelNote.addEventListener("input", () => { noteDirty = true; });
+let noteTimer;
 savedMessage.setAttribute("role", "status");
 
-saveTravel.addEventListener("click", () => {
+function saveTravelNote() {
+    clearTimeout(noteTimer);
     clearTimeout(savedTimer);
     const saved = GameProgress.saveNote("ruisui", travelNote.value);
     noteDirty = !saved;
-    savedMessage.textContent = saved ? "✓ 已記錄這段旅程" : "尚未儲存，請查看下方提示";
+    savedMessage.textContent = saved ? "✓ 已記錄這段旅程" : "尚未儲存，請重試儲存";
     savedMessage.classList.add("show");
-    if (saved) {
-        savedTimer = setTimeout(() => savedMessage.classList.remove("show"), 2000);
+    if (saved) savedTimer = setTimeout(() => savedMessage.classList.remove("show"), 2000);
+    return saved;
+}
+
+travelNote.addEventListener("input", () => {
+    noteDirty = true;
+    clearTimeout(noteTimer);
+    savedMessage.textContent = "記錄中…";
+    savedMessage.classList.add("show");
+    noteTimer = setTimeout(saveTravelNote, 650);
+});
+travelNote.addEventListener("blur", () => { if (noteDirty) saveTravelNote(); });
+saveTravel.addEventListener("click", saveTravelNote);
+window.addEventListener("beforeunload", event => {
+    if (noteDirty && !saveTravelNote()) {
+        event.preventDefault();
+        event.returnValue = "";
     }
 });
-
 window.addEventListener("pagehide", event => {
+    if (noteDirty) saveTravelNote();
     if (!event.persisted && previewURL) URL.revokeObjectURL(previewURL);
 });
 
@@ -209,12 +224,7 @@ backToIndex.addEventListener("click", () => {
     stationDiary.classList.remove("show");
 
     diaryIndex.classList.remove("hidden");
-
-    history.replaceState(
-        {},
-        "",
-        "diary.html"
-    );
+    rememberDiaryView();
 
 });
 
@@ -224,8 +234,9 @@ function markVisibleMemoryRead() {
     }
 }
 
-GameProgress.enterScene("diary");
-GameProgress.subscribe(state => {
+if (params.get("tab") === "player") selectJournalTab("player", false);
+GameProgress.enterScene("diary", "index");
+GameProgress.subscribe((state, status) => {
     const found = state.collectedMemories.includes("ruisui-01");
     const fresh = found && !state.readMemories.includes("ruisui-01");
     document.querySelectorAll("[data-memory-total]").forEach(total => {
@@ -245,6 +256,12 @@ GameProgress.subscribe(state => {
     ruisuiJournal.querySelector(".journal-new").textContent = fresh ? "NEW" : (found ? "✓" : "◇");
     amingJournal.classList.toggle("memory-locked", !found);
     document.querySelector(".memory-found").hidden = !fresh;
+    document.getElementById("journey-return").hidden = !state.readMemories.includes("ruisui-01");
+    if (noteDirty && status.saved && state.notes.ruisui === travelNote.value) {
+        noteDirty = false;
+        clearTimeout(noteTimer);
+        savedMessage.textContent = "✓ 已記錄這段旅程";
+    }
     if (!noteDirty) travelNote.value = state.notes.ruisui ?? "";
     markVisibleMemoryRead();
 });
