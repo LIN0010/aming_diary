@@ -46,6 +46,11 @@ try:
   expect(page.locator('#memory-count')).to_have_text('0')
   assert not page.evaluate('window.sawTransitionBox'), '開始遊戲不應再跳出換場方框'
   print('PASS: 無存檔停用繼續；開始遊戲須等待場景與單頁入口資源載入，完成前不建立／重設存檔。',flush=True)
+  page.evaluate("""() => {
+   const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;
+   EventStore.joinPhoto();EventStore.submitPhoto('重置前的攝影紀錄','保留測試',canvas.toDataURL('image/jpeg'));
+   EventStore.claim('pose');
+  }""")
   page.evaluate("EventStore.assign([0,0,0]); EventStore.completeTask('ticket'); GameProgress.completeRuisui(); GameProgress.saveNote('ruisui','保留我的心得'); GameProgress.enterScene('diary','ruisui-player')")
   page.goto(BASE)
   original=page.evaluate("localStorage.getItem('aming-diary-progress')")
@@ -64,6 +69,8 @@ try:
   expect(page.locator('#travel-note')).to_have_value('保留我的心得')
   assert page.evaluate('EventStore.snapshot().team')=='blue'
   assert page.evaluate('EventStore.personal()')==30
+  assert page.evaluate('EventStore.snapshot().photos.length')==1
+  assert page.evaluate('EventStore.snapshot().claims')==['pose']
   assert not page.evaluate('window.sawTransitionBox'), '繼續旅程不應再跳出換場方框'
   print('PASS: 繼續旅程使用相同進度條，恢復原日記頁籤、碎片與心得。',flush=True)
   page.unroute('**/js/app.js',stall)
@@ -86,6 +93,9 @@ try:
   assert page.evaluate('GameProgress.snapshot().notes.ruisui')==''
   assert page.evaluate('GameProgress.snapshot().collectedMemories')==[]
   assert page.evaluate('EventStore.snapshot().team') is None
+  assert page.evaluate('EventStore.snapshot().photos')==[]
+  assert page.evaluate('EventStore.snapshot().claims')==[]
+  assert not page.evaluate('EventStore.snapshot().photoJoined')
   assert page.evaluate('EventStore.snapshot().completed')==[]
   page.locator('[data-destination="event"]').click()
   page.locator('#ev-tab-race').click()

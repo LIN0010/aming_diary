@@ -17,6 +17,14 @@ def ready(page):
  expect(page.locator('#ev-content h2').first).to_be_visible()
  expect(page.locator('[data-destination="event"]')).to_have_attribute('aria-current','page')
 def shoot(page,title):
+ expect(page.locator('#ev-photo-file')).to_be_hidden()
+ with page.expect_file_chooser() as chooser:
+  page.locator('.ev-upload').click(position={'x':12,'y':12})
+ chooser.value.set_files(str(ROOT/'aming-game/images/cow.png'))
+ expect(page.locator('.ev-upload-preview')).to_be_visible()
+ with page.expect_file_chooser() as chooser:
+  page.locator('.ev-picker-label').click()
+ chooser.value.set_files(str(ROOT/'aming-game/images/cow.png'))
  page.locator('#ev-photo-file').set_input_files(str(ROOT/'aming-game/images/cow.png'))
  expect(page.locator('.ev-upload-preview')).to_be_visible()
  page.locator('#ev-photo-title').fill(title)
