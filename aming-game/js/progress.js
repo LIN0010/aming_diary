@@ -180,15 +180,6 @@
     warning.hidden = true;
     document.body.appendChild(warning);
 
-    // 未完成的導覽保留原入口，避免把玩家帶到不存在的頁面。
-    document.querySelectorAll(".bottom-nav a").forEach(link => {
-        if (["event.html", "group.html", "#"].includes(link.getAttribute("href"))) {
-            link.addEventListener("click", event => {
-                event.preventDefault();
-                window.alert("這段旅程還在準備中，敬請期待。");
-            });
-        }
-    });
 
     window.GameProgress = Object.freeze({
         snapshot: () => copy(state),

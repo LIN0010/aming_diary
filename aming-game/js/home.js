@@ -1,8 +1,9 @@
+GameScenes.register("home", ctx => {
 const amingCharacter =
-    document.getElementById("aming-click-area");
+    ctx.id("aming-click-area");
 
 const amingDialogue =
-    document.getElementById("aming-dialogue");
+    ctx.id("aming-dialogue");
 
 
 const dialogues = [
@@ -16,7 +17,7 @@ const dialogues = [
 
 let dialogueTimer;
 
-amingCharacter.addEventListener("click", () => {
+ctx.on(amingCharacter, "click", () => {
 
 
     const randomIndex =
@@ -27,19 +28,19 @@ amingCharacter.addEventListener("click", () => {
 
     amingDialogue.classList.add("show");
 
-    clearTimeout(dialogueTimer);
+    ctx.cancelTimer(dialogueTimer);
 
-    dialogueTimer = setTimeout(() => {
+    dialogueTimer = ctx.delay(() => {
         amingDialogue.classList.remove("show");
     }, 3500);
 
 });
 
 GameProgress.enterScene("home");
-GameProgress.subscribe((state, status) => {
-    document.getElementById("memory-count").textContent = state.collectedMemories.length;
+ctx.subscribe((state, status) => {
+    ctx.id("memory-count").textContent = state.collectedMemories.length;
     const stage = GameProgress.ruisuiStage();
-    const next = document.getElementById("journey-next");
+    const next = ctx.id("journey-next");
     const found = stage === "memory-found" || stage === "complete";
     next.href = found ? "diary.html?station=ruisui" : "explore.html?station=ruisui";
     next.textContent = {
@@ -48,9 +49,11 @@ GameProgress.subscribe((state, status) => {
         "memory-found": "閱讀新找回的記憶",
         complete: "瑞穗・第一段記憶已完成"
     }[stage];
-    document.getElementById("save-status").textContent = status.saved ? "✓ 旅程已儲存" : "旅程尚未儲存";
+    ctx.id("save-status").textContent = status.saved ? "✓ 旅程已儲存" : "旅程尚未儲存";
 });
-document.getElementById("save-progress").addEventListener("click", () => GameProgress.save());
-document.getElementById("memory-btn").addEventListener("click", () => {
-    window.location.href = "diary.html?memories=1";
+ctx.on(ctx.id("save-progress"), "click", () => GameProgress.save());
+ctx.on(ctx.id("memory-btn"), "click", () => {
+    ctx.go("diary.html?memories=1");
+});
+
 });

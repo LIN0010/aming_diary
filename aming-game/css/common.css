@@ -151,3 +151,9 @@
     font: inherit;
     cursor: pointer;
 }
+
+.bottom-nav { transition: opacity .3s ease, transform .3s ease, visibility .3s ease; }
+.bottom-nav.explore-hidden {
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateX(-50%) translateY(25px);
+}

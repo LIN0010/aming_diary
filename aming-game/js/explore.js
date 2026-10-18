@@ -1,56 +1,57 @@
+GameScenes.register("explore", ctx => {
 const ruisuiStation =
-    document.getElementById("ruisui-station");
+    ctx.id("ruisui-station");
 
 const locationCheck =
-    document.getElementById("location-check");
+    ctx.id("location-check");
 
 const missionCard =
-    document.getElementById("mission-card");
+    ctx.id("mission-card");
 
 const missionClose =
-    document.getElementById("mission-close");
+    ctx.id("mission-close");
 
 const startMission =
-    document.getElementById("start-mission");
+    ctx.id("start-mission");
 	
 const stationExplore =
-    document.getElementById("station-explore");
+    ctx.id("station-explore");
 
 const leaveStation =
-    document.getElementById("leave-station");
+    ctx.id("leave-station");
 	
 const stationScene =
-    document.getElementById("station-scene");
+    ctx.id("station-scene");
 
 const sceneWorld =
-    document.getElementById("scene-world");
+    ctx.id("scene-world");
 	
 const cowTarget =
-    document.getElementById("cow-target");
+    ctx.id("cow-target");
 
 const cameraMode =
-    document.getElementById("camera-mode");
+    ctx.id("camera-mode");
 
 const closeCamera =
-    document.getElementById("close-camera");
+    ctx.id("close-camera");
 
 const shutterButton =
-    document.getElementById("shutter-button");
+    ctx.id("shutter-button");
 
 const cameraFlash =
-    document.getElementById("camera-flash");
+    ctx.id("camera-flash");
 
 const bottomNav =
-    document.querySelector(".bottom-nav");
+    ctx.query(".bottom-nav");
 	
 const photoSuccess =
-    document.getElementById("photo-success");
+    ctx.id("photo-success");
 
 const viewMemory =
-    document.getElementById("view-memory");
+    ctx.id("view-memory");
 	
 const missionProgress =
-    document.querySelector(".mission-progress");
+    ctx.query(".mission-progress");
 
 let locating = false;
 
@@ -65,7 +66,7 @@ let worldX = 0;
 
 /* 點擊瑞穗站 */
 
-ruisuiStation.addEventListener("click", () => {
+ctx.on(ruisuiStation, "click", () => {
 
     if (locating) return;
 
@@ -79,12 +80,12 @@ ruisuiStation.addEventListener("click", () => {
 
 
     // 模擬定位時間
-    setTimeout(() => {
+    ctx.delay(() => {
 
         locationCheck.classList.remove("show");
 
         // 稍微停一下再跳任務
-        setTimeout(() => {
+        ctx.delay(() => {
 
             missionCard.classList.add("show");
 
@@ -99,7 +100,7 @@ ruisuiStation.addEventListener("click", () => {
 
 /* 關閉任務卡 */
 
-missionClose.addEventListener("click", () => {
+ctx.on(missionClose, "click", () => {
 
     missionCard.classList.remove("show");
 
@@ -113,17 +114,17 @@ function enterStation() {
     missionCard.classList.remove("show");
     stationExplore.classList.add("show");
     bottomNav.classList.add("explore-hidden");
-    history.replaceState({}, "", "explore.html?station=ruisui");
+    ctx.replaceRoute("explore.html?station=ruisui");
 }
 
-startMission.addEventListener("click", enterStation);
+ctx.on(startMission, "click", enterStation);
 
-leaveStation.addEventListener("click", () => {
+ctx.on(leaveStation, "click", () => {
 
     resetCamera();
     endDrag();
     GameProgress.enterScene("explore");
-    history.replaceState({}, "", "explore.html");
+    ctx.replaceRoute("explore.html");
     stationExplore.classList.remove("show");
 
     bottomNav.classList.remove("explore-hidden");
@@ -148,7 +149,7 @@ function endDrag() {
     stationScene.classList.remove("dragging");
 }
 
-stationScene.addEventListener("pointerdown", event => {
+ctx.on(stationScene, "pointerdown", event => {
     if (!event.isPrimary || event.button !== 0 || event.target.closest("button")) return;
     isDragging = true;
     activePointerId = event.pointerId;
@@ -159,19 +160,19 @@ stationScene.addEventListener("pointerdown", event => {
     event.preventDefault();
 });
 
-window.addEventListener("pointermove", event => {
+ctx.on(window, "pointermove", event => {
     if (!isDragging || event.pointerId !== activePointerId) return;
     worldX = startWorldX + event.clientX - startX;
     clampWorld();
 });
 
 for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
-    window.addEventListener(type, event => {
+    ctx.on(window, type, event => {
         if (event.pointerId === activePointerId) endDrag();
     });
 }
-window.addEventListener("blur", endDrag);
-window.addEventListener("resize", () => { endDrag(); clampWorld(); });
+ctx.on(window, "blur", endDrag);
+ctx.on(window, "resize", () => { endDrag(); clampWorld(); });
 
 /* ==========================
    乳牛拍照
@@ -179,7 +180,7 @@ window.addEventListener("resize", () => { endDrag(); clampWorld(); });
 
 /* 點乳牛 */
 
-cowTarget.addEventListener("click", (event) => {
+ctx.on(cowTarget, "click", (event) => {
 
     event.stopPropagation();
 
@@ -191,7 +192,7 @@ cowTarget.addEventListener("click", (event) => {
 
 /* 關閉相機 */
 
-closeCamera.addEventListener("click", () => {
+ctx.on(closeCamera, "click", () => {
 
     resetCamera();
 
@@ -200,7 +201,7 @@ closeCamera.addEventListener("click", () => {
 
 /* 拍照 */
 
-shutterButton.addEventListener("click", () => {
+ctx.on(shutterButton, "click", () => {
 
     if (shutterButton.disabled) return;
 
@@ -215,16 +216,16 @@ shutterButton.addEventListener("click", () => {
     // 快門按壓
     shutterButton.classList.add("shot");
 
-    pressTimer = setTimeout(() => {
+    pressTimer = ctx.delay(() => {
         shutterButton.classList.remove("shot");
     }, 180);
 
     // 拍攝成功
-    shotTimer = setTimeout(() => {
+    shotTimer = ctx.delay(() => {
 
         const alreadyFound = GameProgress.hasMemory("ruisui-01");
         const saved = GameProgress.completeRuisui();
-        document.getElementById("photo-result").textContent = saved
+        ctx.id("photo-result").textContent = saved
             ? (alreadyFound ? "這段回憶已收藏" : "已找回一段新記憶")
             : "已找到回憶，尚未儲存";
         photoSuccess.classList.add("show");
@@ -236,18 +237,18 @@ shutterButton.addEventListener("click", () => {
 function openRuisuiMemory(event) {
     event.preventDefault();
     if (!GameProgress.saveStatus().saved && !GameProgress.save()) return;
-    window.location.href = "diary.html?station=ruisui";
+    ctx.go("diary.html?station=ruisui");
 }
-for (const link of [viewMemory, document.getElementById("scene-diary"), document.getElementById("mission-diary")]) {
-    link.addEventListener("click", openRuisuiMemory);
+for (const link of [viewMemory, ctx.id("scene-diary"), ctx.id("mission-diary")]) {
+    ctx.on(link, "click", openRuisuiMemory);
 }
 
 let shotTimer;
 let pressTimer;
 
 function resetCamera() {
-    clearTimeout(shotTimer);
-    clearTimeout(pressTimer);
+    ctx.cancelTimer(shotTimer);
+    ctx.cancelTimer(pressTimer);
     cameraMode.classList.remove("show");
     photoSuccess.classList.remove("show");
     cameraFlash.classList.remove("flash");
@@ -255,34 +256,38 @@ function resetCamera() {
     shutterButton.disabled = false;
 }
 
-GameProgress.subscribe((state, status) => {
+ctx.subscribe((state, status) => {
     const stage = GameProgress.ruisuiStage();
     const found = stage === "memory-found" || stage === "complete";
     const complete = stage === "complete";
     missionProgress.textContent = found ? "1 / 1" : "0 / 1";
-    document.querySelector(".mission-tag").textContent = {
+    ctx.query(".mission-tag").textContent = {
         unvisited: "NEW MISSION", exploring: "IN PROGRESS",
         "memory-found": "MEMORY FOUND", complete: "JOURNEY COMPLETE"
     }[stage];
-    document.querySelector(".mission-story").textContent = found
+    ctx.query(".mission-story").textContent = found
         ? (complete ? "阿明的記憶已記錄在日記中，隨時可以回來重溫。" : "你已找回瑞穗的第一段記憶，翻開日記看看吧。")
         : "阿明似乎對車站裡的某樣東西有印象……";
-    document.querySelector(".mission-goal strong").textContent = found
+    ctx.query(".mission-goal strong").textContent = found
         ? (complete ? "這段旅程已完成" : "閱讀瑞穗・第一段記憶") : "尋找瑞穗站的乳牛裝置";
     startMission.textContent = found ? "再次探索" : (stage === "exploring" ? "繼續探索" : "開始探索");
-    const diaryLink = document.getElementById("mission-diary");
+    const diaryLink = ctx.id("mission-diary");
     diaryLink.hidden = !found;
     diaryLink.textContent = complete ? "重溫日記" : "閱讀新回憶";
-    document.getElementById("scene-mission-label").textContent = found
+    ctx.id("scene-mission-label").textContent = found
         ? (complete ? "瑞穗・第一段記憶已完成" : "已尋回瑞穗・01") : "尋找瑞穗站的乳牛裝置";
-    document.getElementById("scene-diary").hidden = !found;
+    ctx.id("scene-diary").hidden = !found;
     viewMemory.textContent = status.saved ? (complete ? "重溫日記" : "查看新回憶") : "儲存並查看日記";
     if (photoSuccess.classList.contains("show")) {
-        document.getElementById("photo-result").textContent = status.saved ? "這段回憶已儲存" : "已找到回憶，尚未儲存";
+        ctx.id("photo-result").textContent = status.saved ? "這段回憶已儲存" : "已找到回憶，尚未儲存";
     }
 });
-if (new URLSearchParams(window.location.search).get("station") === "ruisui") {
+if (ctx.params.get("station") === "ruisui") {
     enterStation();
 } else {
     GameProgress.enterScene("explore");
 }
+
+ctx.cleanup(endDrag);
+
+});

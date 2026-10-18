@@ -510,3 +510,5 @@ body {
 @media (prefers-reduced-motion: reduce) {
     #loading-screen, .train { transition: none; }
 }
+
+.continuous-journey { color: #fff8ec; text-underline-offset: 4px; }

@@ -117,7 +117,7 @@
                 onProgress(++completed, total);
             }));
             if (signal.aborted) throw new DOMException("載入已取消", "AbortError");
-            return { completed, total };
+            return { completed, total, html };
         } catch (error) {
             abort();
             if (timedOut) throw new Error("載入逾時，請重試");

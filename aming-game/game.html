@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尋軌：阿明的日記</title>
+    <link rel="stylesheet" href="css/common.css" id="common-style">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body data-scene-shell>
+    <div id="scene-host"></div>
+    <section id="scene-loading" class="scene-loading" aria-label="準備下一段旅程">
+        <div class="scene-loading-card">
+            <p id="scene-status" role="status" tabindex="-1">正在準備旅程…</p>
+            <progress id="scene-progress" max="100" value="0" aria-label="場景載入進度"></progress>
+            <span id="scene-percentage">0%</span>
+            <div class="scene-loading-actions">
+                <button id="scene-retry" type="button" hidden>重新載入</button>
+                <button id="scene-cancel" type="button" hidden>留在目前畫面</button>
+                <a id="scene-fallback" href="home.html">開啟原版頁面</a>
+            </div>
+        </div>
+    </section>
+    <noscript>請開啟 JavaScript，以繼續這段旅程。</noscript>
+    <script src="js/navigation.js"></script>
+    <script src="js/progress.js"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/scenes.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/explore.js"></script>
+    <script src="js/diary.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
