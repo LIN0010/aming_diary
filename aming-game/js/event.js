@@ -78,11 +78,11 @@ GameScenes.register("event", ctx => {
         const count = C.photo.baseCount + state.photos.length;
         const ready = store.phase("photo") === "active";
         return `${button("back", "← 返回活動首頁", "ev-text-button")}${banner("photo")}
-            <details class="ev-rules"><summary>攝影祭規則與投稿說明</summary><p>先參加活動，再選擇一張自己的照片投稿。每次成功保存增加 1 份共同投稿，不以瀏覽或重複領獎加分。起始 ${C.photo.baseCount} 份為模擬基數，下方只展示其中幾張 示意照片；沒有真實玩家連線或圖片上傳。</p><p>獎勵須參加後解鎖並領取，僅作本機收藏展示。每張照片會縮圖壓縮，本機最多 ${C.maxPhotos} 張。請只使用可分享的照片；重置活動紀錄只清除活動資料。</p></details>
+            <details class="ev-rules"><summary>攝影祭規則與投稿說明</summary><p>從活動卡片進入後，直接選擇一張自己的照片投稿。每次成功保存增加 1 份共同投稿，不以瀏覽或重複領獎加分。起始 ${C.photo.baseCount} 份為模擬基數，下方只展示其中幾張 示意照片；沒有真實玩家連線或圖片上傳。</p><p>獎勵須參加後解鎖並領取，僅作本機收藏展示。每張照片會縮圖壓縮，本機最多 ${C.maxPhotos} 張。請只使用可分享的照片；重置活動紀錄只清除活動資料。</p></details>
             <section class="ev-paper"><div class="ev-section-heading"><div><p class="ev-eyebrow">TOGETHER, WE BLOOM</p><h3>一起，把春天收集起來</h3></div><span class="ev-count" id="ev-photo-count">${count} <small>/ ${C.photo.goal} 份</small></span></div>
             <progress class="ev-progress" id="ev-photo-progress" max="${C.photo.goal}" value="${Math.min(count, C.photo.goal)}" aria-label="共同相簿投稿進度"></progress><div class="ev-milestones" aria-hidden="true">${C.photo.rewards.map(r => `<span class="${count >= r.at ? "is-unlocked" : ""}" style="left:${Math.min(98, r.at * 100 / C.photo.goal)}%" title="${h(r.name)}：${r.at} 份">${r.at}</span>`).join("")}</div><p class="ev-muted">模擬基數 ${C.photo.baseCount} 份 ＋ 本機投稿 ${state.photos.length} 份 · 達標後仍可投稿</p>
             <div class="ev-rewards">${C.photo.rewards.map(r => reward(r.id, r.name, `共同投稿達 ${r.at} 份 · ${r.description}`, state)).join("")}</div></section>
-            <section class="ev-theme"><span class="ev-eyebrow">本期攝影主題</span><h3>${h(C.photo.theme)}</h3><p>${h(C.photo.themeDescription)}</p>${state.photoJoined ? '<span class="ev-tag">✓ 已參加攝影祭</span>' : button("join-photo", "加入這次共同攝影", "", !ready)}</section>
+            <section class="ev-theme"><span class="ev-eyebrow">本期攝影主題</span><h3>${h(C.photo.theme)}</h3><p>${h(C.photo.themeDescription)}</p>${state.photoJoined ? '<span class="ev-tag">✓ 已參加攝影祭</span>' : (ready ? button("open-photo", "重試開啟投稿", "ev-secondary") : `<span class="ev-tag">${phaseText("photo")}</span>`)}</section>
             <section class="ev-paper" id="ev-submit-area"><div class="ev-section-heading"><h3>留下一張你的春天</h3><span>YOUR PHOTO</span></div><form id="ev-photo-form"><fieldset${disabled(!state.photoJoined || !ready)}><legend class="ev-sr-only">攝影祭投稿</legend><div class="ev-upload-grid"><div class="ev-upload"><label for="ev-photo-file">＋ 選擇本機照片</label><input type="file" id="ev-photo-file" accept="image/jpeg,image/png,image/webp"><p id="ev-file-status">${h(preparing ? "正在整理照片…" : fileName || "JPEG / PNG / WebP，來源不超過 10 MB")}</p>${photoData ? `<img class="ev-upload-preview" src="${photoData}" alt="待投稿照片預覽">` : '<div class="ev-upload-empty" aria-hidden="true">一張照片<br>留住沿途的光</div>'}</div><div class="ev-upload-fields"><label for="ev-photo-title">照片標題</label><input id="ev-photo-title" maxlength="60" required placeholder="例如：在月台邊遇見春天" value="${h(photoTitle)}"><label for="ev-photo-description">照片裡的故事（選填）</label><textarea id="ev-photo-description" maxlength="180" rows="3" placeholder="寫下這一刻的心情…">${h(photoDescription)}</textarea><p class="ev-muted">壓縮後只保存在你的瀏覽器，不會上傳。</p><button class="ev-button" id="ev-submit-photo" type="submit"${disabled(preparing || !photoData || state.photos.length >= C.maxPhotos)}>投稿照片 →</button></div></div></fieldset></form></section>
             <section class="ev-album"><div class="ev-section-heading"><h3>全服共同相簿</h3><span>${state.photos.length + C.photo.album.length} 張展示照片</span></div><p class="ev-muted">這面照片牆由模擬旅人卡片與你的本機投稿組成。點擊照片，翻開它的故事。</p><div class="ev-photo-wall">${[...state.photos].reverse().map(p => `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>`).join("")}${C.photo.album.map(p => `<button type="button" class="ev-polaroid" data-photo="${p.id}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div></section>`;
     }
@@ -183,7 +183,13 @@ GameScenes.register("event", ctx => {
     ctx.on(ctx.root, "click", event => {
         const target = event.target.closest("button"); if (!target || target.disabled) return;
         if (target.dataset.category) { category = target.dataset.category; route(); render(); ctx.id("ev-tab-" + category).focus(); }
-        if (target.dataset.action === "open-photo") switchView("photo");
+        if (target.dataset.action === "open-photo") {
+            if (!store.snapshot().photoJoined && store.phase("photo") === "active") {
+                const result = store.joinPhoto();
+                if (!result.ok) { notice(result.message); return; }
+            }
+            switchView("photo");
+        }
         if (target.dataset.action === "open-race") {
             if (!store.snapshot().team && store.phase("race") === "active") { startPrompt = true; raceStage = "intro"; render(); }
             else switchView("race");
@@ -206,7 +212,6 @@ GameScenes.register("event", ctx => {
                 else assignTeam();
             }, 180);
         }
-        if (target.dataset.action === "join-photo") { if (operate(store.joinPhoto(), "已加入攝影祭，一起收藏春天吧。")) ctx.id("ev-submit-area").scrollIntoView({ behavior: "smooth", block: "start" }); }
         if (target.dataset.photo) showPhoto(target.dataset.photo);
         if (target.dataset.claim) operate(store.claim(target.dataset.claim), "✓ 獎勵已加入本機活動收藏。");
         if (target.dataset.task) {
@@ -242,6 +247,8 @@ GameScenes.register("event", ctx => {
         if (!window.confirm("重置本機活動紀錄？這會清除活動投稿、分隊與獎勵，主線遊戲、日記和回憶碎片不受影響。")) return;
         if (operate(store.reset(), "活動紀錄已重置，主線資料保留。")) { photoData = photoTitle = photoDescription = fileName = postcard = ""; answers = []; quizRevision++; questionIndex = 0; answering = false; raceStage = "intro"; fileToken++; preparing = false; render(); }
     });
+    // 獨立詳情網址也直接開放投稿，不要求第二次參加。
+    if (view === "photo" && !store.snapshot().photoJoined && store.phase("photo") === "active") store.joinPhoto();
     const unsubscribe = store.subscribe(() => {
         const leader = store.leader();
         if (previousLeader && leader && previousLeader !== leader) ctx.root.classList.add("ev-lead-change");
