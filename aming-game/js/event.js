@@ -45,22 +45,20 @@ GameScenes.register("event", ctx => {
         ctx.id("ev-clock").textContent = (C.demoClock ? "活動日曆：" : "台灣日期：") + display;
         ctx.queryAll("[data-countdown]").forEach(el => { el.textContent = timeLeft(el.dataset.countdown); });
     }
-    function banner(kind, hero = false) {
+    function banner(kind, hero = false, summary = "") {
         const event = C[kind];
         return `<section class="ev-banner ev-${kind} ${hero ? "ev-hero" : ""}">
             <div class="ev-banner-art" aria-label="活動主視覺"><span>${kind === "photo" ? "SPRING / 2027" : "TWO WAYS, ONE JOURNEY"}</span><div class="ev-rail" aria-hidden="true"></div></div>
             <div class="ev-banner-copy"><span class="ev-tag">${hero ? "本期推薦 · " : ""}${kind === "photo" ? "全服合作" : "陣營競賽"}</span>
             <h2>${h(event.title)}</h2><p>${h(event.introduction)}</p><div class="ev-meta"><span>${dates(kind)}</span><span class="ev-status">${phaseText(kind)}</span><span data-countdown="${kind}">${timeLeft(kind)}</span></div>
-            ${hero ? button("open-photo", "參加活動 →") : ""}</div></section>`;
-    }
-    function card(kind, state) {
-        const summary = kind === "photo" ? `${C.photo.baseCount + state.photos.length} / ${C.photo.goal} 份共同投稿` : `${store.teams()[0].score} : ${store.teams()[1].score} · 陣營貢獻`;
-        return `<article class="ev-ticket ev-${kind}"><div class="ev-ticket-art"><span>${kind === "photo" ? "花開的地方，都有故事" : "你是哪一種旅行家？"}</span><small>A SEASON TO REMEMBER</small></div><div class="ev-ticket-copy"><span class="ev-eyebrow">${dates(kind)} · ${phaseText(kind)}</span><h3>${h(C[kind].title)}</h3><p>${h(C[kind].introduction)}</p><strong>${summary}</strong>${button("open-" + kind, "查看活動詳情 →", "ev-secondary")}</div></article>`;
+            ${summary ? `<p class="ev-pass-summary">${h(summary)}</p>` : ""}
+            ${hero ? button("open-" + kind, "參加活動 →") : ""}</div></section>`;
     }
     function home(state) {
-        return `${banner("photo", true)}<section class="ev-catalog"><div class="ev-section-heading"><h2>選一段限定旅程</h2><span>EVENT COLLECTION</span></div>
+        const summary = category === "photo" ? `${C.photo.baseCount + state.photos.length} / ${C.photo.goal} 份共同投稿` : `${store.teams()[0].score} : ${store.teams()[1].score} · 陣營貢獻`;
+        return `<section class="ev-catalog">
             <div class="ev-tabs" role="tablist" aria-label="活動分類"><button type="button" role="tab" id="ev-tab-photo" aria-selected="${category === "photo"}" aria-controls="ev-cards" tabindex="${category === "photo" ? 0 : -1}" data-category="photo">全服合作</button><button type="button" role="tab" id="ev-tab-race" aria-selected="${category === "race"}" aria-controls="ev-cards" tabindex="${category === "race" ? 0 : -1}" data-category="race">陣營競賽</button></div>
-            <div id="ev-cards" role="tabpanel" aria-labelledby="ev-tab-${category}">${card(category, state)}</div></section>`;
+            <div id="ev-cards" role="tabpanel" aria-labelledby="ev-tab-${category}">${banner(category, true, summary)}</div></section>`;
     }
     function reward(id, title, detail, state) {
         const claimed = state.claims.includes(id), unlocked = store.unlocked(id);
