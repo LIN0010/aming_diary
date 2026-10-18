@@ -3,13 +3,17 @@ GameScenes.register("event", ctx => {
     const C = EventConfig, store = EventStore;
     const content = ctx.id("ev-content"), scroller = ctx.query(".ev-scroll");
     const modal = ctx.id("ev-lightbox");
+    const quizModal = document.createElement("dialog");
+    quizModal.className = "ev-quiz-modal";
+    quizModal.setAttribute("aria-labelledby", "ev-quiz-heading");
+    ctx.root.append(quizModal);
     let view = ["photo", "race"].includes(ctx.params.get("activity")) ? ctx.params.get("activity") : "home";
     let category = ctx.params.get("category") === "race" ? "race" : "photo";
     let photoData = "", photoTitle = "", photoDescription = "", fileName = "", postcard = "";
     let answers = [], preparing = false, disposed = false, fileToken = 0, messageTimer;
     let previousLeader = store.leader(), lastPhase = store.phase("photo") + store.phase("race");
     let raceStage = store.snapshot().team ? "hub" : "intro";
-    let questionIndex = 0, answering = false, quizRevision = 0;
+    let questionIndex = 0, answering = false;
     const imageURLs = new Set();
     const h = text => String(text).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
     const disabled = value => value ? " disabled" : "";
@@ -35,7 +39,7 @@ GameScenes.register("event", ctx => {
     }
     function switchView(next) {
         fileToken++; preparing = false;
-        quizRevision++; answering = false;
+        answering = false;
         raceStage = store.snapshot().team ? "hub" : "intro";
         view = next;
         if (view === "race") category = "race";
@@ -87,11 +91,12 @@ GameScenes.register("event", ctx => {
     function quiz() {
         const q = C.race.questions[questionIndex];
         return `${button("race-intro", "← 返回活動介紹", "ev-text-button")}<section class="ev-paper ev-quiz-stage" id="ev-quiz">
-            <p class="ev-eyebrow">YOUR TRAVEL RHYTHM</p><h2>旅行風格測驗</h2>
+            <p class="ev-eyebrow">YOUR TRAVEL RHYTHM</p><h2 id="ev-quiz-heading">旅行風格測驗</h2>
             <div class="ev-quiz-progress"><span id="ev-question-progress">${questionIndex + 1} / ${C.race.questions.length}</span><progress class="ev-progress" value="${questionIndex + 1}" max="${C.race.questions.length}" aria-label="測驗題目進度"></progress></div>
-            <h3 id="ev-question-title">${h(q.title)}</h3><p class="ev-muted">選擇最接近你的旅行直覺，選好後將前往下一題。</p>
-            <div class="ev-quiz-choices" role="group" aria-labelledby="ev-question-title">${q.choices.map((choice, i) => `<button type="button" class="ev-quiz-choice ${answers[questionIndex] === i ? "is-selected" : ""}" data-answer="${i}"${disabled(answering || store.phase("race") !== "active")}><span aria-hidden="true">${i === 0 ? "A" : "B"}</span>${h(choice)}</button>`).join("")}</div>
-            ${answers.length === C.race.questions.length && !answering ? button("retry-assign", "重試儲存並揭曉陣營 →") : ""}
+            <h3 id="ev-question-title">${h(q.title)}</h3><p class="ev-muted">選擇最接近你的旅行直覺，再按下確認。</p>
+            <div class="ev-quiz-choices" role="group" aria-labelledby="ev-question-title">${q.choices.map((choice, i) => `<button type="button" class="ev-quiz-choice ${answers[questionIndex] === i ? "is-selected" : ""}" data-answer="${i}" aria-pressed="${answers[questionIndex] === i}"${disabled(answering || store.phase("race") !== "active")}><span aria-hidden="true">${i === 0 ? "A" : "B"}</span>${h(choice)}</button>`).join("")}</div>
+            ${store.status().issue ? `<p class="ev-warning" role="alert">${h(store.status().issue)}</p>` : ""}
+            ${button("confirm-answer", questionIndex === C.race.questions.length - 1 ? "確認並揭曉陣營 →" : "確認，下一題 →", "", answering || ![0, 1].includes(answers[questionIndex]) || store.phase("race") !== "active")}
             <p class="ev-muted">完成全部題目後才會判定陣營，分隊完成後不能自行更換。</p></section>`;
     }
     function reveal(state) {
@@ -109,7 +114,6 @@ GameScenes.register("event", ctx => {
     }
     function race(state) {
         if (!state.team) {
-            if (raceStage === "quiz") return quiz();
             return `${button("back", "← 返回活動首頁", "ev-text-button")}${banner("race", true, "", "start-quiz", "開始測驗 →")}<p class="ev-race-intro-note">三道旅行選擇，找到屬於你的旅行節奏。完成測驗後揭曉陣營，再開啟活動任務。</p>`;
         }
         if (raceStage !== "hub") return reveal(state);
@@ -131,6 +135,13 @@ GameScenes.register("event", ctx => {
     function render() {
         const state = store.snapshot();
         content.innerHTML = view === "photo" ? photo(state) : view === "race" ? race(state) : home(state);
+        if (view === "race" && raceStage === "quiz" && !state.team) {
+            quizModal.innerHTML = quiz();
+            if (!quizModal.open) quizModal.showModal();
+        } else {
+            if (quizModal.open) quizModal.close();
+            quizModal.replaceChildren();
+        }
         const warning = ctx.id("ev-storage-warning");
         warning.textContent = store.status().issue; warning.hidden = !warning.textContent;
         clock();
@@ -174,19 +185,20 @@ GameScenes.register("event", ctx => {
         if (target.dataset.action === "open-race") switchView("race");
         if (target.dataset.action === "back") switchView("home");
         if (target.dataset.action === "start-quiz" && !store.snapshot().team && store.phase("race") === "active") {
-            quizRevision++; answers = []; questionIndex = 0; answering = false; raceStage = "quiz"; raceScreen();
+            answers = []; questionIndex = 0; answering = false; raceStage = "quiz"; raceScreen();
         }
-        if (target.dataset.action === "race-intro") { quizRevision++; answering = false; raceStage = "intro"; raceScreen(); }
+        if (target.dataset.action === "race-intro") { answering = false; raceStage = "intro"; raceScreen(); }
         if (target.dataset.action === "enter-race" && store.snapshot().team) { raceStage = "hub"; raceScreen(); }
-        if (target.dataset.action === "retry-assign" && raceStage === "quiz" && !answering) assignTeam();
         if (target.dataset.answer !== undefined && raceStage === "quiz" && !answering && !store.snapshot().team && store.phase("race") === "active") {
-            answers[questionIndex] = Number(target.dataset.answer); answering = true; render();
-            const revision = quizRevision;
-            ctx.delay(() => {
-                if (disposed || revision !== quizRevision || view !== "race") return;
-                if (questionIndex < C.race.questions.length - 1) { questionIndex++; answering = false; raceScreen(); }
-                else assignTeam();
-            }, 180);
+            answers[questionIndex] = Number(target.dataset.answer); render();
+            quizModal.querySelector(`[data-answer="${answers[questionIndex]}"]`)?.focus();
+        }
+        if (target.dataset.action === "confirm-answer" && raceStage === "quiz" && !answering && !store.snapshot().team && [0, 1].includes(answers[questionIndex]) && store.phase("race") === "active") {
+            if (questionIndex < C.race.questions.length - 1) {
+                questionIndex++; render();
+                quizModal.querySelector("h2").tabIndex = -1;
+                quizModal.querySelector("h2").focus();
+            } else { answering = true; assignTeam(); }
         }
         if (target.dataset.action === "join-photo") { if (operate(store.joinPhoto(), "已加入攝影祭，一起收藏春天吧。")) ctx.id("ev-submit-area").scrollIntoView({ behavior: "smooth", block: "start" }); }
         if (target.dataset.photo) showPhoto(target.dataset.photo);
@@ -217,11 +229,12 @@ GameScenes.register("event", ctx => {
         }
 
     });
+    ctx.on(quizModal, "cancel", event => { event.preventDefault(); answering = false; raceStage = "intro"; render(); ctx.query('[data-action="start-quiz"]')?.focus(); });
     ctx.on(ctx.id("ev-lightbox-close"), "click", () => modal.close());
     ctx.on(modal, "click", event => { if (event.target === modal) { const rect = modal.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) modal.close(); } });
     ctx.on(ctx.id("ev-reset"), "click", () => {
         if (!window.confirm("重置本機活動紀錄？這會清除活動投稿、分隊與獎勵，主線遊戲、日記和回憶碎片不受影響。")) return;
-        if (operate(store.reset(), "活動紀錄已重置，主線資料保留。")) { photoData = photoTitle = photoDescription = fileName = postcard = ""; answers = []; quizRevision++; questionIndex = 0; answering = false; raceStage = "intro"; fileToken++; preparing = false; render(); }
+        if (operate(store.reset(), "活動紀錄已重置，主線資料保留。")) { photoData = photoTitle = photoDescription = fileName = postcard = ""; answers = []; questionIndex = 0; answering = false; raceStage = "intro"; fileToken++; preparing = false; render(); }
     });
     const unsubscribe = store.subscribe(() => {
         const leader = store.leader();
@@ -229,7 +242,7 @@ GameScenes.register("event", ctx => {
         previousLeader = leader; render();
     });
     ctx.cleanup(unsubscribe);
-    ctx.cleanup(() => { disposed = true; fileToken++; imageURLs.forEach(url => URL.revokeObjectURL(url)); imageURLs.clear(); if (modal.open) modal.close(); });
+    ctx.cleanup(() => { disposed = true; fileToken++; imageURLs.forEach(url => URL.revokeObjectURL(url)); imageURLs.clear(); if (modal.open) modal.close(); if (quizModal.open) quizModal.close(); quizModal.remove(); });
     function tick() {
         clock(); const phases = store.phase("photo") + store.phase("race");
         if (phases !== lastPhase) { lastPhase = phases; render(); }
