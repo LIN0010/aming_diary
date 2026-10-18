@@ -4,10 +4,6 @@
     const host = document.getElementById("scene-host");
     const loading = document.getElementById("scene-loading");
     const status = document.getElementById("scene-status");
-    /* 暫停換場進度條，與 game.html 一起恢復。
-    const progress = document.getElementById("scene-progress");
-    const percentage = document.getElementById("scene-percentage");
-    */
     const retry = document.getElementById("scene-retry");
     const cancel = document.getElementById("scene-cancel");
     const fallback = document.getElementById("scene-fallback");
@@ -74,30 +70,16 @@
         pending = controller;
         requested = route.url;
         requestedReplace = replace;
-        // 換場時保留原畫面，暫停原本的載入遮罩效果。
-        loading.hidden = Boolean(active);
+        // 首次進場與後續換場都不開啟方框；僅失敗時提供錯誤操作。
+        loading.hidden = true;
         if (active) active.root.inert = true;
         host.setAttribute("aria-busy", "true");
-        status.textContent = "正在準備旅程…";
-        if (!active) status.focus({ preventScroll: true });
-        /*
-        progress.value = 0;
-        percentage.textContent = "0%";
-        */
         retry.hidden = true;
         cancel.hidden = !active;
         fallback.href = route.url;
         let style;
         try {
-            const result = await JourneyLoader.load(route.url, (done, total) => {
-                if (signal.aborted) return;
-                /* 暫停進度數字，仍保留必要資源預載。
-                const value = Math.floor(done * 100 / total);
-                progress.value = value;
-                percentage.textContent = value + "%";
-                */
-                status.textContent = "正在載入旅程…";
-            }, { signal });
+            const result = await JourneyLoader.load(route.url, undefined, { signal });
             const parsed = new DOMParser().parseFromString(result.html, "text/html");
             const definition = GameNavigation.scenes[route.name];
             const template = parsed.getElementById(definition.root);

@@ -15,6 +15,13 @@ try:
  with sync_playwright() as p:
   browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium'),headless=True,args=['--no-sandbox'])
   context=browser.new_context(viewport={'width':390,'height':844})
+  context.add_init_script("""
+   window.sawTransitionBox=false;
+   new MutationObserver(() => {
+    const box=document.getElementById('scene-loading');
+    if(box && !box.hidden) window.sawTransitionBox=true;
+   }).observe(document,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden']});
+  """)
   page=context.new_page()
   page.on('pageerror',lambda e:errors.append(str(e)))
   held=[]
@@ -37,6 +44,7 @@ try:
   for route in list(held): route.continue_()
   page.wait_for_url(BASE+'game.html#/home',timeout=20000)
   expect(page.locator('#memory-count')).to_have_text('0')
+  assert not page.evaluate('window.sawTransitionBox'), '開始遊戲不應再跳出換場方框'
   print('PASS: 無存檔停用繼續；開始遊戲須等待場景與單頁入口資源載入，完成前不建立／重設存檔。',flush=True)
   page.evaluate("GameProgress.completeRuisui(); GameProgress.saveNote('ruisui','保留我的心得'); GameProgress.enterScene('diary','ruisui-player')")
   page.goto(BASE)
@@ -52,6 +60,7 @@ try:
   for route in list(held): route.continue_()
   page.wait_for_url(BASE+'game.html#/diary?station=ruisui&tab=player',timeout=20000)
   expect(page.locator('#travel-note')).to_have_value('保留我的心得')
+  assert not page.evaluate('window.sawTransitionBox'), '繼續旅程不應再跳出換場方框'
   print('PASS: 繼續旅程使用相同進度條，恢復原日記頁籤、碎片與心得。',flush=True)
   page.unroute('**/js/app.js',stall)
   page.goto(BASE)

@@ -1,20 +1,16 @@
 /* 單頁入口只負責載入提示；各場景仍沿用原有美術樣式。 */
 html, body { margin: 0; min-height: 100%; background: #f4eddf; }
 #scene-host { min-height: 100vh; }
+/* 錯誤提示預設隱藏；沒有全畫面遮罩或進場方框。 */
 .scene-loading {
-    position: fixed; inset: 0; z-index: 10000;
-    display: grid; place-items: center;
-    background: rgba(46, 39, 31, .45);
-    font: 16px/1.6 "Microsoft JhengHei", sans-serif;
-    color: #574a3e;
+    position: fixed; left: 50%; bottom: 24px; z-index: 10000;
+    transform: translateX(-50%); width: min(520px, 90vw);
+    box-sizing: border-box; padding: 14px 18px;
+    border: 1px solid #b9a98d; border-radius: 12px;
+    background: #fff8ec; color: #574a3e;
+    font: 14px/1.6 "Microsoft JhengHei", sans-serif;
 }
 .scene-loading[hidden] { display: none; }
-.scene-loading-card {
-    width: min(420px, 86vw); box-sizing: border-box;
-    padding: 24px; border-radius: 20px; background: #fff8ec;
-    box-shadow: 0 8px 25px rgba(55, 40, 25, .2);
-}
-#scene-progress { width: 80%; accent-color: #7b8e71; }
 .scene-loading-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
 .scene-loading-actions button, .scene-loading-actions a {
     border: 1px solid #b9a98d; border-radius: 8px; padding: 6px 10px;
