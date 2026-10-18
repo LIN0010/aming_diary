@@ -187,6 +187,27 @@
         resumeUrl,
         ruisuiStage,
         save: () => update(() => {}),
+        reset() {
+            // 只在明確選擇新遊戲時呼叫；寫入成功前不動本頁狀態。
+            readStoredState();
+            if (protectedSave) { notify(); return false; }
+            const fresh = emptyState();
+            fresh.notes.ruisui = ""; // 防止舊版心得在下次開啟時重新匯入。
+            try {
+                localStorage.setItem(SAVE_KEY, JSON.stringify(fresh));
+            } catch (_) {
+                issue = "無法建立新旅程，原存檔已保留；請確認瀏覽器允許儲存後再試。";
+                notify();
+                return false;
+            }
+            state = fresh;
+            for (const key of Object.keys(pendingNotes)) delete pendingNotes[key];
+            pendingChanges = false;
+            hasSavedProgress = true;
+            issue = "";
+            notify();
+            return true;
+        },
         subscribe(listener) {
             listeners.add(listener);
             listener(copy(state), saveStatus());

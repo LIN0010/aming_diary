@@ -1,5 +1,6 @@
 const startScreen = document.getElementById("start-screen");
 const startBtn = document.getElementById("start-btn");
+const continueBtn = document.getElementById("continuous-journey");
 const loadingScreen = document.getElementById("loading-screen");
 const train = document.getElementById("train");
 const percentage = document.getElementById("percentage");
@@ -7,11 +8,12 @@ const loadingProgress = document.getElementById("loading-progress");
 const loadingStatus = document.getElementById("loading-status");
 const retryLoading = document.getElementById("retry-loading");
 let destination = "home.html";
+let newGame = false;
 let starting = false;
 let loadController;
 
 GameProgress.subscribe((state, status) => {
-    startBtn.textContent = status.canResume ? "繼續旅程" : "開始遊戲";
+    continueBtn.disabled = starting || !status.canResume;
 });
 
 function renderProgress(completed, total) {
@@ -29,6 +31,7 @@ async function loadGame() {
     loadController = new AbortController();
     const signal = loadController.signal;
     startBtn.disabled = true;
+    continueBtn.disabled = true;
     startScreen.style.display = "none";
     loadingScreen.style.display = "block";
     loadingScreen.style.opacity = "1";
@@ -40,7 +43,17 @@ async function loadGame() {
         await JourneyLoader.load(destination, (completed, total) => {
             renderProgress(completed, total);
             if (loadingStatus.textContent !== "正在載入旅程…") loadingStatus.textContent = "正在載入旅程…";
-        }, { signal });
+        }, { signal, shell: "game.html" });
+        if (signal.aborted) return;
+        // 新旅程只在內容成功載入後重設；載入失敗不會先清掉存檔。
+        if (newGame && !GameProgress.reset()) {
+            starting = false;
+            startBtn.disabled = false;
+            continueBtn.disabled = !GameProgress.saveStatus().canResume;
+            startScreen.style.display = "block";
+            loadingScreen.style.display = "none";
+            return;
+        }
         if (signal.aborted) return;
         loadingStatus.textContent = "載入完成，即將出發。";
         // 百分比由真實載入結果決定；這裡只等待原有的畫面淡出動畫。
@@ -48,7 +61,7 @@ async function loadGame() {
         if (signal.aborted) return;
         loadingScreen.style.opacity = "0";
         await Promise.all(loadingScreen.getAnimations().map(animation => animation.finished.catch(() => {})));
-        if (!signal.aborted) window.location.href = destination;
+        if (!signal.aborted) window.location.href = "game.html" + GameNavigation.route(destination).hash;
     } catch (_) {
         if (signal.aborted) return;
         loadingStatus.textContent = "部分遊戲內容未能載入，請確認網路連線後重試。";
@@ -59,7 +72,17 @@ async function loadGame() {
 
 startBtn.addEventListener("click", () => {
     if (starting) return;
+    GameProgress.resumeUrl(); // 確認其他分頁的最新存檔狀態。
+    if (GameProgress.saveStatus().canResume && !window.confirm("開始新遊戲會重設目前的回憶、探索進度與旅行心得，確定重新開始嗎？")) return;
+    newGame = true;
+    destination = "home.html";
+    loadGame();
+});
+continueBtn.addEventListener("click", () => {
+    if (starting) return;
     destination = GameProgress.resumeUrl();
+    if (!GameProgress.saveStatus().canResume) { continueBtn.disabled = true; return; }
+    newGame = false;
     loadGame();
 });
 retryLoading.addEventListener("click", loadGame);
@@ -68,6 +91,7 @@ window.addEventListener("pageshow", event => {
     if (!event.persisted) return;
     starting = false;
     startBtn.disabled = false;
+    continueBtn.disabled = !GameProgress.saveStatus().canResume;
     startScreen.style.display = "block";
     loadingScreen.style.display = "none";
     loadingScreen.style.opacity = "1";

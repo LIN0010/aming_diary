@@ -522,3 +522,5 @@ body {
 }
 
 /* 連續旅程入口沿用開始遊戲的按鈕樣式。 */
+
+.continuous-journey:disabled { opacity: .55; cursor: not-allowed; transform: none; }

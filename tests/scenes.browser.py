@@ -51,7 +51,7 @@ try:
         page = context.new_page()
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.goto(BASE)
-        page.locator('#continuous-journey').click()
+        page.locator('#start-btn').click()
         ready(page, 'home')
         page.goto(BASE + 'game.html#/home')
         ready(page, 'home')

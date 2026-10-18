@@ -67,15 +67,15 @@ try:
         percentages = page.evaluate('window.percentages')
         assert percentages == sorted(percentages), percentages
         expect(page.locator('#loading-progress')).to_have_attribute('aria-valuenow', '100')
-        page.wait_for_url(BASE + 'home.html')
+        page.wait_for_url(BASE + 'game.html#/home')
         print('PASS: 圖片延遲時百分比停住，不提前進場或執行目標頁程式；載入後才到 100%', flush=True)
 
         page.unroute('**/images/aming.png', hold_image)
         page.go_back()
         expect(page.locator('#start-btn')).to_be_visible()
         expect(page.locator('#start-btn')).to_be_enabled()
-        page.locator('#start-btn').click()
-        page.wait_for_url(BASE + 'home.html')
+        page.locator('#continuous-journey').click()
+        page.wait_for_url(BASE + 'game.html#/home')
         print('PASS: 回到入口後仍可繼續，快取資源也能完成真實載入', flush=True)
         context.close()
 
@@ -97,7 +97,7 @@ try:
         expect(page.locator('#loading-status')).to_contain_text('未能載入')
         fail[0] = False
         page.locator('#retry-loading').click()
-        page.wait_for_url(BASE + 'home.html')
+        page.wait_for_url(BASE + 'game.html#/home')
         print('PASS: 程式載入失敗不會顯示完成或跳頁；恢復後能重試', flush=True)
         context.close()
 
@@ -114,7 +114,7 @@ try:
         expect(page).to_have_url(BASE)
         page.unroute('**/images/aming.png', invalid_image)
         page.locator('#retry-loading').click()
-        page.wait_for_url(BASE + 'home.html')
+        page.wait_for_url(BASE + 'game.html#/home')
         print('PASS: HTTP 成功但圖片損壞仍視為失敗，修復圖片後可重試', flush=True)
         context.close()
 

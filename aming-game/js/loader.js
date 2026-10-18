@@ -73,16 +73,24 @@
             const pageURL = new URL(destination, document.baseURI);
             const page = add(pageURL.href, document.baseURI, "html");
             const html = await textResource(page);
-            const parsed = new DOMParser().parseFromString(html, "text/html");
-            parsed.querySelectorAll('link[rel="stylesheet"][href]').forEach(link => {
-                add(link.getAttribute("href"), pageURL, "css");
-            });
-            parsed.querySelectorAll('script[src]').forEach(script => {
-                add(script.getAttribute("src"), pageURL, "script");
-            });
-            parsed.querySelectorAll('img[src]').forEach(image => {
-                add(image.getAttribute("src"), pageURL, "image");
-            });
+            const pages = [{ url: pageURL, html }];
+            if (options.shell) {
+                const shellURL = new URL(options.shell, document.baseURI);
+                const shell = add(shellURL.href, document.baseURI, "html");
+                pages.push({ url: shellURL, html: await textResource(shell) });
+            }
+            for (const content of pages) {
+                const parsed = new DOMParser().parseFromString(content.html, "text/html");
+                parsed.querySelectorAll('link[rel="stylesheet"][href]').forEach(link => {
+                    add(link.getAttribute("href"), content.url, "css");
+                });
+                parsed.querySelectorAll('script[src]').forEach(script => {
+                    add(script.getAttribute("src"), content.url, "script");
+                });
+                parsed.querySelectorAll('img[src]').forEach(image => {
+                    add(image.getAttribute("src"), content.url, "image");
+                });
+            }
 
             // 先找齊 CSS 的背景圖片及匯入樣式，再固定總數，避免百分比倒退。
             let styles;

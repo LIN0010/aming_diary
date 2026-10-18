@@ -50,9 +50,10 @@ def shoot(page):
 
 def continue_from_start(page, expected_url):
     page.goto(BASE)
-    expect(page.locator('#start-btn')).to_have_text('繼續旅程')
-    page.locator('#start-btn').click()
-    page.wait_for_url(BASE + expected_url, timeout=20000)
+    expect(page.locator('#continuous-journey')).to_be_enabled()
+    page.locator('#continuous-journey').click()
+    route, _, query = expected_url.partition('?')
+    page.wait_for_url(BASE + 'game.html#/' + route.removesuffix('.html') + ('?' + query if query else ''), timeout=20000)
 
 
 server = ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=str(ROOT / 'aming-game')))
@@ -67,7 +68,7 @@ try:
         page.goto(BASE)
         expect(page.locator('#start-btn')).to_have_text('開始遊戲')
         page.locator('#start-btn').click()
-        page.wait_for_url(BASE + 'home.html', timeout=20000)
+        page.wait_for_url(BASE + 'game.html#/home', timeout=20000)
         expect(page.locator('#memory-count')).to_have_text('0')
         page.locator('#save-progress').click()
         expect(page.locator('#save-status')).to_have_text('✓ 旅程已儲存')

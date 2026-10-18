@@ -207,3 +207,32 @@ test('損壞或未知版本的存檔不能藉手動儲存被覆寫，也不提�
         assert.equal(current.api.resumeUrl(), 'home.html');
     }
 });
+
+test('新遊戲重設碎片、心得與位置，重新載入不會匯回舊心得', () => {
+    const first = app({data:new Map([['ruisui-travel-note','舊心得']])});
+    first.api.completeRuisui();
+    first.api.saveNote('ruisui','現有心得');
+    first.api.enterScene('diary','ruisui-player');
+    assert.equal(first.api.reset(), true);
+    const next = app({data:first.data});
+    assert.deepEqual(next.state().collectedMemories, []);
+    assert.deepEqual(next.state().visitedStations, []);
+    assert.equal(next.state().notes.ruisui, '');
+    assert.equal(next.state().lastScene, 'home');
+    assert.equal(first.data.get('ruisui-travel-note'), '舊心得');
+});
+
+test('重設寫入失敗時保留既有存檔及本頁進度', () => {
+    const first=app(); first.api.completeRuisui();
+    const original=first.data.get(KEY);
+    const next=app({data:first.data,failWrite:true});
+    assert.equal(next.api.reset(), false);
+    assert.equal(first.data.get(KEY), original);
+    assert.deepEqual(next.state().collectedMemories, ['ruisui-01']);
+});
+
+test('重設不覆寫無法辨識的既有存檔', () => {
+    const first=app({data:new Map([[KEY,'{broken']])});
+    assert.equal(first.api.reset(), false);
+    assert.equal(first.data.get(KEY), '{broken');
+});
