@@ -252,3 +252,66 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-carousel-arrow:focus-visible { outline: 2px solid #718b76; outline-offset: 3px; }
 .ev-carousel-arrow:disabled { opacity: .3; cursor: default; }
 @media (max-width: 700px) { .ev-carousel-row { grid-template-columns: 26px minmax(0, 1fr) 26px; gap: 4px; } .ev-carousel-arrow { width: 26px; font-size: 12px; } }
+
+/* 攝影祭參加後：固定進度與功能選單，僅左側內容獨立捲動。 */
+.ev-photo-mode .ev-scroll { display: flex; flex-direction: column; overflow: hidden; padding: 18px max(24px, calc((100% - 1200px) / 2)) 112px; }
+.ev-photo-mode .ev-header { display: none; }
+.ev-photo-mode .ev-data-note { flex-shrink: 0; margin-bottom: 8px; }
+.ev-photo-mode .ev-footer { flex-shrink: 0; margin-top: 8px; gap: 4px 12px; }
+.ev-photo-mode #ev-content { flex: 1; min-height: 0; }
+.ev-photo-workspace { height: 100%; min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 12px; }
+.ev-photo-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 18px; }
+#event-screen .ev-photo-heading h2 { font-size: clamp(21px, 2.4vw, 28px); }
+.ev-photo-heading .ev-meta { margin: 0; }
+.ev-photo-progress-area { margin: 0; padding: 14px 20px 10px; }
+.ev-photo-progress-area .ev-section-heading { margin-bottom: 8px; }
+.ev-photo-progress-area .ev-eyebrow { display: none; }
+#event-screen .ev-photo-progress-area h3 { font-size: 16px; }
+.ev-photo-progress-area .ev-count { font-size: 24px; }
+.ev-photo-progress-area .ev-milestones { margin-bottom: 0; }
+.ev-photo-progress-area .ev-muted { font-size: 11px; }
+.ev-photo-body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(160px, 1fr); gap: 20px; min-height: 0; }
+.ev-photo-display { min-width: 0; min-height: 0; display: grid; }
+.ev-photo-panel { min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #73897552 transparent; padding: 6px 12px 20px 4px; scroll-padding: 12px; }
+.ev-photo-panel > .ev-paper, .ev-photo-panel > .ev-album { margin: 0; }
+.ev-photo-panel > .ev-paper { padding: 22px; }
+.ev-photo-panel .ev-upload-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.ev-photo-panel .ev-upload { height: 100%; }
+.ev-photo-menu { display: flex; flex-direction: column; gap: 14px; padding: 6px 0; }
+.ev-photo-menu button { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 68px; padding: 16px 20px; border: 1px solid #c5cebe; border-radius: 10px; background: #f8f6ee; color: #536a58; text-align: left; box-shadow: 0 3px 10px #6e644210; }
+.ev-photo-menu button:hover { background: #e6ecdf; color: #3f583f; }
+.ev-photo-menu button[aria-selected="true"] { background: #5e765f; border-color: #5e765f; color: #fffdf6; box-shadow: inset 4px 0 #d5dec7, 0 4px 12px #536a5820; }
+.ev-photo-menu button[aria-selected="true"]:hover { background: #4f6750; color: #fffdf6; }
+@media (max-width: 700px) {
+    .ev-photo-mode .ev-scroll { padding: 12px 12px 108px; }
+    .ev-photo-mode .ev-footer > span { display: none; }
+    .ev-photo-workspace { gap: 8px; }
+    .ev-photo-heading { gap: 2px 12px; }
+    .ev-photo-heading > .ev-text-button { padding: 0; }
+    .ev-photo-heading .ev-meta { font-size: 10px; gap: 2px 8px; }
+    .ev-photo-progress-area { padding: 10px 12px 6px; }
+    .ev-photo-progress-area .ev-section-heading { gap: 4px; }
+    .ev-photo-progress-area .ev-count { font-size: 20px; }
+    .ev-photo-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 8px; }
+    .ev-photo-menu { grid-row: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 0; }
+    .ev-photo-menu { gap: 8px; }
+    .ev-photo-menu button { min-height: 56px; padding: 12px 8px; font-size: 12px !important; }
+    .ev-photo-panel { padding: 6px 6px 16px 2px; }
+    .ev-photo-panel > .ev-paper { padding: 12px; }
+    .ev-photo-panel .ev-upload-grid, .ev-photo-panel .ev-rewards, .ev-photo-panel .ev-photo-wall { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .ev-photo-panel .ev-theme { padding: 14px; }
+    .ev-photo-panel .ev-rules { padding: 12px; }
+    .ev-photo-panel .ev-upload { min-height: 240px; padding: 10px; }
+    .ev-photo-panel .ev-picker-label { padding: 10px; font-size: 11px !important; }
+}
+@media (min-width: 701px) {
+    .ev-photo-panel #ev-submit-area { padding: 18px; }
+    .ev-photo-panel #ev-submit-area .ev-section-heading { margin-bottom: 12px; }
+    .ev-photo-panel .ev-upload { min-height: 240px; }
+    .ev-photo-panel .ev-upload-preview { max-height: 180px; }
+    .ev-photo-panel .ev-upload-fields { gap: 6px; }
+    .ev-photo-panel .ev-upload-fields label { line-height: 1.4; }
+    .ev-photo-panel .ev-upload-fields .ev-muted { font-size: 12px; line-height: 1.5; }
+    #event-screen.ev-photo-mode .ev-upload-fields input, #event-screen.ev-photo-mode .ev-upload-fields textarea { padding: 8px 10px; line-height: 1.5; }
+    #event-screen.ev-photo-mode .ev-upload-fields textarea { height: 70px; min-height: 70px; }
+}

@@ -10,6 +10,7 @@ GameScenes.register("event", ctx => {
     ctx.root.append(startModal);
     let view = ["photo", "race"].includes(ctx.params.get("activity")) ? ctx.params.get("activity") : "home";
     let category = ctx.params.get("category") === "race" ? "race" : "photo";
+    let photoSection = "submit";
     let photoData = "", photoTitle = "", photoDescription = "", fileName = "", postcard = "";
     let answers = [], preparing = false, disposed = false, fileToken = 0, messageTimer;
     let previousLeader = store.leader(), lastPhase = store.phase("photo") + store.phase("race");
@@ -46,6 +47,7 @@ GameScenes.register("event", ctx => {
         quizRevision++; answering = false;
         raceStage = store.snapshot().team ? "hub" : "intro";
         view = next;
+        if (next === "photo") photoSection = "submit";
         startPrompt = next === "race" && !store.snapshot().team && store.phase("race") === "active";
         if (view === "race") category = "race";
         route(); render(); scroller.scrollTop = 0;
@@ -78,14 +80,26 @@ GameScenes.register("event", ctx => {
     function photo(state) {
         const count = C.photo.baseCount + state.photos.length;
         const ready = store.phase("photo") === "active";
-        return `${button("back", "← 返回活動首頁", "ev-text-button")}${banner("photo")}
-            <details class="ev-rules"><summary>攝影祭規則與投稿說明</summary><p>從活動卡片進入後，直接選擇一張自己的照片投稿。每次成功保存增加 1 份共同投稿，不以瀏覽或重複領獎加分。起始 ${C.photo.baseCount} 份為模擬基數，下方只展示其中幾張 示意照片；沒有真實玩家連線或圖片上傳。</p><p>獎勵須參加後解鎖並領取，僅作本機收藏展示。每張照片會縮圖壓縮，本機最多 ${C.maxPhotos} 張。請只使用可分享的照片；重置活動紀錄只清除活動資料。</p></details>
-            <section class="ev-paper"><div class="ev-section-heading"><div><p class="ev-eyebrow">TOGETHER, WE BLOOM</p><h3>一起，把春天收集起來</h3></div><span class="ev-count" id="ev-photo-count">${count} <small>/ ${C.photo.goal} 份</small></span></div>
-            <progress class="ev-progress" id="ev-photo-progress" max="${C.photo.goal}" value="${Math.min(count, C.photo.goal)}" aria-label="共同相簿投稿進度"></progress><div class="ev-milestones" aria-hidden="true">${C.photo.rewards.map(r => `<span class="${count >= r.at ? "is-unlocked" : ""}" style="left:${Math.min(98, r.at * 100 / C.photo.goal)}%" title="${h(r.name)}：${r.at} 份">${r.at}</span>`).join("")}</div><p class="ev-muted">模擬基數 ${C.photo.baseCount} 份 ＋ 本機投稿 ${state.photos.length} 份 · 達標後仍可投稿</p>
-            <div class="ev-rewards">${C.photo.rewards.map(r => reward(r.id, r.name, `共同投稿達 ${r.at} 份 · ${r.description}`, state)).join("")}</div></section>
-            <section class="ev-theme"><span class="ev-eyebrow">本期攝影主題</span><h3>${h(C.photo.theme)}</h3><p>${h(C.photo.themeDescription)}</p>${state.photoJoined ? '<span class="ev-tag">✓ 已參加攝影祭</span>' : (ready ? button("open-photo", "重試開啟投稿", "ev-secondary") : `<span class="ev-tag">${phaseText("photo")}</span>`)}</section>
-            <section class="ev-paper" id="ev-submit-area"><div class="ev-section-heading"><h3>留下一張你的春天</h3><span>YOUR PHOTO</span></div><form id="ev-photo-form"><fieldset${disabled(!state.photoJoined || !ready)}><legend class="ev-sr-only">攝影祭投稿</legend><div class="ev-upload-grid"><div class="ev-upload-wrap"><button type="button" class="ev-upload" data-action="pick-photo" aria-label="選擇本機照片"><span id="ev-file-status">${h(preparing ? "正在整理照片…" : fileName || "JPEG / PNG / WebP，來源不超過 10 MB")}</span>${photoData ? `<img class="ev-upload-preview" src="${photoData}" alt="待投稿照片預覽">` : '<span class="ev-upload-empty" aria-hidden="true">一張照片<br>留住沿途的光</span>'}<span class="ev-button ev-picker-label">選擇本機照片</span></button><input type="file" id="ev-photo-file" accept="image/jpeg,image/png,image/webp" aria-label="選擇照片檔案" hidden></div><div class="ev-upload-fields"><label for="ev-photo-title">照片標題</label><input id="ev-photo-title" maxlength="60" required placeholder="例如：在月台邊遇見春天" value="${h(photoTitle)}"><label for="ev-photo-description">照片裡的故事（選填）</label><textarea id="ev-photo-description" maxlength="180" rows="3" placeholder="寫下這一刻的心情…">${h(photoDescription)}</textarea><p class="ev-muted">壓縮後只保存在你的瀏覽器，不會上傳。</p><button class="ev-button" id="ev-submit-photo" type="submit"${disabled(preparing || !photoData || state.photos.length >= C.maxPhotos)}>投稿照片 →</button></div></div></fieldset></form></section>
-            <section class="ev-album"><div class="ev-section-heading"><h3>全服共同相簿</h3><span>${state.photos.length + C.photo.album.length} 張展示照片</span></div><p class="ev-muted">這面照片牆由模擬旅人卡片與你的本機投稿組成。點擊照片，翻開它的故事。</p><div class="ev-photo-wall">${[...state.photos].reverse().map(p => `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>`).join("")}${C.photo.album.map(p => `<button type="button" class="ev-polaroid" data-photo="${p.id}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div></section>`;
+        const sections = [["submit", "投稿區"], ["tasks", "任務區"], ["album", "共同相簿區"]];
+        const pane = (id, markup) => `<div id="ev-photo-panel-${id}" class="ev-photo-panel" role="tabpanel" aria-labelledby="ev-photo-tab-${id}" tabindex="0"${photoSection === id ? "" : " hidden"}>${markup}</div>`;
+        return `<div class="ev-photo-workspace"><header class="ev-photo-heading">${button("back", "← 返回活動首頁", "ev-text-button")}<h2>${h(C.photo.title)}</h2><div class="ev-meta"><span>${dates("photo")}</span><span>${phaseText("photo")}</span><span data-countdown="photo">${timeLeft("photo")}</span></div></header>
+            <section class="ev-paper ev-photo-progress-area"><div class="ev-section-heading"><div><p class="ev-eyebrow">TOGETHER, WE BLOOM</p><h3>一起，把春天收集起來</h3></div><span class="ev-count" id="ev-photo-count">${count} <small>/ ${C.photo.goal} 份</small></span></div>
+            <progress class="ev-progress" id="ev-photo-progress" max="${C.photo.goal}" value="${Math.min(count, C.photo.goal)}" aria-label="共同相簿投稿進度"></progress><div class="ev-milestones" aria-hidden="true">${C.photo.rewards.map(r => `<span class="${count >= r.at ? "is-unlocked" : ""}" style="left:${Math.min(98, r.at * 100 / C.photo.goal)}%" title="${h(r.name)}：${r.at} 份">${r.at}</span>`).join("")}</div><p class="ev-muted">模擬基數 ${C.photo.baseCount} 份 ＋ 本機投稿 ${state.photos.length} 份 · 達標後仍可投稿</p></section>
+            <div class="ev-photo-body"><div class="ev-photo-display">
+            ${pane("submit", `<section class="ev-paper" id="ev-submit-area"><div class="ev-section-heading"><h3>留下一張你的春天</h3><span>YOUR PHOTO</span></div><form id="ev-photo-form"><fieldset${disabled(!state.photoJoined || !ready)}><legend class="ev-sr-only">攝影祭投稿</legend><div class="ev-upload-grid"><div class="ev-upload-wrap"><button type="button" class="ev-upload" data-action="pick-photo" aria-label="選擇本機照片"><span id="ev-file-status">${h(preparing ? "正在整理照片…" : fileName || "JPEG / PNG / WebP，來源不超過 10 MB")}</span>${photoData ? `<img class="ev-upload-preview" src="${photoData}" alt="待投稿照片預覽">` : '<span class="ev-upload-empty" aria-hidden="true">一張照片<br>留住沿途的光</span>'}<span class="ev-button ev-picker-label">選擇本機照片</span></button><input type="file" id="ev-photo-file" accept="image/jpeg,image/png,image/webp" aria-label="選擇照片檔案" hidden></div><div class="ev-upload-fields"><label for="ev-photo-title">照片標題</label><input id="ev-photo-title" maxlength="60" required placeholder="例如：在月台邊遇見春天" value="${h(photoTitle)}"><label for="ev-photo-description">照片裡的故事（選填）</label><textarea id="ev-photo-description" maxlength="180" rows="3" placeholder="寫下這一刻的心情…">${h(photoDescription)}</textarea><p class="ev-muted">壓縮後只保存在你的瀏覽器，不會上傳。</p><button class="ev-button" id="ev-submit-photo" type="submit"${disabled(preparing || !photoData || state.photos.length >= C.maxPhotos)}>投稿照片 →</button></div></div></fieldset></form></section>`)}
+            ${pane("tasks", `<section class="ev-theme"><span class="ev-eyebrow">本期攝影主題</span><h3>${h(C.photo.theme)}</h3><p>${h(C.photo.themeDescription)}</p>${state.photoJoined ? '<span class="ev-tag">✓ 已參加攝影祭</span>' : (ready ? button("open-photo", "重試開啟投稿", "ev-secondary") : `<span class="ev-tag">${phaseText("photo")}</span>`)}</section><details class="ev-rules"><summary>攝影祭規則與投稿說明</summary><p>從活動卡片進入後，直接選擇一張自己的照片投稿。每次成功保存增加 1 份共同投稿，不以瀏覽或重複領獎加分。起始 ${C.photo.baseCount} 份為模擬基數，下方只展示其中幾張 示意照片；沒有真實玩家連線或圖片上傳。</p><p>獎勵須參加後解鎖並領取，僅作本機收藏展示。每張照片會縮圖壓縮，本機最多 ${C.maxPhotos} 張。請只使用可分享的照片；重置活動紀錄只清除活動資料。</p></details><section class="ev-paper"><div class="ev-section-heading"><h3>階段獎勵</h3><span>EVENT REWARDS</span></div><div class="ev-rewards">${C.photo.rewards.map(r => reward(r.id, r.name, `共同投稿達 ${r.at} 份 · ${r.description}`, state)).join("")}</div></section>`)}
+            ${pane("album", `<section class="ev-album"><div class="ev-section-heading"><h3>全服共同相簿</h3><span>${state.photos.length + C.photo.album.length} 張展示照片</span></div><p class="ev-muted">這面照片牆由模擬旅人卡片與你的本機投稿組成。點擊照片，翻開它的故事。</p><div class="ev-photo-wall">${[...state.photos].reverse().map(p => `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>`).join("")}${C.photo.album.map(p => `<button type="button" class="ev-polaroid" data-photo="${p.id}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div></section>`)}
+            </div><nav class="ev-photo-menu" role="tablist" aria-label="攝影祭功能" aria-orientation="${matchMedia("(max-width: 700px)").matches ? "horizontal" : "vertical"}">${sections.map(([id, label]) => `<button type="button" role="tab" id="ev-photo-tab-${id}" aria-controls="ev-photo-panel-${id}" aria-selected="${photoSection === id}" tabindex="${photoSection === id ? 0 : -1}" data-photo-section="${id}"><span>${label}</span><span aria-hidden="true">${photoSection === id ? "●" : "○"}</span></button>`).join("")}</nav></div></div>`;
+    }
+    function selectPhotoSection(next) {
+        if (view !== "photo" || !["submit", "tasks", "album"].includes(next)) return;
+        photoSection = next;
+        ctx.queryAll("[data-photo-section]").forEach(tab => {
+            const selected = tab.dataset.photoSection === next;
+            tab.setAttribute("aria-selected", String(selected)); tab.tabIndex = selected ? 0 : -1;
+            tab.lastElementChild.textContent = selected ? "●" : "○";
+            ctx.id(tab.getAttribute("aria-controls")).hidden = !selected;
+        });
     }
     function raceScreen() {
         render(); scroller.scrollTop = 0;
@@ -138,6 +152,7 @@ GameScenes.register("event", ctx => {
     }
     function render() {
         const state = store.snapshot();
+        ctx.root.classList.toggle("ev-photo-mode", view === "photo");
         content.innerHTML = view === "photo" ? photo(state) : view === "race" ? race(state) : home(state);
         if (startPrompt && (view === "race" || (view === "home" && category === "race")) && raceStage === "intro" && !state.team && store.phase("race") === "active") {
             // SPA 完成掛載後才開啟，避免換場搬移 DOM 使對話框掉出浮層。
@@ -187,6 +202,7 @@ GameScenes.register("event", ctx => {
         if (event.isTrusted && activatedTouches.has(target)) { activatedTouches.delete(target); event.preventDefault(); return; }
         if (view === "home" && target.dataset.action === "previous-activity") selectActivity("photo");
         if (view === "home" && target.dataset.action === "next-activity") selectActivity("race");
+        if (target.dataset.photoSection) selectPhotoSection(target.dataset.photoSection);
         if (target.dataset.action === "pick-photo") ctx.id("ev-photo-file").click();
         if (target.dataset.action === "open-photo") {
             if (!store.snapshot().photoJoined && store.phase("photo") === "active") {
@@ -231,6 +247,14 @@ GameScenes.register("event", ctx => {
         category = next; route(); render(); ctx.id("ev-cards")?.focus({ preventScroll: true });
     }
     ctx.on(ctx.root, "keydown", event => {
+        const tab = event.target.closest("[data-photo-section]");
+        if (view === "photo" && tab && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+            event.preventDefault();
+            const ids = ["submit", "tasks", "album"], index = ids.indexOf(photoSection);
+            selectPhotoSection(event.key === "Home" ? ids[0] : event.key === "End" ? ids[2] : ids[(index + (["ArrowUp", "ArrowLeft"].includes(event.key) ? 2 : 1)) % 3]);
+            ctx.id("ev-photo-tab-" + photoSection).focus();
+        }
+
         if (view === "home" && event.target.closest("#ev-cards") && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
             event.preventDefault(); selectActivity(["ArrowRight", "End"].includes(event.key) ? "race" : "photo");
         }
