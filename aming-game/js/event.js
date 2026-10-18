@@ -8,7 +8,8 @@ GameScenes.register("event", ctx => {
     let photoData = "", photoTitle = "", photoDescription = "", fileName = "", postcard = "";
     let answers = [], preparing = false, disposed = false, fileToken = 0, messageTimer;
     let previousLeader = store.leader(), lastPhase = store.phase("photo") + store.phase("race");
-    let resultTeam = null;
+    let raceStage = store.snapshot().team ? "hub" : "intro";
+    let questionIndex = 0, answering = false, quizRevision = 0;
     const imageURLs = new Set();
     const h = text => String(text).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
     const disabled = value => value ? " disabled" : "";
@@ -34,6 +35,8 @@ GameScenes.register("event", ctx => {
     }
     function switchView(next) {
         fileToken++; preparing = false;
+        quizRevision++; answering = false;
+        raceStage = store.snapshot().team ? "hub" : "intro";
         view = next;
         if (view === "race") category = "race";
         route(); render(); scroller.scrollTop = 0;
@@ -45,17 +48,17 @@ GameScenes.register("event", ctx => {
         ctx.id("ev-clock").textContent = (C.demoClock ? "活動日曆：" : "台灣日期：") + display;
         ctx.queryAll("[data-countdown]").forEach(el => { el.textContent = timeLeft(el.dataset.countdown); });
     }
-    function banner(kind, hero = false, summary = "") {
+    function banner(kind, hero = false, summary = "", action = "open-" + kind, label = "參加活動 →") {
         const event = C[kind];
         return `<section class="ev-banner ev-${kind} ${hero ? "ev-hero" : ""}">
             <div class="ev-banner-art" aria-label="活動主視覺"><span>${kind === "photo" ? "SPRING / 2027" : "TWO WAYS, ONE JOURNEY"}</span><div class="ev-rail" aria-hidden="true"></div></div>
             <div class="ev-banner-copy"><span class="ev-tag">${hero ? "本期推薦 · " : ""}${kind === "photo" ? "全服合作" : "陣營競賽"}</span>
             <h2>${h(event.title)}</h2><p>${h(event.introduction)}</p><div class="ev-meta"><span>${dates(kind)}</span><span class="ev-status">${phaseText(kind)}</span><span data-countdown="${kind}">${timeLeft(kind)}</span></div>
             ${summary ? `<p class="ev-pass-summary">${h(summary)}</p>` : ""}
-            ${hero ? button("open-" + kind, "參加活動 →") : ""}</div></section>`;
+            ${hero ? button(action, label, "", action === "start-quiz" && store.phase("race") !== "active") : ""}</div></section>`;
     }
     function home(state) {
-        const summary = category === "photo" ? `${C.photo.baseCount + state.photos.length} / ${C.photo.goal} 份共同投稿` : `${store.teams()[0].score} : ${store.teams()[1].score} · 陣營貢獻`;
+        const summary = category === "photo" ? `${C.photo.baseCount + state.photos.length} / ${C.photo.goal} 份共同投稿` : (state.team ? `${store.teams()[0].score} : ${store.teams()[1].score} · 陣營貢獻` : "跟著旅行直覺，找到屬於你的陣營");
         return `<section class="ev-catalog">
             <div class="ev-tabs" role="tablist" aria-label="活動分類"><button type="button" role="tab" id="ev-tab-photo" aria-selected="${category === "photo"}" aria-controls="ev-cards" tabindex="${category === "photo" ? 0 : -1}" data-category="photo">全服合作</button><button type="button" role="tab" id="ev-tab-race" aria-selected="${category === "race"}" aria-controls="ev-cards" tabindex="${category === "race" ? 0 : -1}" data-category="race">陣營競賽</button></div>
             <div id="ev-cards" role="tabpanel" aria-labelledby="ev-tab-${category}">${banner(category, true, summary)}</div></section>`;
@@ -76,14 +79,40 @@ GameScenes.register("event", ctx => {
             <section class="ev-paper" id="ev-submit-area"><div class="ev-section-heading"><h3>留下一張你的春天</h3><span>YOUR PHOTO</span></div><form id="ev-photo-form"><fieldset${disabled(!state.photoJoined || !ready)}><legend class="ev-sr-only">攝影祭投稿</legend><div class="ev-upload-grid"><div class="ev-upload"><label for="ev-photo-file">＋ 選擇本機照片</label><input type="file" id="ev-photo-file" accept="image/jpeg,image/png,image/webp"><p id="ev-file-status">${h(preparing ? "正在整理照片…" : fileName || "JPEG / PNG / WebP，來源不超過 10 MB")}</p>${photoData ? `<img class="ev-upload-preview" src="${photoData}" alt="待投稿照片預覽">` : '<div class="ev-upload-empty" aria-hidden="true">一張照片<br>留住沿途的光</div>'}</div><div class="ev-upload-fields"><label for="ev-photo-title">照片標題</label><input id="ev-photo-title" maxlength="60" required placeholder="例如：在月台邊遇見春天" value="${h(photoTitle)}"><label for="ev-photo-description">照片裡的故事（選填）</label><textarea id="ev-photo-description" maxlength="180" rows="3" placeholder="寫下這一刻的心情…">${h(photoDescription)}</textarea><p class="ev-muted">壓縮後只保存在你的瀏覽器，不會上傳。</p><button class="ev-button" id="ev-submit-photo" type="submit"${disabled(preparing || !photoData || state.photos.length >= C.maxPhotos)}>投稿照片 →</button></div></div></fieldset></form></section>
             <section class="ev-album"><div class="ev-section-heading"><h3>全服共同相簿</h3><span>${state.photos.length + C.photo.album.length} 張展示照片</span></div><p class="ev-muted">這面照片牆由模擬旅人卡片與你的本機投稿組成。點擊照片，翻開它的故事。</p><div class="ev-photo-wall">${[...state.photos].reverse().map(p => `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>`).join("")}${C.photo.album.map(p => `<button type="button" class="ev-polaroid" data-photo="${p.id}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div></section>`;
     }
-    function quiz(state) {
-        if (state.team) {
-            const t = C.race.teams.find(t => t.id === state.team);
-            return `<section class="ev-team-result ${resultTeam ? "ev-reveal" : ""}" id="ev-team-result"><span class="ev-eyebrow">你的旅行人格・${resultTeam ? "分隊完成" : "已固定分隊"}</span><h3>歡迎登上「${h(t.name)}」</h3><p>${h(t.subtitle)}</p><span class="ev-muted">依測驗結果分配，活動期間不能自行選擇或更換陣營。</span></section>`;
-        }
-        return `<section class="ev-paper"><div class="ev-section-heading"><h3>先找到你的旅行節奏</h3><span>TRAVEL QUIZ · ${C.race.questions.length} 題</span></div><p>跟著直覺選擇。系統會依答案分隊，完成後不能自行更換。</p><form id="ev-quiz"><fieldset${disabled(store.phase("race") !== "active")}><legend class="ev-sr-only">旅行人格測驗</legend>${C.race.questions.map((q, i) => `<fieldset class="ev-question"><legend>${i + 1}. ${h(q.title)}</legend>${q.choices.map((choice, j) => `<label><input type="radio" name="ev-answer-${i}" value="${j}" required${answers[i] === j ? " checked" : ""}>${h(choice)}</label>`).join("")}</fieldset>`).join("")}<button type="submit" class="ev-button">完成測驗，揭曉我的陣營 →</button></fieldset></form></section>`;
+    function raceScreen() {
+        render(); scroller.scrollTop = 0;
+        const heading = content.querySelector("h2");
+        if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+    }
+    function quiz() {
+        const q = C.race.questions[questionIndex];
+        return `${button("race-intro", "← 返回活動介紹", "ev-text-button")}<section class="ev-paper ev-quiz-stage" id="ev-quiz">
+            <p class="ev-eyebrow">YOUR TRAVEL RHYTHM</p><h2>旅行風格測驗</h2>
+            <div class="ev-quiz-progress"><span id="ev-question-progress">${questionIndex + 1} / ${C.race.questions.length}</span><progress class="ev-progress" value="${questionIndex + 1}" max="${C.race.questions.length}" aria-label="測驗題目進度"></progress></div>
+            <h3 id="ev-question-title">${h(q.title)}</h3><p class="ev-muted">選擇最接近你的旅行直覺，選好後將前往下一題。</p>
+            <div class="ev-quiz-choices" role="group" aria-labelledby="ev-question-title">${q.choices.map((choice, i) => `<button type="button" class="ev-quiz-choice ${answers[questionIndex] === i ? "is-selected" : ""}" data-answer="${i}"${disabled(answering || store.phase("race") !== "active")}><span aria-hidden="true">${i === 0 ? "A" : "B"}</span>${h(choice)}</button>`).join("")}</div>
+            ${answers.length === C.race.questions.length && !answering ? button("retry-assign", "重試儲存並揭曉陣營 →") : ""}
+            <p class="ev-muted">完成全部題目後才會判定陣營，分隊完成後不能自行更換。</p></section>`;
+    }
+    function reveal(state) {
+        const t = C.race.teams.find(t => t.id === state.team);
+        return `<section class="ev-team-result ev-reveal ev-race-reveal" id="ev-team-result"><span class="ev-eyebrow">YOUR JOURNEY BEGINS</span><p class="ev-result-seal" aria-hidden="true">✧</p><h2>你的旅行陣營是<br>「${h(t.name)}」</h2><p>${h(t.subtitle)}</p><p class="ev-muted">依照你的三道旅行選擇完成分隊，結果已保存。</p>${button("enter-race", "走進我的陣營 →")}</section>`;
+    }
+    function assignTeam() {
+        if (answers.length !== C.race.questions.length || answers.some(a => a !== 0 && a !== 1)) return;
+        // 先設定揭曉階段，避免存檔通知觸發 render 時提前顯示比較資訊。
+        raceStage = "reveal";
+        const result = store.assign(answers);
+        answering = false;
+        if (!result.ok) { raceStage = "quiz"; notice(result.message); }
+        raceScreen();
     }
     function race(state) {
+        if (!state.team) {
+            if (raceStage === "quiz") return quiz();
+            return `${button("back", "← 返回活動首頁", "ev-text-button")}${banner("race", true, "", "start-quiz", "開始測驗 →")}<p class="ev-race-intro-note">三道旅行選擇，找到屬於你的旅行節奏。完成測驗後揭曉陣營，再開啟活動任務。</p>`;
+        }
+        if (raceStage !== "hub") return reveal(state);
         const teams = store.teams(), lead = store.leader(), score = store.personal(), active = store.phase("race") === "active";
         const team = teams.find(t => t.id === state.team);
         const ranking = [...C.race.ranking.map(p => ({ ...p })), ...(team ? [{ name: C.playerName, points: score, you: true }] : [])].sort((a, b) => b.points - a.points);
@@ -92,7 +121,7 @@ GameScenes.register("event", ctx => {
             <details class="ev-rules"><summary>陣營競賽規則與獎勵方式</summary><p>完成 ${C.race.questions.length} 題測驗後，依答案多數分到對應旅行陣營。不自選、不換隊、不自動平衡。每個活動任務只能加分一次，個人貢獻同步加入所屬陣營。</p><p>所有完成分隊的旅人都能領參與獎；個人累積 ${C.race.contributionThreshold} 分再得加碼獎。活動結束時才確定勝方並開放勝方獎勵，平手則不發勝方獎。敗方保留參與及個人獎勵。</p><p>對手、起始人數及排名皆為固定模擬資料；沒有即時玩家對戰。</p></details>
             <section class="ev-paper"><div class="ev-section-heading"><h3>兩種步調，同一段鐵道</h3><span class="ev-tag">貢獻比較</span></div><div class="ev-team-grid">${teams.map(t => `<article class="ev-team ev-team-${t.id} ${lead === t.id ? "is-leading" : ""}"><span class="ev-team-symbol" aria-hidden="true">${t.id === "blue" ? "↗" : "❋"}</span><span class="ev-tag">${lead === t.id ? "目前領先" : lead ? "努力追趕" : "並列"}${state.team === t.id ? " · 我的陣營" : ""}</span><h3>${h(t.name)}</h3><p>${h(t.subtitle)}</p><strong class="ev-score" data-team-score="${t.id}">${t.score}</strong><span>${t.members} 位旅人 · ${state.team === t.id ? "含你" : "模擬人數"}</span></article>`).join("")}</div>
             <div class="ev-versus" role="img" aria-label="${h(teams.map(t => t.name + ' ' + t.score + ' 分').join('，'))}"><span style="width:${teams[0].score * 100 / (teams[0].score + teams[1].score)}%"></span></div><p class="ev-leader" id="ev-leader">${lead ? teams.find(t => t.id === lead).name + (store.phase("race") === "ended" ? " 最終獲勝" : " 暫時領先") : "雙方平手"}${!active ? " · " + phaseText("race") : ""}</p></section>
-            ${quiz(state)}<section class="ev-paper"><div class="ev-section-heading"><div><p class="ev-eyebrow">MY CONTRIBUTION</p><h3>我的活動足跡</h3></div><strong class="ev-count" id="ev-personal-score">${score} <small>分</small></strong></div><p>${team ? h(team.name) + ` · 個人排名第 ${yourRank} 名` : "完成測驗後，開啟你的活動限定任務。"}</p><div class="ev-tasks">${C.race.tasks.map(t => {
+            <section class="ev-paper"><div class="ev-section-heading"><div><p class="ev-eyebrow">MY CONTRIBUTION</p><h3>我的活動足跡</h3></div><strong class="ev-count" id="ev-personal-score">${score} <small>分</small></strong></div><p>${team ? h(team.name) + ` · 個人排名第 ${yourRank} 名` : "完成測驗後，開啟你的活動限定任務。"}</p><div class="ev-tasks">${C.race.tasks.map(t => {
                 const done = state.completed.includes(t.id);
                 return `<article class="ev-task ${done ? "is-done" : ""}"><div><span class="ev-tag">${done ? "✓ 已完成" : "活動限定"} · ＋${t.points} 分</span><h4>${h(t.name)}</h4><p>${h(t.instruction)}</p></div><div class="ev-task-control">${t.id === "compass" && !done ? '<label for="ev-direction">旅行方向</label><select id="ev-direction"><option value="">選擇方向</option><option value="west">向西</option><option value="east">向東</option><option value="north">向北</option></select>' : ""}${t.id === "postcard" && !done ? `<label for="ev-postcard">給下一位旅人的祝福</label><textarea id="ev-postcard" maxlength="180" rows="2" placeholder="願每次出發都遇見好風景…">${h(postcard)}</textarea>` : ""}<button type="button" class="ev-button ev-secondary" data-task="${t.id}"${disabled(done || !state.team || !active)}>${done ? "已記錄貢獻" : h(t.action)}</button></div></article>`;
             }).join("")}</div></section>
@@ -144,6 +173,21 @@ GameScenes.register("event", ctx => {
         if (target.dataset.action === "open-photo") switchView("photo");
         if (target.dataset.action === "open-race") switchView("race");
         if (target.dataset.action === "back") switchView("home");
+        if (target.dataset.action === "start-quiz" && !store.snapshot().team && store.phase("race") === "active") {
+            quizRevision++; answers = []; questionIndex = 0; answering = false; raceStage = "quiz"; raceScreen();
+        }
+        if (target.dataset.action === "race-intro") { quizRevision++; answering = false; raceStage = "intro"; raceScreen(); }
+        if (target.dataset.action === "enter-race" && store.snapshot().team) { raceStage = "hub"; raceScreen(); }
+        if (target.dataset.action === "retry-assign" && raceStage === "quiz" && !answering) assignTeam();
+        if (target.dataset.answer !== undefined && raceStage === "quiz" && !answering && !store.snapshot().team && store.phase("race") === "active") {
+            answers[questionIndex] = Number(target.dataset.answer); answering = true; render();
+            const revision = quizRevision;
+            ctx.delay(() => {
+                if (disposed || revision !== quizRevision || view !== "race") return;
+                if (questionIndex < C.race.questions.length - 1) { questionIndex++; answering = false; raceScreen(); }
+                else assignTeam();
+            }, 180);
+        }
         if (target.dataset.action === "join-photo") { if (operate(store.joinPhoto(), "已加入攝影祭，一起收藏春天吧。")) ctx.id("ev-submit-area").scrollIntoView({ behavior: "smooth", block: "start" }); }
         if (target.dataset.photo) showPhoto(target.dataset.photo);
         if (target.dataset.claim) operate(store.claim(target.dataset.claim), "✓ 獎勵已加入本機活動收藏。");
@@ -163,7 +207,6 @@ GameScenes.register("event", ctx => {
         if (event.target.id === "ev-photo-title") photoTitle = event.target.value;
         if (event.target.id === "ev-photo-description") photoDescription = event.target.value;
         if (event.target.id === "ev-postcard") postcard = event.target.value;
-        if (event.target.name?.startsWith("ev-answer-")) answers[Number(event.target.name.slice(10))] = Number(event.target.value);
     });
     ctx.on(ctx.root, "change", event => { if (event.target.id === "ev-photo-file") preparePhoto(event.target.files[0]); });
     ctx.on(ctx.root, "submit", event => {
@@ -172,17 +215,13 @@ GameScenes.register("event", ctx => {
             if (preparing || !photoData) { notice("請先選擇並等待照片整理完成。"); return; }
             if (operate(store.submitPhoto(photoTitle, photoDescription, photoData), "✓ 投稿成功！共同相簿與合作進度已更新。")) { photoData = photoTitle = photoDescription = fileName = ""; render(); }
         }
-        if (event.target.id === "ev-quiz") {
-            const data = new FormData(event.target);
-            const values = C.race.questions.map((_, i) => data.has("ev-answer-" + i) ? Number(data.get("ev-answer-" + i)) : NaN);
-            if (operate(store.assign(values), "分隊完成！歡迎加入這次鐵道旅程。")) { resultTeam = store.snapshot().team; render(); }
-        }
+
     });
     ctx.on(ctx.id("ev-lightbox-close"), "click", () => modal.close());
     ctx.on(modal, "click", event => { if (event.target === modal) { const rect = modal.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) modal.close(); } });
     ctx.on(ctx.id("ev-reset"), "click", () => {
         if (!window.confirm("重置本機活動紀錄？這會清除活動投稿、分隊與獎勵，主線遊戲、日記和回憶碎片不受影響。")) return;
-        if (operate(store.reset(), "活動紀錄已重置，主線資料保留。")) { photoData = photoTitle = photoDescription = fileName = postcard = ""; answers = []; resultTeam = null; fileToken++; preparing = false; render(); }
+        if (operate(store.reset(), "活動紀錄已重置，主線資料保留。")) { photoData = photoTitle = photoDescription = fileName = postcard = ""; answers = []; quizRevision++; questionIndex = 0; answering = false; raceStage = "intro"; fileToken++; preparing = false; render(); }
     });
     const unsubscribe = store.subscribe(() => {
         const leader = store.leader();

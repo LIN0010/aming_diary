@@ -202,3 +202,25 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
     .ev-banner-art { border-right: 0; border-bottom: 2px dashed rgba(115, 137, 117, .35); }
     .ev-banner-copy { padding: 24px 26px; }
 }
+
+/* 陣營戰逐幕互動：同一時間只掛載目前階段。 */
+.ev-race-intro-note { text-align: center; color: #817d70; font-size: 13px; margin: 20px auto !important; max-width: 600px; }
+.ev-quiz-stage { max-width: 720px; margin: 24px auto; padding: 36px; background: linear-gradient(145deg, #fffaf2, #f1f0e7); }
+.ev-quiz-stage h2 { margin: 10px 0 22px !important; }
+.ev-quiz-stage h3 { margin: 26px 0 12px !important; }
+.ev-quiz-progress { display: flex; align-items: center; gap: 16px; color: #788b80; font: 16px Georgia, serif; }
+.ev-quiz-progress > span { white-space: nowrap; }
+.ev-quiz-progress .ev-progress { margin: 0; height: 8px; }
+.ev-quiz-choices { display: grid; gap: 16px; margin: 26px 0; }
+.ev-quiz-choice { display: flex; gap: 16px; align-items: center; width: 100%; padding: 20px; border: 1px dashed #c2cbbb; border-radius: 12px; background: #f9f8ef; color: #5b6f68; text-align: left; transition: background .18s, transform .18s; }
+.ev-quiz-choice > span { flex-shrink: 0; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #bccbc5; border-radius: 50%; font: 16px Georgia, serif; }
+.ev-quiz-choice:not(:disabled):hover, .ev-quiz-choice.is-selected { background: #e1e9e4; transform: translateY(-2px); }
+.ev-race-reveal { max-width: 720px; margin: 28px auto; padding: 46px 30px; border-radius: 16px; background: radial-gradient(ellipse at top left, #efdee1, transparent 60%), linear-gradient(145deg, #f7f4e9, #e0e9e3); }
+#event-screen .ev-result-seal { font-size: 56px; color: #8ca295; margin: 18px 0 !important; }
+.ev-race-reveal h2 { margin: 16px 0 !important; }
+.ev-race-reveal .ev-muted { margin: 20px 0 !important; }
+@media (max-width: 700px) {
+    .ev-quiz-stage { padding: 24px 18px; }
+    .ev-quiz-choice { padding: 18px 14px; gap: 12px; font-size: 14px !important; }
+    .ev-race-reveal { padding: 30px 20px; }
+}
