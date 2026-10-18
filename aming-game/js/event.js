@@ -68,8 +68,8 @@ GameScenes.register("event", ctx => {
     }
     function home(state) {
         const summary = category === "photo" ? `${C.photo.baseCount + state.photos.length} / ${C.photo.goal} 份共同投稿` : (state.team ? `${store.teams()[0].score} : ${store.teams()[1].score} · 陣營貢獻` : "跟著旅行直覺，找到屬於你的陣營");
-        return `<section class="ev-catalog"><div class="ev-carousel-heading"><span id="ev-activity-position" aria-live="polite">${category === "photo" ? "全服合作 · 1 / 2" : "陣營競賽 · 2 / 2"}</span><span>← 左右滑動挑選活動 →</span></div>
-            <div id="ev-cards" class="ev-carousel" role="region" aria-roledescription="活動輪播" aria-label="左右滑動或使用方向鍵挑選活動" tabindex="0" style="--ev-slide-from:${swipeDirection * 24}px">${banner(category, true, summary)}</div><div class="ev-carousel-dots" aria-hidden="true"><i class="${category === "photo" ? "is-active" : ""}"></i><i class="${category === "race" ? "is-active" : ""}"></i></div></section>`;
+        return `<section class="ev-catalog"><div class="ev-carousel-heading"><span id="ev-activity-position" aria-live="polite">${category === "photo" ? "全服合作 · 1 / 2" : "陣營競賽 · 2 / 2"}</span><span>左右滑動或點箭頭挑選活動</span></div>
+            <div class="ev-carousel-row"><button type="button" class="ev-carousel-arrow" data-action="previous-activity" aria-label="上一個活動"${disabled(category === "photo")}>◀</button><div id="ev-cards" class="ev-carousel" role="region" aria-roledescription="活動輪播" aria-label="左右滑動或使用方向鍵挑選活動" tabindex="0" style="--ev-slide-from:${swipeDirection * 24}px">${banner(category, true, summary)}</div><button type="button" class="ev-carousel-arrow" data-action="next-activity" aria-label="下一個活動"${disabled(category === "race")}>▶</button></div><div class="ev-carousel-dots" aria-hidden="true"><i class="${category === "photo" ? "is-active" : ""}"></i><i class="${category === "race" ? "is-active" : ""}"></i></div></section>`;
     }
     function reward(id, title, detail, state) {
         const claimed = state.claims.includes(id), unlocked = store.unlocked(id);
@@ -185,6 +185,8 @@ GameScenes.register("event", ctx => {
     ctx.on(ctx.root, "click", event => {
         const target = event.target.closest("button"); if (!target || target.disabled) return;
         if (event.isTrusted && activatedTouches.has(target)) { activatedTouches.delete(target); event.preventDefault(); return; }
+        if (view === "home" && target.dataset.action === "previous-activity") selectActivity("photo");
+        if (view === "home" && target.dataset.action === "next-activity") selectActivity("race");
         if (target.dataset.action === "pick-photo") ctx.id("ev-photo-file").click();
         if (target.dataset.action === "open-photo") {
             if (!store.snapshot().photoJoined && store.phase("photo") === "active") {
