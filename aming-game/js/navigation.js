@@ -4,6 +4,7 @@
     const scenes = Object.freeze({
         home: Object.freeze({ page: "home.html", root: "home-screen", style: "css/home.css", title: "尋軌：阿明的日記" }),
         explore: Object.freeze({ page: "explore.html", root: "explore-screen", style: "css/explore.css", title: "鐵道探索｜尋軌" }),
+        event: Object.freeze({ page: "event.html", root: "event-screen", style: "css/event.css", title: "期間限定活動｜尋軌" }),
         diary: Object.freeze({ page: "diary.html", root: "diary-screen", style: "css/diary.css", title: "阿明的日記｜尋軌" })
     });
     const items = [
@@ -76,10 +77,14 @@
         if (!Object.hasOwn(scenes, name)) return null;
         // 只保留遊戲支援的參數，不把任意 hash 當成檔案或程式載入。
         const query = new URLSearchParams();
-        if (name !== "home" && params.get("station") === "ruisui") query.set("station", "ruisui");
+        if (["explore", "diary"].includes(name) && params.get("station") === "ruisui") query.set("station", "ruisui");
         if (name === "diary") {
             if (["aming", "player"].includes(params.get("tab"))) query.set("tab", params.get("tab"));
             if (params.get("memories") === "1") query.set("memories", "1");
+        }
+        if (name === "event") {
+            if (["photo", "race"].includes(params.get("activity"))) query.set("activity", params.get("activity"));
+            else if (["photo", "race"].includes(params.get("category"))) query.set("category", params.get("category"));
         }
         const suffix = query.size ? "?" + query : "";
         return { name, url: scenes[name].page + suffix, hash: "#/" + name + suffix };

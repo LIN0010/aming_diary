@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>期間限定活動｜尋軌</title>
+    <link rel="stylesheet" href="css/event.css">
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+    <main id="event-screen">
+        <div class="ev-scroll">
+            <header class="ev-header">
+                <div><p class="ev-eyebrow">LIMITED-TIME EVENTS</p><h1>期間限定活動</h1><p class="ev-header-note">在旅途中，和更多人留下同一段回憶。</p></div>
+                <span class="ev-stamp" aria-hidden="true">旅途限定<br>EVENT PASS</span>
+            </header>
+            <aside class="ev-demo"><strong>本機 Demo・未連線</strong><span>其他旅人、投稿基數與陣營排名為模擬資料。你的操作只保存在此瀏覽器。</span><span id="ev-clock"></span></aside>
+            <p id="ev-storage-warning" class="ev-warning" role="status" hidden></p>
+            <div id="ev-content"></div>
+            <footer class="ev-footer"><span>一張票，一段只在此刻發生的旅行。</span><button type="button" id="ev-reset" class="ev-text-button">重置活動 Demo</button></footer>
+        </div>
+        <p id="ev-message" class="ev-message" role="status" hidden></p>
+        <dialog id="ev-lightbox" class="ev-lightbox" aria-labelledby="ev-lightbox-title">
+            <button type="button" id="ev-lightbox-close" class="ev-button ev-secondary">關閉照片 ×</button>
+            <div id="ev-lightbox-image"></div><h2 id="ev-lightbox-title"></h2><p id="ev-lightbox-description"></p>
+        </dialog>
+        <nav class="bottom-nav" data-game-nav data-active="event"></nav>
+    </main>
+    <script src="js/navigation.js"></script>
+    <script src="js/progress.js"></script>
+    <script src="js/scenes.js"></script>
+    <script src="js/event-config.js"></script>
+    <script src="js/event-store.js"></script>
+    <script src="js/event.js"></script>
+</body>
+</html>
