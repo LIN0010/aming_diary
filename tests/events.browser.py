@@ -18,6 +18,7 @@ def ready(page):
  expect(page.locator('[data-destination="event"]')).to_have_attribute('aria-current','page')
 def shoot(page,title):
  expect(page.locator('#ev-photo-file')).to_be_hidden()
+ assert page.locator('.ev-picker-label').bounding_box()['y']>page.locator('#ev-file-status').bounding_box()['y']
  with page.expect_file_chooser() as chooser:
   page.locator('.ev-upload').click(position={'x':12,'y':12})
  chooser.value.set_files(str(ROOT/'aming-game/images/cow.png'))
@@ -33,9 +34,25 @@ def shoot(page,title):
 def nav(page,name):
  page.locator(f'[data-destination="{name}"]').click()
  expect(page.locator(f'#{name}-screen')).to_be_visible(timeout=20000)
+def swipe_activity(page, target):
+ page.locator('#ev-cards .ev-banner-art').scroll_into_view_if_needed()
+ box=page.locator('#ev-cards .ev-banner-art').bounding_box()
+ y=box['y']+box['height']*.4
+ start=box['x']+box['width']*(.85 if target=='race' else .15)
+ end=box['x']+box['width']*(.15 if target=='race' else .85)
+ if page.evaluate('navigator.maxTouchPoints'):
+  session=page.context.new_cdp_session(page)
+  session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':start,'y':y}]})
+  for i in range(1,7):session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':start+(end-start)*i/6,'y':y}]})
+  session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+  session.detach()
+ else:
+  page.mouse.move(start,y);page.mouse.down();page.mouse.move(end,y,steps=8);page.mouse.up()
+ expect(page.locator('#ev-activity-position')).to_contain_text('2 / 2' if target=='race' else '1 / 2')
+ page.locator('#ev-cards .ev-banner').evaluate('(e)=>Promise.all(e.getAnimations().map(a=>a.finished))')
 def race_quiz(page, answer):
  expect(page.locator('[data-action="start-quiz"]')).to_have_count(0)
- expect(page.locator('#ev-tab-race')).to_be_visible()
+ expect(page.locator('#ev-activity-position')).to_contain_text('2 / 2')
  expect(page.locator('.ev-banner')).to_have_count(1)
  expect(page.locator('#ev-quiz')).to_have_count(0)
  expect(page.locator('[data-team-score]')).to_have_count(0)
@@ -81,12 +98,12 @@ try:
   expect(page.locator('.ev-banner')).to_have_count(1)
   expect(page.locator('.ev-ticket')).to_have_count(0)
   expect(page.locator('#ev-content h2')).to_have_count(1)
-  page.locator('#ev-tab-race').click()
+  swipe_activity(page,'race')
   expect(page.locator('#ev-cards')).to_contain_text('鐵道旅行陣營戰')
   expect(page.locator('.ev-banner')).to_have_count(1)
   expect(page.locator('#ev-cards')).not_to_contain_text('春日花季攝影祭')
-  page.locator('#ev-tab-race').press('ArrowLeft')
-  expect(page.locator('#ev-tab-photo')).to_have_attribute('aria-selected','true')
+  page.locator('#ev-cards').press('ArrowLeft')
+  expect(page.locator('#ev-activity-position')).to_contain_text('1 / 2')
   page.locator('[data-action="open-photo"]').first.click()
   before_scroll=page.locator('.ev-scroll').evaluate('(e)=>e.scrollTop')
   page.locator('.ev-scroll').evaluate('(e)=>e.scrollTop=200')
@@ -117,11 +134,11 @@ try:
   expect(page.locator('#ev-photo-count')).to_contain_text('10')
   expect(page.locator('[data-claim="collection"]')).to_have_text('已領取')
   assert page.evaluate("localStorage.getItem('aming-diary-progress')")==main
-  print('PASS: 第四項導覽與頁籤、規則、三次實際圖片投稿、合作門檻、領獎、放大、重載保存及文字跳脫。',flush=True)
+  print('PASS: 第四項導覽與左右滑動挑選、規則、三次實際圖片投稿、合作門檻、領獎、放大、重載保存及文字跳脫。',flush=True)
   page.locator('[data-action="back"]').click()
   page.go_back();expect(page.locator('#ev-photo-count')).to_be_visible()
-  page.go_forward();expect(page.locator('#ev-tab-race')).to_be_visible()
-  page.locator('#ev-tab-race').click()
+  page.go_forward();expect(page.locator('#ev-activity-position')).to_be_visible()
+  swipe_activity(page,'race')
   page.locator('[data-action="open-race"]').click()
   race_quiz(page,0)
   expect(page.locator('#ev-team-result')).to_contain_text('逐風列車')
@@ -184,7 +201,8 @@ try:
    shoot(page,f'{width} 的花季照片')
    expect(page.locator('#ev-photo-count')).to_contain_text('8')
    page.locator('[data-action="back"]').tap()
-   page.locator('#ev-tab-race').tap()
+   swipe_activity(page,'race')
+   page.locator('[data-action="open-race"]').evaluate('(e)=>e.scrollIntoView({block:"center"})')
    page.locator('[data-action="open-race"]').tap()
    race_quiz(page,1)
    expect(page.locator('#ev-team-result')).to_contain_text('拾光月台')

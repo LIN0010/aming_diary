@@ -17,6 +17,8 @@ GameScenes.register("event", ctx => {
     let questionIndex = 0, answering = false, quizRevision = 0;
     let startPrompt = view === "race" && !store.snapshot().team && store.phase("race") === "active";
     const imageURLs = new Set();
+    let activityDrag = null, activityTap = null, swipeDirection = 0;
+    const activatedTouches = new WeakSet();
     const h = text => String(text).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
     const disabled = value => value ? " disabled" : "";
     const phaseText = kind => ({ active: "活動進行中", upcoming: "即將開始", ended: "活動已結束" })[store.phase(kind)];
@@ -66,9 +68,8 @@ GameScenes.register("event", ctx => {
     }
     function home(state) {
         const summary = category === "photo" ? `${C.photo.baseCount + state.photos.length} / ${C.photo.goal} 份共同投稿` : (state.team ? `${store.teams()[0].score} : ${store.teams()[1].score} · 陣營貢獻` : "跟著旅行直覺，找到屬於你的陣營");
-        return `<section class="ev-catalog">
-            <div class="ev-tabs" role="tablist" aria-label="活動分類"><button type="button" role="tab" id="ev-tab-photo" aria-selected="${category === "photo"}" aria-controls="ev-cards" tabindex="${category === "photo" ? 0 : -1}" data-category="photo">全服合作</button><button type="button" role="tab" id="ev-tab-race" aria-selected="${category === "race"}" aria-controls="ev-cards" tabindex="${category === "race" ? 0 : -1}" data-category="race">陣營競賽</button></div>
-            <div id="ev-cards" role="tabpanel" aria-labelledby="ev-tab-${category}">${banner(category, true, summary)}</div></section>`;
+        return `<section class="ev-catalog"><div class="ev-carousel-heading"><span id="ev-activity-position" aria-live="polite">${category === "photo" ? "全服合作 · 1 / 2" : "陣營競賽 · 2 / 2"}</span><span>← 左右滑動挑選活動 →</span></div>
+            <div id="ev-cards" class="ev-carousel" role="region" aria-roledescription="活動輪播" aria-label="左右滑動或使用方向鍵挑選活動" tabindex="0" style="--ev-slide-from:${swipeDirection * 24}px">${banner(category, true, summary)}</div><div class="ev-carousel-dots" aria-hidden="true"><i class="${category === "photo" ? "is-active" : ""}"></i><i class="${category === "race" ? "is-active" : ""}"></i></div></section>`;
     }
     function reward(id, title, detail, state) {
         const claimed = state.claims.includes(id), unlocked = store.unlocked(id);
@@ -83,7 +84,7 @@ GameScenes.register("event", ctx => {
             <progress class="ev-progress" id="ev-photo-progress" max="${C.photo.goal}" value="${Math.min(count, C.photo.goal)}" aria-label="共同相簿投稿進度"></progress><div class="ev-milestones" aria-hidden="true">${C.photo.rewards.map(r => `<span class="${count >= r.at ? "is-unlocked" : ""}" style="left:${Math.min(98, r.at * 100 / C.photo.goal)}%" title="${h(r.name)}：${r.at} 份">${r.at}</span>`).join("")}</div><p class="ev-muted">模擬基數 ${C.photo.baseCount} 份 ＋ 本機投稿 ${state.photos.length} 份 · 達標後仍可投稿</p>
             <div class="ev-rewards">${C.photo.rewards.map(r => reward(r.id, r.name, `共同投稿達 ${r.at} 份 · ${r.description}`, state)).join("")}</div></section>
             <section class="ev-theme"><span class="ev-eyebrow">本期攝影主題</span><h3>${h(C.photo.theme)}</h3><p>${h(C.photo.themeDescription)}</p>${state.photoJoined ? '<span class="ev-tag">✓ 已參加攝影祭</span>' : (ready ? button("open-photo", "重試開啟投稿", "ev-secondary") : `<span class="ev-tag">${phaseText("photo")}</span>`)}</section>
-            <section class="ev-paper" id="ev-submit-area"><div class="ev-section-heading"><h3>留下一張你的春天</h3><span>YOUR PHOTO</span></div><form id="ev-photo-form"><fieldset${disabled(!state.photoJoined || !ready)}><legend class="ev-sr-only">攝影祭投稿</legend><div class="ev-upload-grid"><div class="ev-upload-wrap"><button type="button" class="ev-upload" data-action="pick-photo" aria-label="選擇本機照片"><span class="ev-button ev-picker-label">選擇本機照片</span><span id="ev-file-status">${h(preparing ? "正在整理照片…" : fileName || "JPEG / PNG / WebP，來源不超過 10 MB")}</span>${photoData ? `<img class="ev-upload-preview" src="${photoData}" alt="待投稿照片預覽">` : '<span class="ev-upload-empty" aria-hidden="true">一張照片<br>留住沿途的光</span>'}</button><input type="file" id="ev-photo-file" accept="image/jpeg,image/png,image/webp" aria-label="選擇照片檔案" hidden></div><div class="ev-upload-fields"><label for="ev-photo-title">照片標題</label><input id="ev-photo-title" maxlength="60" required placeholder="例如：在月台邊遇見春天" value="${h(photoTitle)}"><label for="ev-photo-description">照片裡的故事（選填）</label><textarea id="ev-photo-description" maxlength="180" rows="3" placeholder="寫下這一刻的心情…">${h(photoDescription)}</textarea><p class="ev-muted">壓縮後只保存在你的瀏覽器，不會上傳。</p><button class="ev-button" id="ev-submit-photo" type="submit"${disabled(preparing || !photoData || state.photos.length >= C.maxPhotos)}>投稿照片 →</button></div></div></fieldset></form></section>
+            <section class="ev-paper" id="ev-submit-area"><div class="ev-section-heading"><h3>留下一張你的春天</h3><span>YOUR PHOTO</span></div><form id="ev-photo-form"><fieldset${disabled(!state.photoJoined || !ready)}><legend class="ev-sr-only">攝影祭投稿</legend><div class="ev-upload-grid"><div class="ev-upload-wrap"><button type="button" class="ev-upload" data-action="pick-photo" aria-label="選擇本機照片"><span id="ev-file-status">${h(preparing ? "正在整理照片…" : fileName || "JPEG / PNG / WebP，來源不超過 10 MB")}</span>${photoData ? `<img class="ev-upload-preview" src="${photoData}" alt="待投稿照片預覽">` : '<span class="ev-upload-empty" aria-hidden="true">一張照片<br>留住沿途的光</span>'}<span class="ev-button ev-picker-label">選擇本機照片</span></button><input type="file" id="ev-photo-file" accept="image/jpeg,image/png,image/webp" aria-label="選擇照片檔案" hidden></div><div class="ev-upload-fields"><label for="ev-photo-title">照片標題</label><input id="ev-photo-title" maxlength="60" required placeholder="例如：在月台邊遇見春天" value="${h(photoTitle)}"><label for="ev-photo-description">照片裡的故事（選填）</label><textarea id="ev-photo-description" maxlength="180" rows="3" placeholder="寫下這一刻的心情…">${h(photoDescription)}</textarea><p class="ev-muted">壓縮後只保存在你的瀏覽器，不會上傳。</p><button class="ev-button" id="ev-submit-photo" type="submit"${disabled(preparing || !photoData || state.photos.length >= C.maxPhotos)}>投稿照片 →</button></div></div></fieldset></form></section>
             <section class="ev-album"><div class="ev-section-heading"><h3>全服共同相簿</h3><span>${state.photos.length + C.photo.album.length} 張展示照片</span></div><p class="ev-muted">這面照片牆由模擬旅人卡片與你的本機投稿組成。點擊照片，翻開它的故事。</p><div class="ev-photo-wall">${[...state.photos].reverse().map(p => `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>`).join("")}${C.photo.album.map(p => `<button type="button" class="ev-polaroid" data-photo="${p.id}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div></section>`;
     }
     function raceScreen() {
@@ -153,6 +154,7 @@ GameScenes.register("event", ctx => {
         if (!file) return;
         if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > C.maxFileBytes) { photoData = fileName = ""; preparing = false; render(); notice("請選擇 10 MB 以下的 JPEG、PNG 或 WebP 照片。"); return; }
         preparing = true; photoData = ""; fileName = file.name;
+        ctx.query(".ev-upload-preview")?.remove();
         const submit = ctx.id("ev-submit-photo"); if (submit) submit.disabled = true;
         ctx.id("ev-file-status").textContent = "正在整理照片…";
         const url = URL.createObjectURL(file);
@@ -182,8 +184,8 @@ GameScenes.register("event", ctx => {
     }
     ctx.on(ctx.root, "click", event => {
         const target = event.target.closest("button"); if (!target || target.disabled) return;
+        if (event.isTrusted && activatedTouches.has(target)) { activatedTouches.delete(target); event.preventDefault(); return; }
         if (target.dataset.action === "pick-photo") ctx.id("ev-photo-file").click();
-        if (target.dataset.category) { category = target.dataset.category; route(); render(); ctx.id("ev-tab-" + category).focus(); }
         if (target.dataset.action === "open-photo") {
             if (!store.snapshot().photoJoined && store.phase("photo") === "active") {
                 const result = store.joinPhoto();
@@ -221,11 +223,55 @@ GameScenes.register("event", ctx => {
             if (operate(store.completeTask(id, answer), "✓ 任務完成，個人與陣營貢獻已同步增加。") && before !== store.leader()) notice(store.leader() ? "陣營比分反超！" + C.race.teams.find(t => t.id === store.leader()).name + " 現在領先。" : "雙方貢獻追平了，下一次行動可能改變領先！");
         }
     });
+    function selectActivity(next) {
+        if (category === next) return;
+        swipeDirection = next === "race" ? 1 : -1;
+        category = next; route(); render(); ctx.id("ev-cards")?.focus({ preventScroll: true });
+    }
     ctx.on(ctx.root, "keydown", event => {
-        if (event.target.matches('[role="tab"]') && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
-            event.preventDefault(); category = event.key === "Home" ? "photo" : event.key === "End" ? "race" : category === "photo" ? "race" : "photo";
-            route(); render(); ctx.id("ev-tab-" + category).focus();
+        if (view === "home" && event.target.closest("#ev-cards") && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+            event.preventDefault(); selectActivity(["ArrowRight", "End"].includes(event.key) ? "race" : "photo");
         }
+    });
+    ctx.on(ctx.root, "pointerdown", event => {
+        const carousel = event.target.closest("#ev-cards");
+        if (view !== "home" || !carousel || !event.isPrimary || event.button !== 0) return;
+        const control = event.target.closest("button, input, a");
+        if (control) {
+            if (event.pointerType === "touch" && control.matches("button")) activityTap = { id: event.pointerId, button: control, x: event.clientX, y: event.clientY };
+            return;
+        }
+        activityDrag = { id: event.pointerId, x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY };
+        carousel.setPointerCapture(event.pointerId);
+    });
+    ctx.on(ctx.root, "pointermove", event => {
+        if (!activityDrag || activityDrag.id !== event.pointerId) return;
+        activityDrag.lastX = event.clientX; activityDrag.lastY = event.clientY;
+        const dx = event.clientX - activityDrag.x, dy = event.clientY - activityDrag.y;
+        if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            const card = ctx.query("#ev-cards .ev-banner");
+            if (card) card.style.transform = `translateX(${Math.max(-60, Math.min(60, dx * .25))}px)`;
+        }
+    });
+    ctx.on(window, "pointerup", event => {
+        // 手機滑動後的第一下按鈕觸控直接處理，避免相容 click 被瀏覽器抑制。
+        if (activityTap?.id === event.pointerId) {
+            const tap = activityTap; activityTap = null;
+            if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) < 12 && tap.button.isConnected && !tap.button.disabled) {
+                activatedTouches.add(tap.button); tap.button.click();
+            }
+        }
+        if (!activityDrag || activityDrag.id !== event.pointerId) return;
+        const dx = event.clientX - activityDrag.x, dy = event.clientY - activityDrag.y;
+        activityDrag = null;
+        const card = ctx.query("#ev-cards .ev-banner"); if (card) card.style.transform = "";
+        if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            // 觸控結束事件完成後再換 DOM，避免吞掉後續點擊。
+            ctx.delay(() => { if (view === "home") selectActivity(dx < 0 ? "race" : "photo"); }, 0);
+        }
+    });
+    for (const type of ["pointercancel", "blur"]) ctx.on(window, type, () => {
+        activityDrag = activityTap = null; const card = ctx.query("#ev-cards .ev-banner"); if (card) card.style.transform = "";
     });
     ctx.on(ctx.root, "input", event => {
         if (event.target.id === "ev-photo-title") photoTitle = event.target.value;

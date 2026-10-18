@@ -98,7 +98,7 @@ try:
   assert not page.evaluate('EventStore.snapshot().photoJoined')
   assert page.evaluate('EventStore.snapshot().completed')==[]
   page.locator('[data-destination="event"]').click()
-  page.locator('#ev-tab-race').click()
+  page.locator('#ev-cards').press('ArrowRight')
   page.locator('[data-action="open-race"]').click()
   expect(page.locator('.ev-start-modal')).to_be_visible()
   expect(page.locator('[data-team-score]')).to_have_count(0)

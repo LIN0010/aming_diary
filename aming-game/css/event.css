@@ -88,11 +88,11 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-theme p { font-size: 14px; margin-bottom: 16px !important; }
 #event-screen fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
 .ev-upload-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; }
-.ev-upload { display: block; width: 100%; color: inherit; padding: 18px; border: 1px dashed #c6c6ac; border-radius: 4px; text-align: center; background: #f3f0e6; }
-.ev-picker-label { display: inline-block; pointer-events: none; margin-bottom: 8px; }
+.ev-upload { display: flex; flex-direction: column; min-height: 280px; width: 100%; color: inherit; padding: 18px; border: 1px dashed #c6c6ac; border-radius: 4px; text-align: center; background: #f3f0e6; }
+.ev-picker-label { display: inline-block; pointer-events: none; align-self: center; margin-top: auto; }
 .ev-upload:not(:disabled):is(:hover, :focus-visible) .ev-picker-label { background: #4f6750; color: #fffdf6; border-color: #4f6750; }
 #ev-file-status { display: block; font-size: 11px; color: #948b77; overflow-wrap: anywhere; margin: 8px 0 !important; }
-.ev-upload-empty { display: block; padding: 22px; font: 20px/2 "PMingLiU", serif; color: #afa78e; }
+.ev-upload-empty { display: grid; place-content: center; flex: 1; min-height: 140px; padding: 22px; font: 20px/2 "PMingLiU", serif; color: #afa78e; }
 .ev-upload-preview { display: block; width: 100%; max-height: 250px; object-fit: contain; }
 .ev-upload-fields { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 #event-screen input:not([type="radio"]):not([type="file"]), #event-screen textarea, #event-screen select { width: 100%; border: 1px solid #d9d1be; border-radius: 6px; padding: 10px 12px; background: #fffdf6; color: #5d5a4f; font-size: 14px; }
@@ -234,3 +234,14 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-start-modal > p:not(.ev-eyebrow) { color: #7e8272; font-size: 14px; }
 .ev-start-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
 @media (max-width: 700px) { .ev-start-modal { padding: 28px 22px; } }
+
+.ev-carousel-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; color: #71816f; font-size: 12px; }
+.ev-carousel-heading > span:last-child { color: #8b8576; }
+.ev-carousel { touch-action: pan-y; cursor: grab; user-select: none; }
+.ev-carousel:active { cursor: grabbing; }
+.ev-carousel .ev-banner { margin-top: 0; animation: ev-activity-slide .25s ease both; }
+.ev-carousel .ev-banner button { cursor: pointer; }
+.ev-carousel-dots { display: flex; justify-content: center; gap: 8px; margin: -12px 0 20px; }
+.ev-carousel-dots i { width: 6px; height: 6px; border-radius: 50%; background: #c8cbbb; }
+.ev-carousel-dots .is-active { width: 20px; border-radius: 8px; background: #809580; }
+@keyframes ev-activity-slide { from { opacity: .65; translate: var(--ev-slide-from) 0; } to { opacity: 1; translate: 0 0; } }
