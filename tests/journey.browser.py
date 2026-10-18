@@ -103,13 +103,13 @@ try:
         unread_context = context.storage_state()
         page.locator('#scene-diary').click()
         expect(page.locator('#aming-journal .diary-entry')).to_be_visible()
-        expect(page.locator('#journey-return')).to_be_visible()
+        expect(page.locator('#journey-return')).to_have_count(0)
         assert state(page)['readMemories'] == ['ruisui-01']
-        page.locator('#journey-return').click()
+        page.locator('[data-destination="explore"]').click()
         page.locator('#ruisui-station').click()
         expect(page.locator('.mission-tag')).to_have_text('JOURNEY COMPLETE')
         page.locator('#mission-diary').click()
-        expect(page.locator('#journey-return')).to_be_visible()
+        expect(page.locator('#journey-return')).to_have_count(0)
         report('取消／重拍不重複獲得；重新載入可直接閱讀；完成後返回地圖並重溫日記')
 
         page.locator('#player-tab').click()
@@ -167,7 +167,7 @@ try:
         page.locator('#progress-warning button').click()
         expect(page.locator('#progress-warning')).to_be_hidden()
         page.locator('#scene-diary').click()
-        expect(page.locator('#journey-return')).to_be_visible()
+        expect(page.locator('#journey-return')).to_have_count(0)
         assert state(page)['collectedMemories'] == ['ruisui-01']
         page.reload()
         assert state(page)['readMemories'] == ['ruisui-01']
@@ -198,8 +198,8 @@ try:
             page.locator('#shutter-button').tap()
             expect(page.locator('#photo-success')).to_have_class('photo-success show')
             page.locator('#view-memory').tap()
-            expect(page.locator('#journey-return')).to_be_visible()
-            page.locator('#journey-return').tap()
+            expect(page.locator('#journey-return')).to_have_count(0)
+            page.locator('[data-destination="explore"]').tap()
             expect(page).to_have_url(BASE + 'explore.html')
             page.locator('#ruisui-station').tap()
             expect(page.locator('.mission-tag')).to_have_text('JOURNEY COMPLETE')

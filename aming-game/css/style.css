@@ -402,6 +402,10 @@ body {
 /* 標題＋開始按鈕 */
 
 .start-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
     position: absolute;
 
     left: 7%;
@@ -447,7 +451,12 @@ body {
 
 /* 開始遊戲按鈕 */
 
-#start-btn {
+#start-btn,
+.continuous-journey {
+    display: inline-block;
+    font-family: inherit;
+    line-height: 1.4;
+    text-decoration: none;
     padding: 13px 38px;
 
     background:
@@ -471,7 +480,8 @@ body {
 }
 
 
-#start-btn:hover {
+#start-btn:hover,
+.continuous-journey:hover {
     transform: scale(1.05);
 
     background: white;
@@ -511,4 +521,4 @@ body {
     #loading-screen, .train { transition: none; }
 }
 
-.continuous-journey { color: #fff8ec; text-underline-offset: 4px; }
+/* 連續旅程入口沿用開始遊戲的按鈕樣式。 */

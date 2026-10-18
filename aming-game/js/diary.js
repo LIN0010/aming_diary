@@ -257,7 +257,8 @@ ctx.subscribe((state, status) => {
     ruisuiJournal.querySelector(".journal-new").textContent = fresh ? "NEW" : (found ? "✓" : "◇");
     amingJournal.classList.toggle("memory-locked", !found);
     ctx.query(".memory-found").hidden = !fresh;
-    ctx.id("journey-return").hidden = !state.readMemories.includes("ruisui-01");
+    // 返回地圖按鈕暫停，與 diary.html 一起恢復。
+    // ctx.id("journey-return").hidden = !state.readMemories.includes("ruisui-01");
     if (noteDirty && status.saved && state.notes.ruisui === travelNote.value) {
         noteDirty = false;
         ctx.cancelTimer(noteTimer);

@@ -183,20 +183,22 @@ try:
         def hold_image(route): held.append(route)
         page.route('**/js/explore.js', hold_image)
         page.locator('[data-destination="explore"]').click()
-        page.wait_for_function('document.getElementById("scene-progress").value > 0')
+        expect(page.locator('#scene-host')).to_have_attribute('aria-busy', 'true')
         page.wait_for_timeout(150)
         assert held
-        assert page.locator('#scene-progress').evaluate('(el) => el.value') < 100
-        page.locator('#scene-cancel').click()
-        ready(page, 'home')
-        for route in held: route.abort()
+        expect(page.locator('#scene-progress')).to_have_count(0)
+        expect(page.locator('#scene-loading')).to_be_hidden()
+        expect(page.locator('#home-screen')).to_be_visible()
+        for route in held: route.continue_()
+        ready(page, 'explore')
+        nav(page, 'home')
         page.unroute('**/js/explore.js', hold_image)
         page.evaluate("location.hash = '#/explore'; location.hash = '#/diary'")
         ready(page, 'diary')
         assert page.locator('link[href="css/explore.css"]').count() == 0
         page.evaluate("location.hash = '#/unavailable'")
         expect(page).to_have_url(BASE + 'game.html#/diary')
-        report('載入失敗保留舊場景並可重試；真實資源進度不提前補滿；取消、快速換場與無效路由可回復')
+        report('載入失敗保留舊場景並可重試；換場預載不顯示進度遮罩；快速換場與無效路由可回復')
         context.close()
 
         for width in (320, 390):
