@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const source = readFileSync(join(__dirname, '../aming-game/js/progress.js'), 'utf8');
 const KEY = 'aming-diary-progress';
 
-function app({ data = new Map(), failRead = false, failWrite = false } = {}) {
+function app({ data = new Map(), failRead = false, failWrite = false, failRemove = false } = {}) {
     const events = {};
     const warning = { setAttribute() {}, addEventListener() {}, appendChild() {}, hidden: true };
     const storage = {
@@ -18,6 +18,10 @@ function app({ data = new Map(), failRead = false, failWrite = false } = {}) {
         setItem(key, value) {
             if (failWrite) throw new Error('quota exceeded');
             data.set(key, value);
+        },
+        removeItem(key) {
+            if (failRemove) throw new Error('remove blocked');
+            data.delete(key);
         }
     };
     const context = vm.createContext({
@@ -235,4 +239,23 @@ test('重設不覆寫無法辨識的既有存檔', () => {
     const first=app({data:new Map([[KEY,'{broken']])});
     assert.equal(first.api.reset(), false);
     assert.equal(first.data.get(KEY), '{broken');
+});
+
+
+test('入口新遊戲一併清除活動存檔，無關資料保留', () => {
+    const a = app({data:new Map([['activity','saved team'],['unrelated','keep']])});
+    a.api.completeRuisui();
+    assert.equal(a.api.reset({activityKey:'activity'}),true);
+    assert.equal(a.data.has('activity'),false);
+    assert.equal(a.data.get('unrelated'),'keep');
+    assert.deepEqual(a.state().collectedMemories,[]);
+});
+
+test('活動無法清除時還原主線，不留下只重設一半的旅程', () => {
+    const a=app({data:new Map([['activity','saved team']]),failRemove:true});
+    a.api.completeRuisui();const before=a.data.get(KEY);
+    assert.equal(a.api.reset({activityKey:'activity'}),false);
+    assert.equal(a.data.get(KEY),before);
+    assert.equal(a.data.get('activity'),'saved team');
+    assert.deepEqual(a.state().collectedMemories,['ruisui-01']);
 });

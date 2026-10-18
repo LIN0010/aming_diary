@@ -46,9 +46,10 @@ try:
   expect(page.locator('#memory-count')).to_have_text('0')
   assert not page.evaluate('window.sawTransitionBox'), '開始遊戲不應再跳出換場方框'
   print('PASS: 無存檔停用繼續；開始遊戲須等待場景與單頁入口資源載入，完成前不建立／重設存檔。',flush=True)
-  page.evaluate("GameProgress.completeRuisui(); GameProgress.saveNote('ruisui','保留我的心得'); GameProgress.enterScene('diary','ruisui-player')")
+  page.evaluate("EventStore.assign([0,0,0]); EventStore.completeTask('ticket'); GameProgress.completeRuisui(); GameProgress.saveNote('ruisui','保留我的心得'); GameProgress.enterScene('diary','ruisui-player')")
   page.goto(BASE)
   original=page.evaluate("localStorage.getItem('aming-diary-progress')")
+  activity=page.evaluate('localStorage.getItem(EventConfig.storageKey)')
   held=[]
   hold[0]=True
   page.locator('#continuous-journey').click()
@@ -56,10 +57,13 @@ try:
   page.wait_for_timeout(200)
   assert held and int(page.locator('#percentage').inner_text())<100
   assert page.evaluate("localStorage.getItem('aming-diary-progress')")==original
+  assert page.evaluate('localStorage.getItem(EventConfig.storageKey)')==activity
   hold[0]=False
   for route in list(held): route.continue_()
   page.wait_for_url(BASE+'game.html#/diary?station=ruisui&tab=player',timeout=20000)
   expect(page.locator('#travel-note')).to_have_value('保留我的心得')
+  assert page.evaluate('EventStore.snapshot().team')=='blue'
+  assert page.evaluate('EventStore.personal()')==30
   assert not page.evaluate('window.sawTransitionBox'), '繼續旅程不應再跳出換場方框'
   print('PASS: 繼續旅程使用相同進度條，恢復原日記頁籤、碎片與心得。',flush=True)
   page.unroute('**/js/app.js',stall)
@@ -68,17 +72,26 @@ try:
   page.locator('#start-btn').click()
   expect(page.locator('#start-screen')).to_be_visible()
   assert page.evaluate("localStorage.getItem('aming-diary-progress')")==original
+  assert page.evaluate('localStorage.getItem(EventConfig.storageKey)')==activity
   page.route('**/js/app.js',lambda route:route.abort())
   page.once('dialog',lambda d:d.accept())
   page.locator('#start-btn').click()
   expect(page.locator('#retry-loading')).to_be_visible()
   assert page.evaluate("localStorage.getItem('aming-diary-progress')")==original
+  assert page.evaluate('localStorage.getItem(EventConfig.storageKey)')==activity
   page.unroute('**/js/app.js')
   page.locator('#retry-loading').click()
   page.wait_for_url(BASE+'game.html#/home',timeout=20000)
   expect(page.locator('#memory-count')).to_have_text('0')
   assert page.evaluate('GameProgress.snapshot().notes.ruisui')==''
   assert page.evaluate('GameProgress.snapshot().collectedMemories')==[]
+  assert page.evaluate('EventStore.snapshot().team') is None
+  assert page.evaluate('EventStore.snapshot().completed')==[]
+  page.locator('[data-destination="event"]').click()
+  page.locator('#ev-tab-race').click()
+  page.locator('[data-action="open-race"]').click()
+  expect(page.locator('.ev-start-modal')).to_be_visible()
+  expect(page.locator('[data-team-score]')).to_have_count(0)
   print('PASS: 取消重設／載入失敗保留原存檔；重試載入成功後才開始全新旅程。',flush=True)
   context.close()
   context=browser.new_context()

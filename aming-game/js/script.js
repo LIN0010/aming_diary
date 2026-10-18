@@ -46,7 +46,7 @@ async function loadGame() {
         }, { signal, shell: "game.html" });
         if (signal.aborted) return;
         // 新旅程只在內容成功載入後重設；載入失敗不會先清掉存檔。
-        if (newGame && !GameProgress.reset()) {
+        if (newGame && !GameProgress.reset({ activityKey: EventConfig.storageKey })) {
             starting = false;
             startBtn.disabled = false;
             continueBtn.disabled = !GameProgress.saveStatus().canResume;
@@ -73,7 +73,9 @@ async function loadGame() {
 startBtn.addEventListener("click", () => {
     if (starting) return;
     GameProgress.resumeUrl(); // 確認其他分頁的最新存檔狀態。
-    if (GameProgress.saveStatus().canResume && !window.confirm("開始新遊戲會重設目前的回憶、探索進度與旅行心得，確定重新開始嗎？")) return;
+    let hasActivity = false;
+    try { hasActivity = localStorage.getItem(EventConfig.storageKey) !== null; } catch (_) { hasActivity = true; }
+    if ((GameProgress.saveStatus().canResume || hasActivity) && !window.confirm("開始新遊戲會重設回憶、探索、旅行心得，以及活動陣營、任務、獎勵與投稿照片，確定重新開始嗎？")) return;
     newGame = true;
     destination = "home.html";
     loadGame();

@@ -187,16 +187,28 @@
         resumeUrl,
         ruisuiStage,
         save: () => update(() => {}),
-        reset() {
+        reset({ activityKey = null } = {}) {
             // 只在明確選擇新遊戲時呼叫；寫入成功前不動本頁狀態。
             readStoredState();
             if (protectedSave) { notify(); return false; }
             const fresh = emptyState();
             fresh.notes.ruisui = ""; // 防止舊版心得在下次開啟時重新匯入。
+            let originalSave;
+            let mainWritten = false;
             try {
+                originalSave = localStorage.getItem(SAVE_KEY);
                 localStorage.setItem(SAVE_KEY, JSON.stringify(fresh));
+                mainWritten = true;
+                if (activityKey && activityKey !== SAVE_KEY) localStorage.removeItem(activityKey);
             } catch (_) {
-                issue = "無法建立新旅程，原存檔已保留；請確認瀏覽器允許儲存後再試。";
+                let restored = true;
+                if (mainWritten) {
+                    try {
+                        if (originalSave === null) localStorage.removeItem(SAVE_KEY);
+                        else localStorage.setItem(SAVE_KEY, originalSave);
+                    } catch (_) { restored = false; }
+                }
+                issue = restored ? "無法建立新旅程，原存檔已保留；請確認瀏覽器允許儲存後再試。" : "重置未完成，請保留本頁並重試，活動紀錄尚未清除。";
                 notify();
                 return false;
             }
