@@ -308,7 +308,6 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
     .ev-photo-panel #ev-submit-area { padding: 18px; }
     .ev-photo-panel #ev-submit-area .ev-section-heading { margin-bottom: 12px; }
     .ev-photo-panel .ev-upload { min-height: 240px; }
-    .ev-photo-panel .ev-upload-preview { max-height: 180px; }
     .ev-photo-panel .ev-upload-fields { gap: 6px; }
     .ev-photo-panel .ev-upload-fields label { line-height: 1.4; }
     .ev-photo-panel .ev-upload-fields .ev-muted { font-size: 12px; line-height: 1.5; }
@@ -319,4 +318,6 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-upload-wrap { position: relative; }
 .ev-remove-photo { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid #c4cebc; border-radius: 50%; background: #fffaf0; color: #526c59; font-size: 25px !important; line-height: 1; box-shadow: 0 2px 8px #514c4320; }
 .ev-remove-photo:hover { background: #e6ecdf; color: #304c39; }
-.ev-upload:has(.ev-upload-preview) #ev-file-status { padding-inline: 28px; }
+.ev-photo-panel .ev-upload:has(.ev-upload-preview) { position: relative; padding: 0; border: 0; overflow: hidden; }
+.ev-upload:has(.ev-upload-preview) #ev-file-status { display: none; }
+.ev-photo-panel .ev-upload .ev-upload-preview { position: absolute; inset: 0; width: 100%; height: 100%; max-height: none; object-fit: cover; }

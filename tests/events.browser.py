@@ -24,6 +24,15 @@ def shoot(page,title):
  chooser.value.set_files(str(ROOT/'aming-game/images/cow.png'))
  expect(page.locator('.ev-upload-preview')).to_be_visible()
  expect(page.locator('.ev-picker-label')).to_have_count(0)
+ frame=page.locator('.ev-upload').bounding_box()
+ image=page.locator('.ev-upload-preview').bounding_box()
+ close=page.locator('[data-action="remove-photo"]').bounding_box()
+ assert all(abs(frame[k]-image[k])<1 for k in ('x','y','width','height'))
+ assert close['x']>=image['x'] and close['y']>=image['y']
+ assert close['x']+close['width']<=image['x']+image['width']
+ assert close['y']+close['height']<=image['y']+image['height']
+ assert page.locator('.ev-upload-preview').evaluate('(e)=>getComputedStyle(e).objectFit')=='cover'
+ expect(page.locator('#ev-file-status')).to_be_hidden()
  page.locator('#ev-photo-title').fill('保留中的標題')
  page.locator('#ev-photo-description').fill('保留中的心得')
  page.locator('[data-action="remove-photo"]').click()
