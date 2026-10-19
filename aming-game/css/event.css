@@ -316,7 +316,10 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 }
 
 .ev-upload-wrap { position: relative; }
-.ev-remove-photo { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid #c4cebc; border-radius: 50%; background: #fffaf0; color: #526c59; font-size: 25px !important; line-height: 1; box-shadow: 0 2px 8px #514c4320; }
+.ev-remove-photo { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid #c4cebc; border-radius: 50%; background: #fffaf0; color: #526c59; font-size: 0 !important; line-height: 0; box-shadow: 0 2px 8px #514c4320; }
+.ev-remove-photo::before, .ev-remove-photo::after { content: ""; position: absolute; top: 50%; left: 50%; width: 16px; height: 2px; border-radius: 1px; background: currentColor; pointer-events: none; }
+.ev-remove-photo::before { transform: translate(-50%, -50%) rotate(45deg); }
+.ev-remove-photo::after { transform: translate(-50%, -50%) rotate(-45deg); }
 .ev-remove-photo:hover { background: #e6ecdf; color: #304c39; }
 .ev-photo-panel .ev-upload:has(.ev-upload-preview) { position: relative; padding: 0; border: 0; overflow: hidden; }
 .ev-upload:has(.ev-upload-preview) #ev-file-status { display: none; }
