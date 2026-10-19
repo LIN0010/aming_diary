@@ -55,8 +55,6 @@ GameScenes.register("event", ctx => {
         if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
     }
     function clock() {
-        const display = new Intl.DateTimeFormat("zh-TW", { timeZone: "Asia/Taipei", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(store.now()));
-        ctx.id("ev-clock").textContent = (C.demoClock ? "活動日曆：" : "台灣日期：") + display;
         ctx.queryAll("[data-countdown]").forEach(el => { el.textContent = timeLeft(el.dataset.countdown); });
     }
     function banner(kind, hero = false, summary = "", action = "open-" + kind, label = "參加活動 →") {
@@ -70,8 +68,8 @@ GameScenes.register("event", ctx => {
     }
     function home(state) {
         const summary = category === "photo" ? `${C.photo.baseCount + state.photos.length} / ${C.photo.goal} 份共同投稿` : (state.team ? `${store.teams()[0].score} : ${store.teams()[1].score} · 陣營貢獻` : "跟著旅行直覺，找到屬於你的陣營");
-        return `<section class="ev-catalog"><div class="ev-carousel-heading"><span id="ev-activity-position" aria-live="polite">${category === "photo" ? "全服合作 · 1 / 2" : "陣營競賽 · 2 / 2"}</span><span>左右滑動或點箭頭挑選活動</span></div>
-            <div class="ev-carousel-row"><button type="button" class="ev-carousel-arrow" data-action="previous-activity" aria-label="上一個活動"${disabled(category === "photo")}>◀</button><div id="ev-cards" class="ev-carousel" role="region" aria-roledescription="活動輪播" aria-label="左右滑動或使用方向鍵挑選活動" tabindex="0" style="--ev-slide-from:${swipeDirection * 24}px">${banner(category, true, summary)}</div><button type="button" class="ev-carousel-arrow" data-action="next-activity" aria-label="下一個活動"${disabled(category === "race")}>▶</button></div><div class="ev-carousel-dots" aria-hidden="true"><i class="${category === "photo" ? "is-active" : ""}"></i><i class="${category === "race" ? "is-active" : ""}"></i></div></section>`;
+        return `<section class="ev-catalog"><div class="ev-carousel-heading"><span>左右滑動或點箭頭挑選活動</span></div>
+            <div class="ev-carousel-row"><button type="button" class="ev-carousel-arrow" data-action="previous-activity" aria-label="上一個活動">◀</button><div id="ev-cards" class="ev-carousel" role="region" aria-roledescription="活動輪播" aria-label="左右滑動或使用方向鍵挑選活動" tabindex="0" style="--ev-slide-from:${swipeDirection * 24}px">${banner(category, true, summary)}</div><button type="button" class="ev-carousel-arrow" data-action="next-activity" aria-label="下一個活動">▶</button></div><div class="ev-carousel-dots" aria-hidden="true"><i class="${category === "photo" ? "is-active" : ""}"></i><i class="${category === "race" ? "is-active" : ""}"></i></div></section>`;
     }
     function reward(id, title, detail, state) {
         const claimed = state.claims.includes(id), unlocked = store.unlocked(id);
@@ -199,8 +197,8 @@ GameScenes.register("event", ctx => {
     ctx.on(ctx.root, "click", event => {
         const target = event.target.closest("button"); if (!target || target.disabled) return;
         if (event.isTrusted && activatedTouches.has(target)) { activatedTouches.delete(target); event.preventDefault(); return; }
-        if (view === "home" && target.dataset.action === "previous-activity") selectActivity("photo");
-        if (view === "home" && target.dataset.action === "next-activity") selectActivity("race");
+        if (view === "home" && target.dataset.action === "previous-activity") stepActivity(-1);
+        if (view === "home" && target.dataset.action === "next-activity") stepActivity(1);
         if (target.dataset.photoSection) selectPhotoSection(target.dataset.photoSection);
         if (target.dataset.action === "remove-photo") {
             fileToken++; preparing = false; photoData = fileName = "";
@@ -244,9 +242,10 @@ GameScenes.register("event", ctx => {
             if (operate(store.completeTask(id, answer), "✓ 任務完成，個人與陣營貢獻已同步增加。") && before !== store.leader()) notice(store.leader() ? "陣營比分反超！" + C.race.teams.find(t => t.id === store.leader()).name + " 現在領先。" : "雙方貢獻追平了，下一次行動可能改變領先！");
         }
     });
-    function selectActivity(next) {
+    function stepActivity(direction) { selectActivity(category === "photo" ? "race" : "photo", direction); }
+    function selectActivity(next, direction = next === "race" ? 1 : -1) {
         if (category === next) return;
-        swipeDirection = next === "race" ? 1 : -1;
+        swipeDirection = direction;
         category = next; route(); render(); ctx.id("ev-cards")?.focus({ preventScroll: true });
     }
     ctx.on(ctx.root, "keydown", event => {
@@ -259,7 +258,9 @@ GameScenes.register("event", ctx => {
         }
 
         if (view === "home" && event.target.closest("#ev-cards") && ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
-            event.preventDefault(); selectActivity(["ArrowRight", "End"].includes(event.key) ? "race" : "photo");
+            event.preventDefault();
+            if (["Home", "End"].includes(event.key)) selectActivity(event.key === "End" ? "race" : "photo");
+            else stepActivity(event.key === "ArrowRight" ? 1 : -1);
         }
     });
     ctx.on(ctx.root, "pointerdown", event => {
@@ -296,7 +297,7 @@ GameScenes.register("event", ctx => {
         const card = ctx.query("#ev-cards .ev-banner"); if (card) card.style.transform = "";
         if (Math.abs(dx) >= 45 && Math.abs(dx) > Math.abs(dy) * 1.3) {
             // 觸控結束事件完成後再換 DOM，避免吞掉後續點擊。
-            ctx.delay(() => { if (view === "home") selectActivity(dx < 0 ? "race" : "photo"); }, 0);
+            ctx.delay(() => { if (view === "home") stepActivity(dx < 0 ? 1 : -1); }, 0);
         }
     });
     for (const type of ["pointercancel", "blur"]) ctx.on(window, type, () => {
@@ -319,10 +320,6 @@ GameScenes.register("event", ctx => {
     ctx.on(startModal, "cancel", event => { event.preventDefault(); startPrompt = false; render(); ctx.query('[data-action="start-quiz"], [data-action="open-race"]')?.focus(); });
     ctx.on(ctx.id("ev-lightbox-close"), "click", () => modal.close());
     ctx.on(modal, "click", event => { if (event.target === modal) { const rect = modal.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) modal.close(); } });
-    ctx.on(ctx.id("ev-reset"), "click", () => {
-        if (!window.confirm("重置本機活動紀錄？這會清除活動投稿、分隊與獎勵，主線遊戲、日記和回憶碎片不受影響。")) return;
-        if (operate(store.reset(), "活動紀錄已重置，主線資料保留。")) { photoData = photoTitle = photoDescription = fileName = postcard = ""; answers = []; quizRevision++; questionIndex = 0; answering = false; raceStage = "intro"; fileToken++; preparing = false; render(); }
-    });
     // 獨立詳情網址也直接開放投稿，不要求第二次參加。
     if (view === "photo" && !store.snapshot().photoJoined && store.phase("photo") === "active") store.joinPhoto();
     const unsubscribe = store.subscribe(() => {

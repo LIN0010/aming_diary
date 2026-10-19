@@ -66,11 +66,11 @@ def swipe_activity(page, target):
   session.detach()
  else:
   page.mouse.move(start,y);page.mouse.down();page.mouse.move(end,y,steps=8);page.mouse.up()
- expect(page.locator('#ev-activity-position')).to_contain_text('2 / 2' if target=='race' else '1 / 2')
+ expect(page.locator('#ev-cards h2')).to_have_text('鐵道旅行陣營戰' if target=='race' else '春日花季攝影祭')
  page.locator('#ev-cards .ev-banner').evaluate('(e)=>Promise.all(e.getAnimations().map(a=>a.finished))')
 def race_quiz(page, answer):
  expect(page.locator('[data-action="start-quiz"]')).to_have_count(0)
- expect(page.locator('#ev-activity-position')).to_contain_text('2 / 2')
+ expect(page.locator('#ev-cards h2')).to_have_text('鐵道旅行陣營戰')
  expect(page.locator('.ev-banner')).to_have_count(1)
  expect(page.locator('#ev-quiz')).to_have_count(0)
  expect(page.locator('[data-team-score]')).to_have_count(0)
@@ -113,22 +113,28 @@ try:
   assert page.locator('.ev-scroll').evaluate('(e)=>Math.abs(e.getBoundingClientRect().right-innerWidth)<1')
   assert page.locator('.ev-scroll').evaluate('(e)=>getComputedStyle(e).scrollbarWidth')=='thin'
   expect(page.locator('.ev-data-note details')).to_have_count(0)
-  expect(page.locator('#ev-clock')).to_be_visible()
+  expect(page.locator('#ev-clock, #ev-reset, #ev-activity-position')).to_have_count(0)
   expect(page.locator('.ev-banner')).to_have_count(1)
   expect(page.locator('.ev-ticket')).to_have_count(0)
   expect(page.locator('#ev-content h2')).to_have_count(1)
-  expect(page.locator('[data-action="previous-activity"]')).to_be_disabled()
+  expect(page.locator('[data-action="previous-activity"]')).to_be_enabled()
   page.locator('[data-action="next-activity"]').click()
-  expect(page.locator('#ev-activity-position')).to_contain_text('2 / 2')
-  expect(page.locator('[data-action="next-activity"]')).to_be_disabled()
+  expect(page.locator('#ev-cards h2')).to_have_text('鐵道旅行陣營戰')
+  expect(page.locator('[data-action="next-activity"]')).to_be_enabled()
   page.locator('[data-action="previous-activity"]').click()
-  expect(page.locator('#ev-activity-position')).to_contain_text('1 / 2')
+  expect(page.locator('#ev-cards h2')).to_have_text('春日花季攝影祭')
+  # 兩端均可循環，左右箭頭沒有外框或底色。
+  for action,title in [('previous-activity','鐵道旅行陣營戰'),('previous-activity','春日花季攝影祭'),('next-activity','鐵道旅行陣營戰'),('next-activity','春日花季攝影祭')]:
+   arrow=page.locator(f'[data-action="{action}"]')
+   assert arrow.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
+   assert arrow.evaluate('(e)=>getComputedStyle(e).borderTopWidth')=='0px'
+   arrow.click();expect(page.locator('#ev-cards h2')).to_have_text(title)
   swipe_activity(page,'race')
   expect(page.locator('#ev-cards')).to_contain_text('鐵道旅行陣營戰')
   expect(page.locator('.ev-banner')).to_have_count(1)
   expect(page.locator('#ev-cards')).not_to_contain_text('春日花季攝影祭')
   page.locator('#ev-cards').press('ArrowLeft')
-  expect(page.locator('#ev-activity-position')).to_contain_text('1 / 2')
+  expect(page.locator('#ev-cards h2')).to_have_text('春日花季攝影祭')
   page.locator('[data-action="open-photo"]').first.click()
   # 固定進度與選單；只切換左側內容，保留未送出草稿。
   expect(page.locator('#ev-photo-panel-submit')).to_be_visible()
@@ -180,7 +186,7 @@ try:
   print('PASS: 第四項導覽與左右滑動挑選、移除說明區、三次實際圖片投稿、合作門檻、領獎、放大、重載保存及文字跳脫。',flush=True)
   page.locator('[data-action="back"]').click()
   page.go_back();expect(page.locator('#ev-photo-count')).to_be_visible()
-  page.go_forward();expect(page.locator('#ev-activity-position')).to_be_visible()
+  page.go_forward();expect(page.locator('#ev-cards')).to_be_visible()
   swipe_activity(page,'race')
   page.locator('[data-action="open-race"]').click()
   race_quiz(page,0)
@@ -221,8 +227,7 @@ try:
   expect(page.locator('[data-claim="winner"]')).to_be_enabled()
   page.locator('[data-claim="winner"]').click()
   expect(page.locator('[data-claim="winner"]')).to_have_text('已領取')
-  page.once('dialog',lambda d:d.accept())
-  page.locator('#ev-reset').click()
+  assert page.evaluate('EventStore.reset().ok')
   expect(page.locator('[data-action="start-quiz"]').first).to_be_visible()
   expect(page.locator('[data-team-score]')).to_have_count(0)
   assert page.evaluate('EventStore.snapshot().photos.length')==0
