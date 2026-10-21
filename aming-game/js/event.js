@@ -10,7 +10,7 @@ GameScenes.register("event", ctx => {
     ctx.root.append(startModal);
     let view = ["photo", "race"].includes(ctx.params.get("activity")) ? ctx.params.get("activity") : "home";
     let category = ctx.params.get("category") === "race" ? "race" : "photo";
-    let photoSection = "submit", albumSelection = [];
+    let photoSection = "submit", albumSelection = [], ownAlbum = false;
     let photoData = "", photoTitle = "", photoDescription = "", fileName = "", postcard = "";
     let answers = [], preparing = false, disposed = false, fileToken = 0, messageTimer;
     let previousLeader = store.leader(), lastPhase = store.phase("photo") + store.phase("race");
@@ -86,17 +86,17 @@ GameScenes.register("event", ctx => {
         if (selected.length > 1 && selected.every((p, i) => p.id === albumSelection[i]?.id)) selected.push(selected.shift());
         return selected;
     }
-    function photoAlbum(state, own = false) {
+    function photoAlbum(state, own = ownAlbum) {
         if (!own && !albumSelection.length) albumSelection = sampleAlbum();
         const photos = own ? [...state.photos].reverse() : albumSelection;
-        return `<section class="ev-album"><div class="ev-section-heading"><h3>${own ? "我的投稿" : "全服共同相簿"}</h3>${own ? `<span>${photos.length} 張本機投稿</span>` : ""}${own ? "" : button("refresh-album", "↻ 刷新照片", "ev-secondary")}</div>
+        return `<section class="ev-album"><div class="ev-section-heading"><h3>${own ? "我的投稿" : "全服共同相簿"}</h3>${own ? `<span>${photos.length} 張本機投稿</span>` : ""}<button type="button" class="ev-album-toggle" data-action="toggle-own-album" role="switch" aria-checked="${own}"><span class="ev-album-switch-track" aria-hidden="true"><i></i></span>我的投稿</button>${own ? "" : button("refresh-album", "↻ 刷新照片", "ev-secondary")}</div>
             ${own ? '<p class="ev-muted">這裡收藏你在此瀏覽器投稿的照片。點擊照片，翻開它的故事。</p>' : ""}
             ${photos.length ? `<div class="ev-photo-wall">${photos.map(p => own ? `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>` : `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div>` : '<p class="ev-album-empty">還沒有照片，先到投稿區留下你的春天吧。</p>'}</section>`;
     }
     function photo(state) {
         const count = C.photo.baseCount + state.photos.length;
         const ready = store.phase("photo") === "active";
-        const sections = [["submit", "投稿區"], ["tasks", "任務區"], ["album", "共同相簿區"], ["mine", "我的投稿"]];
+        const sections = [["submit", "投稿區"], ["tasks", "任務區"], ["album", "共同相簿區"]];
         const pane = (id, markup) => `<div id="ev-photo-panel-${id}" class="ev-photo-panel" role="tabpanel" aria-labelledby="ev-photo-tab-${id}" tabindex="0"${photoSection === id ? "" : " hidden"}>${markup}</div>`;
         return `<div class="ev-photo-workspace"><header class="ev-photo-heading">${button("back", "← 返回活動首頁", "ev-text-button")}<h2>${h(C.photo.title)}</h2><div class="ev-meta"><span>${dates("photo")}</span><span>${phaseText("photo")}</span><span data-countdown="photo">${timeLeft("photo")}</span></div></header>
             <section class="ev-paper ev-photo-progress-area"><div class="ev-section-heading"><div><p class="ev-eyebrow">TOGETHER, WE BLOOM</p><h3>一起，把春天收集起來</h3></div><span class="ev-count" id="ev-photo-count">${count} <small>/ ${C.photo.goal} 份</small></span></div>
@@ -105,11 +105,10 @@ GameScenes.register("event", ctx => {
             ${pane("submit", `<section class="ev-paper" id="ev-submit-area"><div class="ev-section-heading"><h3>留下一張你的春天</h3><span>YOUR PHOTO</span></div><form id="ev-photo-form"><fieldset${disabled(!state.photoJoined || !ready)}><legend class="ev-sr-only">攝影祭投稿</legend><div class="ev-upload-grid"><div class="ev-upload-wrap"><${photoData ? 'div' : 'button type="button" data-action="pick-photo" aria-label="選擇本機照片"'} class="ev-upload"><span id="ev-file-status">${h(preparing ? "正在整理照片…" : fileName || "JPEG / PNG / WebP，來源不超過 10 MB")}</span>${photoData ? `<img class="ev-upload-preview" src="${photoData}" alt="待投稿照片預覽">` : '<span class="ev-upload-empty" aria-hidden="true">一張照片<br>留住沿途的光</span>'}${photoData ? "" : '<span class="ev-button ev-picker-label">選擇本機照片</span>'}</${photoData ? "div" : "button"}>${photoData ? '<button type="button" class="ev-remove-photo" data-action="remove-photo" aria-label="移除照片，重新選擇">×</button>' : ""}<input type="file" id="ev-photo-file" accept="image/jpeg,image/png,image/webp" aria-label="選擇照片檔案" hidden></div><div class="ev-upload-fields"><label for="ev-photo-title">照片標題</label><input id="ev-photo-title" maxlength="60" required placeholder="例如：在月台邊遇見春天" value="${h(photoTitle)}"><label for="ev-photo-description">照片裡的故事（選填）</label><textarea id="ev-photo-description" maxlength="180" rows="3" placeholder="寫下這一刻的心情…">${h(photoDescription)}</textarea><p class="ev-muted">壓縮後只保存在你的瀏覽器，不會上傳。</p><button class="ev-button" id="ev-submit-photo" type="submit"${disabled(preparing || !photoData || state.photos.length >= C.maxPhotos)}>投稿照片 →</button></div></div></fieldset></form></section>`)}
             ${pane("tasks", `<p>${state.photoJoined ? '<span class="ev-tag">✓ 已參加攝影祭</span>' : (ready ? button("open-photo", "重試開啟投稿", "ev-secondary") : `<span class="ev-tag">${phaseText("photo")}</span>`)}</p><section class="ev-paper"><div class="ev-section-heading"><h3>階段獎勵</h3><span>EVENT REWARDS</span></div><div class="ev-rewards">${C.photo.rewards.map(r => reward(r.id, r.name, `共同投稿達 ${r.at} 份 · ${r.description}`, state)).join("")}</div></section>`)}
             ${pane("album", photoAlbum(state))}
-            ${pane("mine", photoAlbum(state, true))}
             </div><nav class="ev-photo-menu" role="tablist" aria-label="攝影祭功能" aria-orientation="${matchMedia("(max-width: 700px)").matches ? "horizontal" : "vertical"}">${sections.map(([id, label]) => `<button type="button" role="tab" id="ev-photo-tab-${id}" aria-controls="ev-photo-panel-${id}" aria-selected="${photoSection === id}" tabindex="${photoSection === id ? 0 : -1}" data-photo-section="${id}"><span>${label}</span><span aria-hidden="true">${photoSection === id ? "●" : "○"}</span></button>`).join("")}</nav></div></div>`;
     }
     function selectPhotoSection(next) {
-        if (view !== "photo" || !["submit", "tasks", "album", "mine"].includes(next)) return;
+        if (view !== "photo" || !["submit", "tasks", "album"].includes(next)) return;
         photoSection = next;
         ctx.queryAll("[data-photo-section]").forEach(tab => {
             const selected = tab.dataset.photoSection === next;
@@ -219,7 +218,12 @@ GameScenes.register("event", ctx => {
         if (view === "home" && target.dataset.action === "previous-activity") stepActivity(-1);
         if (view === "home" && target.dataset.action === "next-activity") stepActivity(1);
         if (target.dataset.photoSection) selectPhotoSection(target.dataset.photoSection);
-        if (view === "photo" && target.dataset.action === "refresh-album") {
+        if (view === "photo" && target.dataset.action === "toggle-own-album") {
+            ownAlbum = !ownAlbum;
+            ctx.id("ev-photo-panel-album").innerHTML = photoAlbum(store.snapshot());
+            ctx.query('[data-action="toggle-own-album"]')?.focus({ preventScroll: true });
+        }
+        if (view === "photo" && !ownAlbum && target.dataset.action === "refresh-album") {
             albumSelection = sampleAlbum();
             ctx.id("ev-photo-panel-album").innerHTML = photoAlbum(store.snapshot());
             ctx.query('[data-action="refresh-album"]')?.focus({ preventScroll: true });
@@ -276,7 +280,7 @@ GameScenes.register("event", ctx => {
         const tab = event.target.closest("[data-photo-section]");
         if (view === "photo" && tab && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
             event.preventDefault();
-            const ids = ["submit", "tasks", "album", "mine"], index = ids.indexOf(photoSection);
+            const ids = ["submit", "tasks", "album"], index = ids.indexOf(photoSection);
             selectPhotoSection(event.key === "Home" ? ids[0] : event.key === "End" ? ids[ids.length - 1] : ids[(index + (["ArrowUp", "ArrowLeft"].includes(event.key) ? ids.length - 1 : 1)) % ids.length]);
             ctx.id("ev-photo-tab-" + photoSection).focus();
         }

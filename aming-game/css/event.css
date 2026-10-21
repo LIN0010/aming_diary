@@ -326,4 +326,10 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-photo-panel .ev-upload .ev-upload-preview { position: absolute; inset: 0; width: 100%; height: 100%; max-height: none; object-fit: cover; }
 
 .ev-album-empty { margin-top: 24px !important; padding: 28px 18px; border: 1px dashed #c4cebc; border-radius: 10px; color: #7b7e69; text-align: center; }
-@media (max-width: 700px) { .ev-photo-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.ev-album-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 8px 0; border: 0; background: transparent; color: #526c59; font-size: 13px !important; }
+.ev-album-switch-track { display: inline-flex; align-items: center; width: 40px; height: 24px; padding: 3px; border: 1px solid #b9c3b1; border-radius: 20px; background: #e2e6d9; }
+.ev-album-switch-track i { width: 16px; height: 16px; border-radius: 50%; background: #fffdf6; box-shadow: 0 1px 3px #514c4330; transition: transform .18s; }
+.ev-album-toggle[aria-checked="true"] .ev-album-switch-track { background: #5e765f; border-color: #5e765f; }
+.ev-album-toggle[aria-checked="true"] i { transform: translateX(16px); }
+.ev-album-toggle:hover { color: #304c39; }
