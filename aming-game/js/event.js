@@ -92,7 +92,7 @@ GameScenes.register("event", ctx => {
     function syncAlbumControls() {
         ctx.query('.ev-footer').hidden = view !== "photo" || photoSection !== "album";
         ctx.query('[data-action="toggle-own-album"]').setAttribute("aria-checked", String(ownAlbum));
-        ctx.query('[data-action="refresh-album"]').disabled = ownAlbum;
+        ctx.query('[data-action="refresh-album"]').hidden = ownAlbum;
     }
     function updatePhotoAlbum() {
         ctx.query('.ev-album-content').innerHTML = photoAlbumContent(store.snapshot());
