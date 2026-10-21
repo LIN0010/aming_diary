@@ -324,3 +324,6 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-photo-panel .ev-upload:has(.ev-upload-preview) { position: relative; padding: 0; border: 0; overflow: hidden; }
 .ev-upload:has(.ev-upload-preview) #ev-file-status { display: none; }
 .ev-photo-panel .ev-upload .ev-upload-preview { position: absolute; inset: 0; width: 100%; height: 100%; max-height: none; object-fit: cover; }
+
+.ev-album-empty { margin-top: 24px !important; padding: 28px 18px; border: 1px dashed #c4cebc; border-radius: 10px; color: #7b7e69; text-align: center; }
+@media (max-width: 700px) { .ev-photo-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
