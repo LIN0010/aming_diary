@@ -89,8 +89,8 @@ GameScenes.register("event", ctx => {
     function photoAlbum(state, own = false) {
         if (!own && !albumSelection.length) albumSelection = sampleAlbum();
         const photos = own ? [...state.photos].reverse() : albumSelection;
-        return `<section class="ev-album"><div class="ev-section-heading"><h3>${own ? "我的投稿" : "全服共同相簿"}</h3><span>${photos.length} 張${own ? "本機投稿" : "展示照片"}</span>${own ? "" : button("refresh-album", "↻ 刷新照片", "ev-secondary")}</div>
-            <p class="ev-muted">${own ? "這裡收藏你在此瀏覽器投稿的照片。點擊照片，翻開它的故事。" : "隨機展示最多三張其他旅人的作品；目前沿用示意卡片，尚未連線至玩家伺服器。"}</p>
+        return `<section class="ev-album"><div class="ev-section-heading"><h3>${own ? "我的投稿" : "全服共同相簿"}</h3>${own ? `<span>${photos.length} 張本機投稿</span>` : ""}${own ? "" : button("refresh-album", "↻ 刷新照片", "ev-secondary")}</div>
+            ${own ? '<p class="ev-muted">這裡收藏你在此瀏覽器投稿的照片。點擊照片，翻開它的故事。</p>' : ""}
             ${photos.length ? `<div class="ev-photo-wall">${photos.map(p => own ? `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>` : `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div>` : '<p class="ev-album-empty">還沒有照片，先到投稿區留下你的春天吧。</p>'}</section>`;
     }
     function photo(state) {
