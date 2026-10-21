@@ -87,13 +87,17 @@ GameScenes.register("event", ctx => {
         return selected;
     }
     function photoAlbum(state) {
-        return `<section class="ev-album"><div class="ev-album-toolbar"><button type="button" class="ev-album-toggle" data-action="toggle-own-album" role="switch" aria-checked="${ownAlbum}"><span class="ev-album-switch-track" aria-hidden="true"><i></i></span>我的投稿</button>${button("refresh-album", "↻ 刷新照片", "ev-secondary", ownAlbum)}</div><div class="ev-album-content" tabindex="0" aria-label="相簿照片">${photoAlbumContent(state)}</div></section>`;
+        return `<section class="ev-album"><div class="ev-album-content" tabindex="0" aria-label="相簿照片">${photoAlbumContent(state)}</div></section>`;
+    }
+    function syncAlbumControls() {
+        ctx.query('.ev-footer').hidden = view !== "photo" || photoSection !== "album";
+        ctx.query('[data-action="toggle-own-album"]').setAttribute("aria-checked", String(ownAlbum));
+        ctx.query('[data-action="refresh-album"]').disabled = ownAlbum;
     }
     function updatePhotoAlbum() {
         ctx.query('.ev-album-content').innerHTML = photoAlbumContent(store.snapshot());
         ctx.query('.ev-album-content').scrollTop = 0;
-        ctx.query('[data-action="toggle-own-album"]').setAttribute("aria-checked", String(ownAlbum));
-        ctx.query('[data-action="refresh-album"]').disabled = ownAlbum;
+        syncAlbumControls();
     }
     function photoAlbumContent(state, own = ownAlbum) {
         if (!own && !albumSelection.length) albumSelection = sampleAlbum();
@@ -119,6 +123,7 @@ GameScenes.register("event", ctx => {
     function selectPhotoSection(next) {
         if (view !== "photo" || !["submit", "tasks", "album"].includes(next)) return;
         photoSection = next;
+        syncAlbumControls();
         ctx.queryAll("[data-photo-section]").forEach(tab => {
             const selected = tab.dataset.photoSection === next;
             tab.setAttribute("aria-selected", String(selected)); tab.tabIndex = selected ? 0 : -1;
@@ -178,6 +183,7 @@ GameScenes.register("event", ctx => {
         const state = store.snapshot();
         ctx.root.classList.toggle("ev-photo-mode", view === "photo");
         content.innerHTML = view === "photo" ? photo(state) : view === "race" ? race(state) : home(state);
+        syncAlbumControls();
         if (startPrompt && (view === "race" || (view === "home" && category === "race")) && raceStage === "intro" && !state.team && store.phase("race") === "active") {
             // SPA 完成掛載後才開啟，避免換場搬移 DOM 使對話框掉出浮層。
             ctx.delay(() => {
