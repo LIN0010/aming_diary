@@ -282,9 +282,15 @@ try:
    expect(page.locator('#ev-photo-panel-album .ev-polaroid')).to_have_count(3)
    page.locator('[data-action="refresh-album"]').tap()
    positions={action:page.locator(f'[data-action="{action}"]').bounding_box() for action in ('toggle-own-album','refresh-album')}
+   toggle=page.locator('[data-action="toggle-own-album"]').element_handle()
+   page.locator('.ev-album-content').evaluate('(e)=>e.scrollTop=10000')
+   assert page.locator('.ev-album-content').evaluate('(e)=>e.scrollTop')>0
+   for action,box in positions.items():
+    assert page.locator(f'[data-action="{action}"]').bounding_box()==box
    page.locator('[data-action="toggle-own-album"]').tap()
    for action,box in positions.items():
     assert page.locator(f'[data-action="{action}"]').bounding_box()==box
+   assert toggle.evaluate('(e)=>e===document.querySelector(".ev-album-toggle")')
    expect(page.locator('#ev-photo-panel-album .ev-polaroid')).to_have_count(1)
    page.locator('[data-action="back"]').tap()
    swipe_activity(page,'race')

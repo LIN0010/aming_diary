@@ -86,12 +86,21 @@ GameScenes.register("event", ctx => {
         if (selected.length > 1 && selected.every((p, i) => p.id === albumSelection[i]?.id)) selected.push(selected.shift());
         return selected;
     }
-    function photoAlbum(state, own = ownAlbum) {
+    function photoAlbum(state) {
+        return `<section class="ev-album"><div class="ev-album-toolbar"><button type="button" class="ev-album-toggle" data-action="toggle-own-album" role="switch" aria-checked="${ownAlbum}"><span class="ev-album-switch-track" aria-hidden="true"><i></i></span>我的投稿</button>${button("refresh-album", "↻ 刷新照片", "ev-secondary", ownAlbum)}</div><div class="ev-album-content" tabindex="0" aria-label="相簿照片">${photoAlbumContent(state)}</div></section>`;
+    }
+    function updatePhotoAlbum() {
+        ctx.query('.ev-album-content').innerHTML = photoAlbumContent(store.snapshot());
+        ctx.query('.ev-album-content').scrollTop = 0;
+        ctx.query('[data-action="toggle-own-album"]').setAttribute("aria-checked", String(ownAlbum));
+        ctx.query('[data-action="refresh-album"]').disabled = ownAlbum;
+    }
+    function photoAlbumContent(state, own = ownAlbum) {
         if (!own && !albumSelection.length) albumSelection = sampleAlbum();
         const photos = own ? [...state.photos].reverse() : albumSelection;
-        return `<section class="ev-album"><div class="ev-album-toolbar"><button type="button" class="ev-album-toggle" data-action="toggle-own-album" role="switch" aria-checked="${own}"><span class="ev-album-switch-track" aria-hidden="true"><i></i></span>我的投稿</button>${button("refresh-album", "↻ 刷新照片", "ev-secondary", own)}</div><div class="ev-section-heading"><h3>${own ? "我的投稿" : "全服共同相簿"}</h3>${own ? `<span>${photos.length} 張本機投稿</span>` : ""}</div>
+        return `<div class="ev-section-heading"><h3>${own ? "我的投稿" : "全服共同相簿"}</h3>${own ? `<span>${photos.length} 張本機投稿</span>` : ""}</div>
             ${own ? '<p class="ev-muted">這裡收藏你在此瀏覽器投稿的照片。點擊照片，翻開它的故事。</p>' : ""}
-            ${photos.length ? `<div class="ev-photo-wall">${photos.map(p => own ? `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>` : `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div>` : '<p class="ev-album-empty">還沒有照片，先到投稿區留下你的春天吧。</p>'}</section>`;
+            ${photos.length ? `<div class="ev-photo-wall">${photos.map(p => own ? `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><img src="${p.image}" alt="${h(p.title)}"><strong>${h(p.title)}</strong><span>${h(C.playerName)} · 本機投稿</span></button>` : `<button type="button" class="ev-polaroid" data-photo="${h(p.id)}"><span class="ev-sample ev-sample-${p.art}" aria-label="示意照片"><span>春日留影</span></span><strong>${h(p.title)}</strong><span>${h(p.name)} · 模擬旅人</span></button>`).join("")}</div>` : '<p class="ev-album-empty">還沒有照片，先到投稿區留下你的春天吧。</p>'}`;
     }
     function photo(state) {
         const count = C.photo.baseCount + state.photos.length;
@@ -220,13 +229,11 @@ GameScenes.register("event", ctx => {
         if (target.dataset.photoSection) selectPhotoSection(target.dataset.photoSection);
         if (view === "photo" && target.dataset.action === "toggle-own-album") {
             ownAlbum = !ownAlbum;
-            ctx.id("ev-photo-panel-album").innerHTML = photoAlbum(store.snapshot());
-            ctx.query('[data-action="toggle-own-album"]')?.focus({ preventScroll: true });
+            updatePhotoAlbum();
         }
         if (view === "photo" && !ownAlbum && target.dataset.action === "refresh-album") {
             albumSelection = sampleAlbum();
-            ctx.id("ev-photo-panel-album").innerHTML = photoAlbum(store.snapshot());
-            ctx.query('[data-action="refresh-album"]')?.focus({ preventScroll: true });
+            updatePhotoAlbum();
         }
         if (target.dataset.action === "remove-photo") {
             fileToken++; preparing = false; photoData = fileName = "";
