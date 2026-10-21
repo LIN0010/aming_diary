@@ -162,7 +162,10 @@ try:
   page.locator('#ev-photo-panel-album .ev-polaroid').first.click()
   expect(page.locator('#ev-lightbox .ev-sample')).to_be_visible()
   page.keyboard.press('Escape')
+  positions={action:page.locator(f'[data-action="{action}"]').bounding_box() for action in ('toggle-own-album','refresh-album')}
   page.locator('[data-action="toggle-own-album"]').click()
+  for action,box in positions.items():
+   assert page.locator(f'[data-action="{action}"]').bounding_box()==box
   expect(page.locator('#ev-photo-panel-album .ev-album-empty')).to_be_visible()
   expect(page.locator('#ev-photo-panel-album .ev-polaroid')).to_have_count(0)
   expect(page.locator('[data-action="toggle-own-album"]')).to_have_attribute('aria-checked','true')
@@ -193,7 +196,7 @@ try:
   expect(page.locator('#ev-photo-panel-album .ev-polaroid')).to_have_count(3)
   page.locator('[data-action="toggle-own-album"]').click()
   expect(page.locator('#ev-photo-panel-album .ev-polaroid')).to_have_count(3)
-  expect(page.locator('#ev-photo-panel-album [data-action="refresh-album"]')).to_have_count(0)
+  expect(page.locator('#ev-photo-panel-album [data-action="refresh-album"]')).to_be_disabled()
   page.locator('#ev-photo-panel-album .ev-polaroid').first.click()
   expect(page.locator('#ev-lightbox')).to_be_visible()
   expect(page.locator('#ev-lightbox-image img')).to_have_count(1)
@@ -278,7 +281,10 @@ try:
    page.locator('[data-photo-section="album"]').tap()
    expect(page.locator('#ev-photo-panel-album .ev-polaroid')).to_have_count(3)
    page.locator('[data-action="refresh-album"]').tap()
+   positions={action:page.locator(f'[data-action="{action}"]').bounding_box() for action in ('toggle-own-album','refresh-album')}
    page.locator('[data-action="toggle-own-album"]').tap()
+   for action,box in positions.items():
+    assert page.locator(f'[data-action="{action}"]').bounding_box()==box
    expect(page.locator('#ev-photo-panel-album .ev-polaroid')).to_have_count(1)
    page.locator('[data-action="back"]').tap()
    swipe_activity(page,'race')

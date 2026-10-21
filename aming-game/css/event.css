@@ -333,3 +333,6 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-album-toggle[aria-checked="true"] .ev-album-switch-track { background: #5e765f; border-color: #5e765f; }
 .ev-album-toggle[aria-checked="true"] i { transform: translateX(16px); }
 .ev-album-toggle:hover { color: #304c39; }
+
+.ev-album-toolbar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-start; align-items: center; gap: 16px; min-height: 40px; padding-bottom: 8px; margin-bottom: 16px; background: #f2eddf; }
+.ev-album-toolbar > button { flex-shrink: 0; }
