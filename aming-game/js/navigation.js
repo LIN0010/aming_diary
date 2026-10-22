@@ -4,6 +4,7 @@
     const scenes = Object.freeze({
         home: Object.freeze({ page: "home.html", root: "home-screen", style: "css/home.css", title: "尋軌：阿明的日記" }),
         explore: Object.freeze({ page: "explore.html", root: "explore-screen", style: "css/explore.css", title: "鐵道探索｜尋軌" }),
+        group: Object.freeze({ page: "group.html", root: "group-screen", style: "css/guild.css", title: "旅團小屋｜尋軌" }),
         event: Object.freeze({ page: "event.html", root: "event-screen", style: "css/event.css", title: "期間限定活動｜尋軌" }),
         diary: Object.freeze({ page: "diary.html", root: "diary-screen", style: "css/diary.css", title: "阿明的日記｜尋軌" })
     });

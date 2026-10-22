@@ -1,0 +1,98 @@
+/* 旅團小屋：背景原圖不變，所有資訊與熱區疊加在同一座標面。 */
+html, body { margin:0; width:100%; height:100%; overflow:hidden; }
+#group-screen { position:relative; width:100%; height:100vh; height:100dvh; overflow:hidden; color:#4c5146; font:15px/1.7 'Microsoft JhengHei','Noto Sans TC',sans-serif; background:#b6baa8; }
+#group-screen *, #group-screen *::before, #group-screen *::after { box-sizing:border-box; }
+#group-screen [hidden] { display:none !important; }
+#group-screen button, #group-screen input, #group-screen textarea, #group-screen select { font:inherit; }
+#group-screen button { cursor:pointer; }
+#group-screen button:disabled { cursor:default; opacity:.5; }
+#group-screen :focus-visible { outline:3px solid #527b7c; outline-offset:4px; }
+#group-screen h1, #group-screen h2, #group-screen h3, #group-screen h4, #group-screen p { margin:0; }
+#group-screen h1, #group-screen h2, #group-screen h3 { font-family:'Noto Serif TC','PMingLiU',serif; font-weight:500; }
+#group-screen h2 { font-size:28px; margin:0 40px 22px 0; }
+#group-screen h3 { font-size:21px; margin-bottom:10px; }
+.gl-room { position:absolute; inset:0; overflow-x:auto; overflow-y:hidden; scrollbar-width:thin; scrollbar-color:#71847055 transparent; }
+.gl-world { position:absolute; top:50%; left:0; width:max(100vw, calc(100dvh * var(--gl-room-ratio))); aspect-ratio:var(--gl-room-ratio); transform:translateY(-50%); }
+.gl-room-bg { display:block; width:100%; height:100%; pointer-events:none; }
+.gl-room-heading { position:absolute; top:20px; left:24px; display:flex; flex-wrap:wrap; gap:4px 16px; align-items:center; padding:12px 18px; max-width:calc(100% - 48px); border:1px solid #fff8de70; border-radius:18px; background:#fffae9bc; backdrop-filter:blur(8px); box-shadow:0 4px 20px #4b573620; }
+#group-screen .gl-room-heading h1 { font-size:24px; }
+.gl-room-heading > span { font-size:12px; color:#67725f; }
+.gl-avatars { display:flex; gap:6px; }
+.gl-avatars button { display:block; padding:0; border:1px solid #fdf9e9; border-radius:50%; background:#f4ecdb; transition:transform .15s; }
+.gl-avatars button:hover { transform:translateY(-3px); }
+.gl-avatar { display:block; width:36px; height:36px; object-fit:cover; border-radius:50%; background:#e2e7d7; }
+.gl-room-menu { position:absolute; right:24px; top:25%; width:172px; display:flex; flex-direction:column; gap:14px; }
+#group-screen .gl-room-menu .gl-button { padding:12px 18px; border:1px solid #fff5d273; border-radius:6px 18px 18px 6px; background:#fff8e3c4; color:#4e6051; box-shadow:0 3px 14px #5d583520; backdrop-filter:blur(6px); text-align:left; }
+#group-screen .gl-room-menu .gl-button:hover { background:#f9f3ddeb; color:#304e43; transform:translateX(-3px); }
+.gl-hotspot { position:absolute; border:1px solid transparent; border-radius:12px; background:transparent; transition:background .2s, box-shadow .2s; }
+.gl-hotspot span { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); white-space:nowrap; opacity:0; padding:3px 12px; border-radius:20px; color:#40544b; background:#fffae9df; font-size:13px; transition:opacity .2s; }
+.gl-hotspot:hover, .gl-hotspot:focus-visible { border-color:#fff6cfb0; background:#fff9d71c; box-shadow:inset 0 0 25px #fff8d633; }
+.gl-hotspot:hover span, .gl-hotspot:focus-visible span { opacity:1; }
+.gl-hotspot:active { background:#fff9d75c; }
+.gl-wall-progress { position:absolute; transform:translateX(-50%); font-size:13px; letter-spacing:.08em; color:#4e5c4c; background:#fff8dfcc; padding:3px 14px; border-radius:20px; pointer-events:none; }
+.gl-modal { width:min(1040px,calc(100vw - 28px)); max-height:calc(100dvh - 130px); overflow:auto; padding:32px; border:1px solid #c5c9b4; border-radius:18px; color:#4c5146; background:radial-gradient(ellipse at top left,#e9eada,transparent 65%),#faf6ea; box-shadow:0 20px 70px #30392b55; scrollbar-width:thin; scrollbar-color:#71847055 transparent; }
+.gl-modal::backdrop { background:#263b384d; backdrop-filter:blur(2px); }
+.gl-modal:is([data-panel='welcome'],[data-panel='create'],[data-panel='join']) { width:min(480px,calc(100vw - 28px)); }
+.gl-close { position:absolute; top:12px; right:14px; display:grid; place-items:center; width:36px; height:36px; padding:0; border:1px solid #ccd0bc; border-radius:50%; background:#fffbef; color:#586d59; font-size:24px !important; }
+.gl-button { display:inline-block; padding:9px 18px; min-height:40px; border:1px solid #667e67; border-radius:22px; background:#617961; color:#fffaf0; font-size:13px !important; transition:background .2s,transform .2s; }
+.gl-button:hover:not(:disabled), .gl-button:focus-visible { background:#4d694f; color:#fffaf0; }
+.gl-button.gl-plain { color:#526d57; background:transparent; border-color:#bbc8b4; }
+.gl-button.gl-plain:hover:not(:disabled) { background:#e0e8d6; color:#3d5c43; }
+.gl-actions, .gl-welcome-actions, .gl-puzzle-tabs { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0; }
+.gl-subtle { color:#7d806e; font-size:12px; margin:10px 0 !important; }
+.gl-modal form { display:flex; flex-direction:column; gap:14px; margin:16px 0; }
+.gl-modal label { display:flex; flex-direction:column; gap:6px; color:#687663; font-size:13px; }
+.gl-modal input, .gl-modal select, .gl-modal textarea { width:100%; padding:10px 12px; border:1px solid #cbd1bc; border-radius:8px; background:#fffdf5; color:#4f5f4f; }
+.gl-modal textarea { resize:vertical; }
+.gl-wall-layout { display:grid; grid-template-columns:minmax(220px,.8fr) minmax(0,1.5fr); gap:26px; }
+.gl-share-paper { align-self:start; padding:22px; background:#f1eddb; border:1px dashed #c6c9ac; border-radius:8px; }
+.gl-post-wall { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-content:start; padding:10px 4px; }
+.gl-post { position:relative; padding:22px 18px; background:#fffdf3; box-shadow:0 4px 13px #6f684825; border-radius:3px; transform:rotate(-1deg); overflow-wrap:anywhere; }
+.gl-post:nth-child(even) { transform:rotate(1deg); background:#edf0de; }
+.gl-post::before { content:''; position:absolute; width:58px; height:14px; background:#d2c9a882; top:-6px; left:calc(50% - 29px); transform:rotate(-5deg); }
+.gl-post header { display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:16px; }
+.gl-post small { display:block; color:#92917d; }
+.gl-post p { white-space:pre-wrap; font-size:14px; }
+.gl-puzzle-layout { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(230px,1fr); gap:26px; }
+.gl-puzzle-board { display:grid; grid-template-columns:repeat(var(--cols),minmax(0,1fr)); grid-template-rows:repeat(var(--rows),minmax(0,1fr)); gap:2px; padding:7px; background:#c9c6ac; border:8px solid #e5d8b8; border-radius:4px; box-shadow:0 5px 20px #6c684825; }
+#group-screen .gl-piece { position:relative; min-width:0; min-height:0; padding:0; border:1px dashed #b9bba4; background-color:#f1efdf; color:#a5af95; background-repeat:no-repeat; font-size:24px; }
+#group-screen .gl-piece.is-owned:disabled { opacity:1; border:0; }
+.gl-piece:not(.is-owned):hover { box-shadow:inset 0 0 20px #a3b39980; }
+.gl-puzzle-notes { padding:16px 0; }
+.gl-puzzle-notes > p { margin-bottom:12px !important; }
+.gl-puzzle-notes progress { display:block; width:100%; height:12px; accent-color:#819a78; margin:12px 0; }
+.gl-puzzle-notes h4 { margin-top:22px !important; }
+.gl-missing { font-size:12px; color:#8e8c77; overflow-wrap:anywhere; }
+.gl-reward-preview { border-top:1px dashed #bfc8b1; margin-top:18px; }
+.gl-draw-result { padding:12px; margin-top:12px !important; color:#4d7051; background:#e2ebd4; border-radius:8px; }
+.gl-flip { animation:gl-flip .65s ease both; }
+@keyframes gl-flip { from { transform:rotateY(90deg) scale(.8); filter:brightness(1.4); } to { transform:none; filter:none; } }
+.gl-member-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.gl-member { display:flex; align-items:center; gap:14px; padding:18px; border-bottom:1px dashed #c7cbb7; }
+.gl-member .gl-avatar { width:58px; height:58px; }
+.gl-member p { font-size:12px; color:#808471; }
+.gl-label { padding:2px 7px; font-size:11px; border-radius:4px; background:#e2e8d2; color:#68805e; }
+.gl-code { display:inline-block; letter-spacing:.2em; padding:15px 22px; margin:18px 0 0 !important; border:1px dashed #bfc8b1; background:#efeedb; font-family:monospace; user-select:all; }
+.gl-unlocked-cg { display:block; width:100%; max-height:55dvh; object-fit:contain; }
+.gl-story { padding:24px; background:#efeedb; margin:20px 0; border-radius:8px; }
+#gl-notice { position:absolute; bottom:115px; left:50%; transform:translateX(-50%); z-index:40; max-width:90%; padding:10px 18px; background:#fff9e8; border:1px solid #bac7ad; border-radius:12px; box-shadow:0 4px 16px #4d593330; pointer-events:none; }
+#group-screen:has(.gl-modal[open]) #gl-notice { position:fixed; z-index:100; }
+@media(max-width:700px) {
+    .gl-room-heading { top:12px; left:12px; padding:10px 12px; max-width:calc(100% - 24px); gap:3px 12px; }
+    #group-screen .gl-room-heading h1 { font-size:20px; }
+    .gl-avatars { gap:4px; }
+    .gl-avatar { width:30px; height:30px; }
+    .gl-room-menu { right:12px; top:auto; bottom:115px; width:auto; max-width:calc(100% - 24px); display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    #group-screen .gl-room-menu .gl-button { font-size:12px !important; padding:8px 14px; }
+    .gl-modal { padding:24px 18px; max-height:calc(100dvh - 120px); }
+    #group-screen h2 { font-size:23px; }
+    .gl-wall-layout, .gl-puzzle-layout, .gl-member-list { grid-template-columns:minmax(0,1fr); }
+    .gl-post-wall { grid-template-columns:minmax(0,1fr); }
+    .gl-puzzle-layout { gap:8px; }
+    .gl-member { padding:12px 0; }
+}
+@media(prefers-reduced-motion:reduce) { #group-screen *,#group-screen *::before,#group-screen *::after { animation:none !important; transition:none !important; } }
+.gl-puzzle-notes progress { appearance:none; border:0; border-radius:12px; overflow:hidden; background:#e1e5d3; }
+.gl-puzzle-notes progress::-webkit-progress-bar { background:#e1e5d3; }
+.gl-puzzle-notes progress::-webkit-progress-value { background:linear-gradient(90deg,#b8c8a7,#7c987c); }
+.gl-puzzle-notes progress::-moz-progress-bar { background:#7c987c; }
