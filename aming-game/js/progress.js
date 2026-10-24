@@ -195,15 +195,26 @@
             fresh.notes.ruisui = ""; // 防止舊版心得在下次開啟時重新匯入。
             let originalSave;
             let mainWritten = false;
+            const relatedSaves = new Map();
             try {
+                // 新遊戲統一清除命名空間內的存檔，包含活動、旅團及未來模組。
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key !== SAVE_KEY && key?.startsWith('aming-diary-')) relatedSaves.set(key, localStorage.getItem(key));
+                }
+                if (activityKey && activityKey !== SAVE_KEY) relatedSaves.set(activityKey, localStorage.getItem(activityKey));
                 originalSave = localStorage.getItem(SAVE_KEY);
                 localStorage.setItem(SAVE_KEY, JSON.stringify(fresh));
                 mainWritten = true;
-                if (activityKey && activityKey !== SAVE_KEY) localStorage.removeItem(activityKey);
+                for (const key of relatedSaves.keys()) localStorage.removeItem(key);
             } catch (_) {
                 let restored = true;
                 if (mainWritten) {
                     try {
+                        for (const [key, value] of relatedSaves) {
+                            if (value === null) localStorage.removeItem(key);
+                            else localStorage.setItem(key, value);
+                        }
                         if (originalSave === null) localStorage.removeItem(SAVE_KEY);
                         else localStorage.setItem(SAVE_KEY, originalSave);
                     } catch (_) { restored = false; }

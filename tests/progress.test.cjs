@@ -11,6 +11,8 @@ function app({ data = new Map(), failRead = false, failWrite = false, failRemove
     const events = {};
     const warning = { setAttribute() {}, addEventListener() {}, appendChild() {}, hidden: true };
     const storage = {
+        get length() { return data.size; },
+        key(i) { return [...data.keys()][i] ?? null; },
         getItem(key) {
             if (failRead) throw new Error('storage blocked');
             return data.get(key) ?? null;
@@ -258,4 +260,11 @@ test('活動無法清除時還原主線，不留下只重設一半的旅程', ()
     assert.equal(a.data.get(KEY),before);
     assert.equal(a.data.get('activity'),'saved team');
     assert.deepEqual(a.state().collectedMemories,['ruisui-01']);
+});
+
+test('開始遊戲統一清除旅團、申請、活動與未來模組存檔，保留無關資料', () => {
+ const data=new Map([['aming-diary-guild-v1','guild'],['aming-diary-events-demo-v1','events'],['aming-diary-future-v1','future'],['unrelated','keep']]);
+ const a=app({data});assert(a.api.reset());
+ for(const key of ['aming-diary-guild-v1','aming-diary-events-demo-v1','aming-diary-future-v1'])assert.equal(data.has(key),false);
+ assert.equal(data.get('unrelated'),'keep');
 });
