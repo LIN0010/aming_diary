@@ -56,14 +56,20 @@ GameScenes.register('group', ctx => {
         if(!groups.some(g=>g.id===selectedGuildId))selectedGuildId=groups[0]?.id||null;
         return groups;
     }
+    function guildPortrait(g) {
+        const record=S.snapshot().guilds.find(x=>x.id===g.id)||g;
+        const custom=typeof record.avatar==='string'&&(/^(?:images\/[\w.-]+\.(?:png|jpe?g|webp)|data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+)$/i).test(record.avatar)?record.avatar:null;
+        const hash=[...g.id].reduce((n,c)=>(n*31+c.charCodeAt(0))>>>0,0);
+        return `<img class="gl-guild-portrait" data-fallback="${h(C.guildBadges[hash%C.guildBadges.length])}" src="${h(custom||C.guildBadges[hash%C.guildBadges.length])}" alt="${h(g.name)}旅團徽章">`;
+    }
     function directoryRows() {
-        return rosterGuilds().map(g=>`<button type="button" class="gl-roster-row" data-select-guild="${h(g.id)}" aria-pressed="${g.id===selectedGuildId}"><span aria-hidden="true">${g.id===selectedGuildId?'◆':'◇'}</span><span>${h(g.name)}</span></button>`).join('')||'<p class="gl-subtle">找不到符合條件的旅團</p>';
+        return rosterGuilds().map(g=>`<button type="button" class="gl-roster-row" data-select-guild="${h(g.id)}" aria-pressed="${g.id===selectedGuildId}">${guildPortrait(g)}<span>${h(g.name)}</span><small class="gl-roster-mark" aria-hidden="true">${g.id===selectedGuildId?'◆':''}</small></button>`).join('')||'<p class="gl-subtle">找不到符合條件的旅團</p>';
     }
     function guildDetail() {
         const g=S.snapshot().guilds.find(g=>g.id===selectedGuildId);
         if(!g)return '<p class="gl-subtle">目前沒有可顯示的旅團。</p>';
         const p=C.puzzles[0],pieces=g.puzzles[p.id].owned.length,total=p.rows*p.cols,request=S.latestApplication(),waiting=request?.status==='pending',full=g.members.length>=C.maxMembers;
-        return `<div class="gl-roster-info"><header><span class="gl-guild-emblem" role="img" aria-label="預設鐵道徽章">🚆</span><h3>${h(g.name)}</h3></header><p>目前旅伴：${g.members.length} / ${C.maxMembers} 人${full?' · 旅團已滿':''}</p><p class="gl-guild-introduction">${h(g.introduction||'尚未填寫旅團介紹。')}</p><p>共同拼圖：${pieces} / ${total} 片</p><progress max="${total}" value="${pieces}" aria-label="共同拼圖進度"></progress><p>旅行牆紀錄：${g.posts.length} 則</p>${g.code===C.invite?'<small class="gl-subtle">本機模擬旅團</small>':''}</div><footer class="gl-roster-apply"><button type="button" class="gl-button" data-apply="${h(g.id)}"${full||!g.openApplications||waiting?' disabled':''}>${full?'旅團已滿':!g.openApplications?'暫停申請':waiting?'等待團長審核':'申請加入旅團'}</button>${waiting?btn('pending','查看申請',false,'gl-plain'):''}</footer>`;
+        return `<div class="gl-roster-info"><header>${guildPortrait(g)}<h3>${h(g.name)}</h3></header><p class="gl-guild-count">目前旅伴：${g.members.length} / ${C.maxMembers} 人${full?' · 旅團已滿':''}</p><p class="gl-guild-introduction">${h(g.introduction||'尚未填寫旅團介紹。')}</p><p>🧩 共同拼圖：${pieces} / ${total} 片</p><p>📖 旅行牆紀錄：${g.posts.length} 則</p>${g.code===C.invite?'<small class="gl-subtle">本機模擬旅團</small>':''}</div><footer class="gl-roster-apply"><button type="button" class="gl-button" data-apply="${h(g.id)}"${full||!g.openApplications||waiting?' disabled':''}>${full?'旅團已滿':!g.openApplications?'暫停申請':waiting?'等待團長審核':'申請加入旅團'}</button>${waiting?btn('pending','查看申請',false,'gl-plain'):''}</footer>`;
     }
     function updateRoster(preserveScroll=false) {
         const list=ctx.query('.gl-guild-directory'),top=list.scrollTop;
@@ -83,7 +89,7 @@ GameScenes.register('group', ctx => {
             const request=S.latestApplication();
             if(joinMethod==='code')return title('邀請碼加入')+`<form id="gl-join-form"><div class="gl-clip-fields"><label>請輸入旅伴提供的邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="邀請碼"></label></div><footer class="gl-clip-footer"><button type="button" class="gl-button gl-plain" data-join-mode="apply">返回旅團列表</button><button class="gl-button">確認加入</button></footer></form>`;
             rosterGuilds();
-            return title('尋找同行旅伴')+`<div class="gl-roster"><section class="gl-roster-detail" aria-live="polite">${guildDetail()}</section><section class="gl-roster-list"><form id="gl-search-form"><label><span class="gl-search-label">搜尋旅團名稱</span><input name="query" maxlength="24" value="${h(search)}" autocomplete="off" placeholder="搜尋旅團名稱"></label></form><div class="gl-guild-directory" role="group" aria-label="旅團名冊">${directoryRows()}</div><footer><button type="button" class="gl-button gl-plain" data-join-mode="code">✦ 使用邀請碼加入</button></footer></section></div>`;
+            return title('尋找同行旅伴')+`<div class="gl-roster"><section class="gl-roster-detail" aria-live="polite">${guildDetail()}</section><section class="gl-roster-list"><form id="gl-search-form"><label><span class="gl-search-label">搜尋旅團名稱</span><span class="gl-search-icon" aria-hidden="true"></span><input name="query" maxlength="24" value="${h(search)}" autocomplete="off" placeholder="搜尋旅團名稱"></label></form><div class="gl-guild-directory" role="group" aria-label="旅團名冊">${directoryRows()}</div><footer><button type="button" class="gl-button gl-plain" data-join-mode="code">✦ 使用邀請碼加入</button></footer></section></div>`;
         }
         return title('旅團入口')+(issue?`<p role="alert">${h(issue)}</p>${btn('reset','重置旅團資料')}`:'')+btn('close','返回車站');
     }
@@ -192,6 +198,10 @@ GameScenes.register('group', ctx => {
         if(e.target.id==='gl-create-form')board(()=>S.create(f.get('name'),f.get('introduction')),'旅程啟程');
         else board(()=>S.join(f.get('code')),'同行確認');
     });
+    ctx.on(ctx.root,'error',e=>{
+        const img=e.target;
+        if(img.matches?.('img.gl-guild-portrait')&&img.src!==new URL(img.dataset.fallback,document.baseURI).href)img.src=img.dataset.fallback;
+    },{capture:true});
     ctx.on(ctx.root,'input',e=>{if(e.target.name==='summary')draft=e.target.value;
         if(e.target.name==='query'){search=e.target.value;updateRoster();}});
     ctx.on(ctx.root,'change',e=>{if(e.target.name==='station'){selectedStation=e.target.value;draft='';renderPanel();}});

@@ -243,3 +243,30 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-roster-info progress::-webkit-progress-value { background:#9caa81; }
 .gl-roster-info progress::-moz-progress-bar { background:#9caa81; }
 .gl-roster-list input:focus-visible { outline:1px solid #b99b63; outline-offset:1px; }
+
+/* 名冊以共用圖片建立左右一致的旅團辨識。 */
+.gl-roster { grid-template-columns:minmax(0,45fr) minmax(0,55fr); }
+.gl-roster-info header { flex-direction:column; gap:8px; text-align:center; }
+.gl-guild-portrait { display:block; width:80px; height:80px; flex-shrink:0; border-radius:50%; object-fit:cover; object-position:center; border:1px solid #c1a56e; padding:2px; background:#efe2c4; box-shadow:0 2px 6px #66502a1a; }
+.gl-roster-info header .gl-guild-portrait { margin:0 auto; }
+#group-screen .gl-roster-info h3 { font-size:21px; }
+.gl-roster-info .gl-guild-count { text-align:center; color:#7a6b54; }
+.gl-guild-introduction { line-height:1.7; white-space:pre-wrap; }
+.gl-roster-apply { justify-content:center; }
+.gl-roster-row { min-height:54px; gap:9px; }
+.gl-roster-row .gl-guild-portrait { width:40px; height:40px; padding:1px; }
+.gl-roster-row span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.gl-roster-mark { margin-left:auto; color:#b88a42; }
+.gl-roster-list #gl-search-form label { position:relative; display:block; }
+.gl-search-icon { position:absolute; left:3px; top:50%; width:10px; height:10px; border:1px solid #9c8457; border-radius:50%; transform:translateY(-65%); pointer-events:none; }
+.gl-search-icon::after { content:''; position:absolute; width:5px; height:1px; right:-4px; bottom:-2px; background:#9c8457; transform:rotate(45deg); }
+#group-screen .gl-roster-list input { background:transparent; border:0; border-bottom:1px solid #c4ad7a; border-radius:0; padding-left:23px; box-shadow:none; outline:none; }
+#group-screen .gl-roster-list input:focus-visible { border-bottom-color:#8b642e; outline:none; box-shadow:none; border-bottom-width:1.5px; }
+@media(max-width:700px) {
+ .gl-roster-info header .gl-guild-portrait { width:72px; height:72px; }
+ #group-screen .gl-roster-info h3 { font-size:13px; }
+ .gl-roster-row { min-height:46px; gap:5px; }
+ .gl-roster-row .gl-guild-portrait { width:36px; height:36px; }
+ .gl-roster-row span { font-size:10px; }
+}
+.gl-roster-info { padding-right:0; }

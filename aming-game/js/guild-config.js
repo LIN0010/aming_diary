@@ -2,6 +2,7 @@
 (() => {
     const config = {
         storageKey: 'aming-diary-guild-v1', maxMembers: 6, minMembers: 2,
+        guildBadges: ['images/guild-station-bg.png','images/ruisui-bg.jpg','images/home-bg.jpg'],
         player: { id: 'you', name: '旅人・你', avatar: 'images/aming.png' },
         entrance: { image: 'images/guild-station-bg.png', width: 1536, height: 1024,
             hotspots: [

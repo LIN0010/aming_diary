@@ -14,10 +14,18 @@ try:
   for width,height in [(1280,800),(390,844),(320,844)]:
    page=browser.new_page(viewport={'width':width,'height':height});page.goto(f'http://127.0.0.1:{server.server_port}/group.html');page.locator('[data-gl="join"]').click()
    expect(page.locator('.gl-roster-row').first).to_have_attribute('aria-pressed','true');expect(page.locator('.gl-roster-detail h3')).to_have_text('沿線慢慢走')
+   expect(page.locator('.gl-roster-detail progress')).to_have_count(0)
+   img=page.locator('.gl-roster-info header img');expect(img).to_be_visible()
+   assert img.evaluate('(e)=>e.complete&&e.naturalWidth>0')
+   detail=page.locator('.gl-roster-detail').bounding_box();pic=img.bounding_box();assert abs(pic['x']+pic['width']/2-detail['x']-(detail['width']-float(page.locator('.gl-roster-detail').evaluate('(e)=>parseFloat(getComputedStyle(e).paddingRight)'))-1)/2)<2
    expect(page.locator('.gl-roster-detail')).to_contain_text('7 / 12');expect(page.locator('.gl-roster-detail')).to_contain_text('3 則')
    # 只在測試工作階段複製示範資料，不變更產品資料格式或建立額外正式旅團。
-   page.evaluate("""()=>{const s=GuildStore.snapshot(),g=s.guilds[0];for(let i=0;i<9;i++){const x=structuredClone(g);x.id='fixture-'+i;x.code='FIX'+i;x.name='測試旅團'+i;x.introduction='本機測試資料';x.puzzles.spring.owned=[0,1];x.posts=[];s.guilds.push(x);}localStorage.setItem(GuildConfig.storageKey,JSON.stringify(s));GuildStore.refresh();}""")
+   page.evaluate("""()=>{const s=GuildStore.snapshot(),g=s.guilds[0];for(let i=0;i<9;i++){const x=structuredClone(g);x.id='fixture-'+i;x.code='FIX'+i;x.name='測試旅團'+i;if(i===1)x.avatar='images/ruisui-bg.jpg';x.introduction='本機測試資料';x.puzzles.spring.owned=[0,1];x.posts=[];s.guilds.push(x);}localStorage.setItem(GuildConfig.storageKey,JSON.stringify(s));GuildStore.refresh();}""")
    page.locator('.gl-roster-row').nth(2).click();expect(page.locator('.gl-roster-detail h3')).to_have_text('測試旅團1');expect(page.locator('.gl-roster-detail')).to_contain_text('2 / 12');expect(page.locator('.gl-roster-detail')).to_contain_text('0 則')
+   assert page.locator('.gl-roster-row[aria-pressed="true"] img').get_attribute('src')==page.locator('.gl-roster-info header img').get_attribute('src')=='images/ruisui-bg.jpg'
+   expect(page.locator('.gl-roster-row img')).to_have_count(10)
+   a=page.locator('.gl-roster-detail').bounding_box();r=page.locator('.gl-roster-list').bounding_box();assert abs(a['width']/r['width']-45/55)<.03
+   field=page.locator('[name="query"]');field.focus();assert field.evaluate('(e)=>getComputedStyle(e).borderTopWidth')=='0px';assert field.evaluate('(e)=>getComputedStyle(e).outlineStyle')=='none'
    page.locator('[name="query"]').fill('測試');expect(page.locator('.gl-roster-detail h3')).to_have_text('測試旅團1')
    page.locator('[name="query"]').fill('旅團7');expect(page.locator('.gl-roster-detail h3')).to_have_text('測試旅團7')
    page.locator('[name="query"]').fill('找不到');expect(page.locator('.gl-guild-directory')).to_have_text('找不到符合條件的旅團');expect(page.locator('[data-apply]')).to_have_count(0)
