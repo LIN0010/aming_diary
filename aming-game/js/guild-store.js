@@ -3,16 +3,22 @@
     'use strict';
     const C = GuildConfig, copy = v => JSON.parse(JSON.stringify(v)), listeners = new Set();
     let state, issue = '', blocked = false;
-    const fresh = () => ({ version: 1, activeId: null, guilds: [], earned: [] });
+    const fresh = () => ({ version: 1, activeId: null, guilds: [], earned: [], applications: [] });
     const id = () => crypto.randomUUID();
     function validate(s) {
         if (!s || s.version !== 1 || !Array.isArray(s.guilds) || !Array.isArray(s.earned) ||
             !s.earned.every(x => C.stations.some(t => t.id === x)) || new Set(s.earned).size !== s.earned.length) throw Error('invalid');
+        // 舊版 v1 只補齊新欄位，不變更既有旅團、拼圖與日記。
+        if (s.applications === undefined) s.applications = [];
+        if (!Array.isArray(s.applications)) throw Error('invalid');
         const int = n => Number.isSafeInteger(n) && n >= 0;
         for (const g of s.guilds) {
+            if (g.introduction === undefined) g.introduction = '';
+            if (g.openApplications === undefined) g.openApplications = true;
             if (!g || typeof g.id !== 'string' || typeof g.code !== 'string' || typeof g.name !== 'string' || !g.name.trim() || g.name.length > 24 ||
                 !Array.isArray(g.members) || g.members.length < C.minMembers || g.members.length > C.maxMembers || !Array.isArray(g.posts) || !int(g.draws) || !int(g.points) || !g.puzzles ||
                 new Set(g.members.map(m => m.id)).size !== g.members.length || !g.members.some(m => m.id === g.leader)) throw Error('invalid');
+            if (typeof g.introduction !== 'string' || g.introduction.length > 120 || typeof g.openApplications !== 'boolean') throw Error('invalid');
             for (const m of g.members) if (!C.members.some(d => d.id === m.id) && m.id !== C.player.id) throw Error('invalid');
             for (const p of g.posts) if (!p || typeof p.id !== 'string' || typeof p.memberId !== 'string' || typeof p.station !== 'string' || typeof p.summary !== 'string' || p.summary.length > 500 || !Number.isFinite(Date.parse(p.at))) throw Error('invalid');
             for (const p of C.puzzles) {
@@ -20,6 +26,13 @@
                 if (!Array.isArray(owned) || new Set(owned).size !== owned.length || !owned.every(n => int(n) && n < p.rows*p.cols) || !contributions || !Object.values(contributions).every(int)) throw Error('invalid');
             }
         }
+        if (new Set(s.applications.map(r => r.id)).size !== s.applications.length) throw Error('invalid');
+        for (const r of s.applications) {
+            if (!r || typeof r.id !== 'string' || !s.guilds.some(g => g.id === r.guildId) ||
+                ![C.player.id,...C.members.map(m=>m.id)].includes(r.applicantId) ||
+                !['pending','approved','rejected','cancelled'].includes(r.status) || !Number.isFinite(Date.parse(r.at))) throw Error('invalid');
+        }
+        if (s.applications.filter(r => r.applicantId === C.player.id && r.status === 'pending').length > 1) throw Error('invalid');
         if (new Set(s.guilds.map(g => g.code)).size !== s.guilds.length || new Set(s.guilds.map(g => g.id)).size !== s.guilds.length ||
             (s.activeId !== null && !s.guilds.some(g => g.id === s.activeId && g.members.some(m => m.id === C.player.id))) ||
             s.guilds.filter(g => g.members.some(m => m.id === C.player.id)).length > 1) throw Error('invalid');
@@ -42,19 +55,34 @@
         } catch (e) { issue = e.name === 'QuotaExceededError' || e.name === 'SecurityError' ? '旅團未能保存，請允許本機儲存後再試。' : (e.message === 'invalid' ? '存檔格式不符，未覆寫原資料。' : e.message); return { ok: false, message: issue }; }
     }
     function member(source, now) { return { id: source.id, joinedAt: now }; }
-    function makeGuild(name, code, leader, count) {
+    function makeGuild(name, code, leader, count, includePlayer = true) {
         const at = new Date().toISOString(), members = C.members.slice(0, count).map(m => member(m, at));
-        members.push(member(C.player, at));
-        return { id: id(), name, code, leader, createdAt: at, members,
+        if (includePlayer) members.push(member(C.player, at));
+        return { id: id(), name, code, leader, createdAt: at, members, introduction: '', openApplications: true,
             posts: C.demoPosts.filter(p => members.some(m => m.id === p.memberId)).map(p => ({ ...p, id: id(), at })),
             draws: C.initialDraws, points: C.initialPoints,
             puzzles: Object.fromEntries(C.puzzles.map(p => [p.id, { owned: [...p.initial], contributions: {} }])) };
+    }
+    function ensureDirectory(s) {
+        let g = s.guilds.find(g => g.code === C.invite);
+        if (!g) {
+            g = makeGuild(C.demoName, C.invite, C.members[0].id, 3, false);
+            g.introduction = C.demoIntroduction; s.guilds.push(g);
+        }
+        return g;
+    }
+    function cancelPending(s) { s.applications.forEach(r => { if (r.applicantId === C.player.id && r.status === 'pending') r.status='cancelled'; }); }
+    function admit(s,g,applicantId) {
+        if (g.members.length >= C.maxMembers) throw Error('旅團已滿 6 人。');
+        if (s.guilds.some(g => g.members.some(m => m.id === applicantId))) throw Error('這位旅人已加入其他旅團。');
+        g.members.push({ id: applicantId, joinedAt: new Date().toISOString() });
+        if (applicantId === C.player.id) { s.activeId=g.id; cancelPending(s); }
     }
     const needGuild = s => { const g = active(s); if (!g) throw Error('請先建立或加入旅團。'); return g; };
     function leave(s) {
         const g = needGuild(s); g.members = g.members.filter(m => m.id !== C.player.id);
         if (g.leader === C.player.id) g.leader = g.members[0]?.id;
-        if (g.members.length < C.minMembers) s.guilds = s.guilds.filter(x => x.id !== g.id);
+        if (g.members.length < C.minMembers) { s.guilds = s.guilds.filter(x => x.id !== g.id); s.applications=s.applications.filter(r=>r.guildId!==g.id); }
         s.activeId = null;
     }
     read();
@@ -62,22 +90,53 @@
         snapshot: () => copy(state), current: () => copy(active(state) || null), status: () => ({ issue, blocked }),
         subscribe(f) { listeners.add(f); return () => listeners.delete(f); },
         refresh() { read(); notify(); },
-        create(name) { return change(s => {
+        latestApplication: () => copy([...state.applications].reverse().find(r=>r.applicantId===C.player.id) || null),
+        directory: query => copy(state.guilds.filter(g=>g.name.toLocaleLowerCase().includes(String(query||'').trim().toLocaleLowerCase())).map(g=>({id:g.id,name:g.name,introduction:g.introduction,count:g.members.length,open:g.openApplications}))),
+        prepareDirectory: () => change(s => { ensureDirectory(s); }),
+        create(name, introduction = '') { return change(s => {
             if (s.activeId) throw Error('一次只能加入一個旅團。');
             name = String(name).trim(); if (!name || name.length > 24) throw Error('旅團名稱請填寫 1～24 個字。');
             let code; do { code = id().replaceAll('-', '').slice(0,8).toUpperCase(); } while (code === C.invite || s.guilds.some(g => g.code === code));
-            const g = makeGuild(name, code, C.player.id, C.minMembers-1); s.guilds.push(g); s.activeId = g.id;
+            introduction=String(introduction).trim(); if (introduction.length>120) throw Error('旅團介紹最多 120 個字。');
+            const g = makeGuild(name, code, C.player.id, C.minMembers-1); g.introduction=introduction; s.guilds.push(g); s.activeId = g.id; cancelPending(s);
         }); },
         join(code) { return change(s => {
             if (s.activeId) throw Error('請先退出目前的旅團。');
-            code = String(code).trim().toUpperCase(); let g = s.guilds.find(g => g.code === code);
-            if (!g && code === C.invite) { g = makeGuild(C.demoName, C.invite, C.members[0].id, 3); s.guilds.push(g); }
-            else {
-                if (!g) throw Error('找不到本機邀請碼，請使用示範碼或這個瀏覽器建立的邀請碼。');
-                if (g.members.length >= C.maxMembers) throw Error('旅團已滿 6 人。');
-                g.members.push(member(C.player, new Date().toISOString()));
-            }
-            s.activeId = g.id;
+            code = String(code).trim().toUpperCase();
+            const g = s.guilds.find(g => g.code === code) || (code === C.invite ? ensureDirectory(s) : null);
+            if (!g) throw Error('邀請碼不正確，請重新確認。');
+            admit(s,g,C.player.id);
+        }); },
+        apply(guildId) { return change(s => {
+            if(s.activeId) throw Error('一次只能加入一個旅團。');
+            if(s.applications.some(r=>r.applicantId===C.player.id&&r.status==='pending')) throw Error('已有等待審核的申請，請先取消或等待結果。');
+            const g=s.guilds.find(g=>g.id===guildId);
+            if(!g||!g.openApplications) throw Error('這個旅團目前未開放申請。');
+            if(g.members.length>=C.maxMembers) throw Error('旅團已滿 6 人。');
+            s.applications.push({id:id(),guildId,applicantId:C.player.id,status:'pending',at:new Date().toISOString()});
+        }); },
+        cancelApplication() { return change(s => { cancelPending(s); }); },
+        setApplications(open) { return change(s => {
+            const g=needGuild(s); if(g.leader!==C.player.id) throw Error('只有團長可以管理申請。');
+            g.openApplications=Boolean(open);
+        }); },
+        addDemoApplication() { return change(s => {
+            const g=needGuild(s); if(g.leader!==C.player.id) throw Error('只有團長可以產生本機測試申請。');
+            if(!g.openApplications) throw Error('請先開放申請。');
+            if(g.members.length>=C.maxMembers) throw Error('旅團已滿 6 人。');
+            const m=C.members.find(m=>!s.guilds.some(g=>g.members.some(x=>x.id===m.id))&&!s.applications.some(r=>r.applicantId===m.id&&r.status==='pending'));
+            if(!m) throw Error('目前沒有可用的本機測試旅人。');
+            s.applications.push({id:id(),guildId:g.id,applicantId:m.id,status:'pending',at:new Date().toISOString()});
+        }); },
+        reviewApplication(requestId, approve, simulateLeader=false) { return change(s => {
+            const r=s.applications.find(r=>r.id===requestId),g=r&&s.guilds.find(g=>g.id===r.guildId);
+            if(!g||r.status!=='pending') throw Error('這筆申請已處理或不存在。');
+            const leader=s.activeId===g.id&&g.leader===C.player.id;
+            const localTest=simulateLeader&&!s.activeId&&r.applicantId===C.player.id&&C.members.some(m=>m.id===g.leader);
+            if(!leader&&!localTest) throw Error('只有團長可以審核這筆申請。');
+            if(approve) admit(s,g,r.applicantId);
+            r.status=approve?'approved':'rejected'; r.decidedAt=new Date().toISOString();
+            return {joined:approve&&r.applicantId===C.player.id};
         }); },
         share(stationId, summary) { return change(s => {
             const g = needGuild(s), t = C.stations.find(t => t.id === stationId);

@@ -3,6 +3,7 @@ GameScenes.register('group', ctx => {
     const C = GuildConfig, S = GuildStore, dialog = ctx.id('gl-dialog'), body = ctx.id('gl-dialog-content');
     const noticeElement=ctx.id('gl-notice');
     let panel = '', puzzleId = C.puzzles[0].id, drawing = false, reveal = null, noticeTimer, draft = '', selectedStation = '', disposed = false;
+    let sceneMode='', joinMethod='apply', search='', boarding=false, stampLabel='';
     const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const btn = (action,label,off=false,extra='') => `<button type="button" class="gl-button ${extra}" data-gl="${action}"${off?' disabled':''}>${h(label)}</button>`;
     const date = s => new Date(s).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -15,23 +16,63 @@ GameScenes.register('group', ctx => {
         noticeTimer=ctx.delay(()=>ctx.id('gl-notice').hidden=true,4500);
     }
     function result(r, text) { if (!r.ok) {notify(r.message);return false;} ctx.cancelTimer(noticeTimer); noticeElement.hidden=true; if(text)notify(text);return true; }
-    function background() {
-        ctx.root.style.setProperty('--gl-room-ratio',C.room.width/C.room.height);
-        ctx.query('.gl-room-bg').src=C.room.image;
-        ctx.id('gl-hotspots').innerHTML=C.room.hotspots.map(t=>`<button type="button" class="gl-hotspot" data-gl="${t.id}" aria-label="${h(t.label)}" style="left:${t.x*100}%;top:${t.y*100}%;width:${t.w*100}%;height:${t.h*100}%"><span>${h(t.label)} ↗</span></button>`).join('')+'<span class="gl-wall-progress" id="gl-wall-progress"></span>';
-        const marker=ctx.id('gl-wall-progress'); marker.style.left=C.room.progress.x*100+'%';marker.style.top=C.room.progress.y*100+'%';
+    function background(mode) {
+        const setting=mode==='entry'?C.entrance:C.room;
+        sceneMode=mode; ctx.root.classList.toggle('gl-entry-mode',mode==='entry');
+        ctx.root.style.setProperty('--gl-room-ratio',setting.width/setting.height);
+        ctx.root.style.setProperty('--gl-entry-image',`url('${new URL(C.entrance.image,document.baseURI).href}')`);
+        ctx.query('.gl-room-bg').src=setting.image;
+        ctx.query('.gl-room-bg').alt=mode==='entry'?'水彩車站：左側售票窗口，右側剪票口':'旅團小屋：窗邊鐵道、沙發、旅行手帳與拼圖牆';
+        ctx.id('gl-hotspots').innerHTML=setting.hotspots.map(t=>`<button type="button" class="gl-hotspot ${mode==='entry'?'gl-entry-hotspot':''}" data-gl="${t.id}" aria-label="${h(t.label)}" style="left:${t.x*100}%;top:${t.y*100}%;width:${t.w*100}%;height:${t.h*100}%"><span>${h(t.label)}${mode==='entry'?'':' ↗'}</span></button>`).join('')+(mode==='room'?'<span class="gl-wall-progress" id="gl-wall-progress"></span>':'');
+        if(mode==='room'){
+            const marker=ctx.id('gl-wall-progress');marker.style.left=C.room.progress.x*100+'%';marker.style.top=C.room.progress.y*100+'%';
+        }
+        ctx.delay(()=>{const room=ctx.query('.gl-room');room.scrollLeft=(room.scrollWidth-room.clientWidth)/2;},0);
     }
     function renderRoom() {
-        const g=S.current();
-        ctx.id('gl-hud').innerHTML=g ? `<div class="gl-room-heading"><h1>${h(g.name)}</h1><span>${g.members.length}/${C.maxMembers} 位旅人</span><div class="gl-avatars">${g.members.map(m=>`<button type="button" data-member="${m.id}" aria-label="查看${h(memberInfo(m.id).name)}">${avatar(m.id)}</button>`).join('')}</div></div>` : `<div class="gl-room-heading"><h1>旅團小屋</h1><span>一起收藏沿線的回憶</span></div>`;
-        ctx.id('gl-wall-progress').textContent=g ? `共同拼圖 ${g.puzzles.spring.owned.length}/12` : '共同回憶拼圖';
-        ctx.id('gl-menu').innerHTML=`<nav class="gl-room-menu" aria-label="旅團功能">${g ? btn('wall','旅行牆 ↗')+btn('puzzle','回憶拼圖 ↗')+btn('members','旅團成員 ↗')+btn('manage','旅團手帳 ↗') : btn('welcome','建立／加入旅團 ↗')}</nav>`;
+        const g=S.current(), entry=!g||boarding, request=S.latestApplication();
+        if(sceneMode!==(entry?'entry':'room'))background(entry?'entry':'room');
+        if(entry){
+            ctx.id('gl-hud').innerHTML=`<header class="gl-entry-heading"><h1>下一段旅程，你想與誰同行？</h1></header>`;
+            ctx.id('gl-menu').innerHTML=request&&['pending','rejected'].includes(request.status)?`<div class="gl-application-badge">${btn('pending',request.status==='pending'?'等待團長審核':'查看申請結果')}</div>`:'';
+        }else{
+            ctx.id('gl-hud').innerHTML=`<div class="gl-room-heading"><h1>${h(g.name)}</h1><span>${g.members.length}/${C.maxMembers} 位旅人</span><div class="gl-avatars">${g.members.map(m=>`<button type="button" data-member="${m.id}" aria-label="查看${h(memberInfo(m.id).name)}">${avatar(m.id)}</button>`).join('')}</div></div>`;
+            ctx.id('gl-wall-progress').textContent=`共同拼圖 ${g.puzzles.spring.owned.length}/12`;
+            ctx.id('gl-menu').innerHTML=`<nav class="gl-room-menu" aria-label="旅團功能">${btn('wall','旅行牆 ↗')+btn('puzzle','回憶拼圖 ↗')+btn('members','旅團成員 ↗')+btn('manage','旅團手帳 ↗')}</nav>`;
+        }
+    }
+    function pending() {
+        const r=S.latestApplication(), g=r&&S.snapshot().guilds.find(g=>g.id===r.guildId);
+        if(!r||!g)return title('尚未送出申請')+btn('close','返回入口');
+        const waiting=r.status==='pending';
+        return title(waiting?'等待團長審核':r.status==='rejected'?'申請未通過':'申請已取消')+`<p class="gl-ticket-destination">${h(g.name)}</p><p>${waiting?'申請已送出，核准後才會加入旅團。':r.status==='rejected'?'可以回到車站選擇其他旅團。':'可以重新選擇同行的旅團。'}</p><div class="gl-actions">${btn('close','返回入口')}${waiting?btn('cancel-application','取消申請',false,'gl-plain'):''}</div>${waiting&&C.members.some(m=>m.id===g.leader)?btn('review-demo','本機審核測試',false,'gl-plain'):''}`;
+    }
+    function applicationList(g, simulate=false) {
+        const requests=S.snapshot().applications.filter(r=>r.guildId===g.id&&r.status==='pending'&&(!simulate||r.applicantId===C.player.id));
+        return `<section class="gl-applications"><h3>${simulate?'本機團長審核':'加入申請'}</h3>${simulate?'<p class="gl-subtle">本機模擬審核，不會跨裝置同步。</p>':''}${requests.length?requests.map(r=>`<article class="gl-application-row">${avatar(r.applicantId)}<div><strong>${h(memberInfo(r.applicantId).name)}</strong><small>${date(r.at)} 申請</small></div><div class="gl-actions"><button type="button" class="gl-button" data-review="${h(r.id)}" data-approve="true" data-simulate="${simulate}">核准</button><button type="button" class="gl-button gl-plain" data-review="${h(r.id)}" data-approve="false" data-simulate="${simulate}">拒絕</button></div></article>`).join(''):'<p class="gl-subtle">目前沒有等待審核的申請。</p>'}</section>`;
     }
     function welcome(mode='welcome') {
-        const issue=S.status().issue;
-        return title('下一段旅程，一起出發')+`<p class="gl-subtle">本機示範旅團 · 邀請碼不跨裝置連線</p>${issue?`<p role="alert">${h(issue)}</p>`:''}`+
-            (mode==='create' ? `<form id="gl-create-form"><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="替我們的小屋取個名字"></label><p class="gl-subtle">與一位示範同伴共創小屋，最多 6 人。</p><button class="gl-button">建立旅團</button></form>` : mode==='join' ? `<form id="gl-join-form"><label>旅團邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="${C.invite}"></label><p class="gl-subtle">示範邀請碼：<strong>${C.invite}</strong></p><button class="gl-button">加入旅團</button></form>` : `<div class="gl-welcome-actions">${btn('create','建立旅團')}${btn('join','加入旅團')}</div>`)+
-            `<div class="gl-actions">${mode!=='welcome'?btn('welcome','← 返回','', 'gl-plain'):''}${S.status().blocked?btn('reset','重置旅團示範資料'):''}</div>`;
+        const issue=S.status().issue, localNote='<p class="gl-subtle">本機旅團 · 邀請碼與審核不跨裝置同步</p>';
+        if(mode==='pending')return pending();
+        if(mode==='review-demo'){
+            const r=S.latestApplication(),g=r&&S.snapshot().guilds.find(g=>g.id===r.guildId);
+            return title('審核旅程通行證')+(g?applicationList(g,true):'')+btn('pending','← 申請狀態',false,'gl-plain');
+        }
+        if(mode==='create')return title('建立旅團')+`<p class="gl-ticket-kicker">DEPARTURE / 旅程通行證</p><form id="gl-create-form"><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="替我們的小屋取個名字"></label><label>旅團介紹（選填）<textarea name="introduction" maxlength="120" rows="2" placeholder="簡短寫下想一起走的旅程"></textarea></label><button class="gl-button">確認建立</button></form>`+localNote;
+        if(mode==='join'){
+            const request=S.latestApplication(),guilds=S.directory(search);
+            return title('加入旅團')+`<p class="gl-ticket-kicker">TRAVEL TOGETHER / 同行車票</p><div class="gl-join-tabs" role="group" aria-label="加入方式"><button type="button" class="gl-button ${joinMethod==='apply'?'':'gl-plain'}" data-join-mode="apply" aria-pressed="${joinMethod==='apply'}">申請加入</button><button type="button" class="gl-button ${joinMethod==='code'?'':'gl-plain'}" data-join-mode="code" aria-pressed="${joinMethod==='code'}">邀請碼加入</button></div>`+
+            (joinMethod==='code'?`<form id="gl-join-form"><label>旅團邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="輸入邀請碼"></label><button class="gl-button">確認加入</button></form>`:`<form id="gl-search-form"><label>搜尋旅團<input name="query" maxlength="24" value="${h(search)}" autocomplete="off" placeholder="旅團名稱"></label><button class="gl-button gl-plain">搜尋</button></form><div class="gl-guild-directory">${guilds.map(g=>`<article class="gl-guild-result"><h3>${h(g.name)}</h3>${g.introduction?`<p>${h(g.introduction)}</p>`:''}<span>${g.count}/${C.maxMembers} 人 · ${g.open?'開放申請':'暫停申請'}</span><button type="button" class="gl-button" data-apply="${h(g.id)}"${!g.open||g.count>=C.maxMembers||request?.status==='pending'?' disabled':''}>${g.count>=C.maxMembers?'旅團已滿':'送出申請'}</button></article>`).join('')||'<p class="gl-subtle">沒有符合的旅團。</p>'}</div>${request?.status==='pending'?btn('pending','查看等待中的申請',false,'gl-plain'):''}`)+localNote;
+        }
+        return title('旅團入口')+(issue?`<p role="alert">${h(issue)}</p>${btn('reset','重置旅團資料')}`:'')+btn('close','返回車站');
+    }
+    function board(operation,label) {
+        boarding=true;
+        const r=operation();
+        if(!result(r)){boarding=false;renderRoom();return;}
+        stampLabel=label;panel='stamp';renderPanel();
+        if(!dialog.open)dialog.showModal();
+        ctx.delay(()=>{boarding=false;panel='';dialog.close();renderRoom();},900);
     }
     function wall(g) {
         const unlocked=C.stations.filter(t=>GameProgress.hasMemory(t.memory));
@@ -57,7 +98,7 @@ GameScenes.register('group', ctx => {
     }
     function manage(g) {
         const leader=g.leader===C.player.id;
-        return title('旅團手帳')+`<section class="gl-manage"><h3>${h(g.name)}</h3><p>${g.members.length}/${C.maxMembers} 位旅人 · ${leader?'你是團長':h(memberInfo(g.leader).name)+'帶隊'}</p><p class="gl-code" id="gl-invite-code">${h(g.code)}</p><div class="gl-actions">${btn('copy','複製邀請碼')}${btn('invite','邀請示範同伴',!leader||g.members.length>=C.maxMembers)}</div><p class="gl-subtle">本機模擬，邀請碼只適用這個瀏覽器。示範同行者、初始拼圖與點數由本機設定提供。</p><div class="gl-actions">${btn('leave','退出旅團',false,'gl-plain')}${btn('reset','重置旅團示範',false,'gl-plain')}</div><p class="gl-subtle">退出不影響主線；團長退出後由下一位成員接任，不足 2 人則解散。</p></section>`;
+        return title('旅團手帳')+`<section class="gl-manage"><h3>${h(g.name)}</h3>${g.introduction?`<p>${h(g.introduction)}</p>`:""}<p>${g.members.length}/${C.maxMembers} 位旅人 · ${leader?'你是團長':h(memberInfo(g.leader).name)+'帶隊'}</p>${g.code!==C.invite?`<p class="gl-code" id="gl-invite-code">${h(g.code)}</p>`:""}<div class="gl-actions">${g.code!==C.invite?btn('copy','複製邀請碼'):""}${btn('invite','邀請示範同伴',!leader||g.members.length>=C.maxMembers)}</div><p class="gl-subtle">本機模擬，邀請碼只適用這個瀏覽器。示範同行者、初始拼圖與點數由本機設定提供。</p><div class="gl-actions">${btn('leave','退出旅團',false,'gl-plain')}${btn('reset','重置旅團示範',false,'gl-plain')}</div><p class="gl-subtle">退出不影響主線；團長退出後由下一位成員接任，不足 2 人則解散。</p>${leader?`<div class="gl-actions">${btn('toggle-applications',g.openApplications?'暫停申請':'開放申請',false,'gl-plain')}${btn('test-application','產生本機測試申請',!g.openApplications||g.members.length>=C.maxMembers,'gl-plain')}</div>${applicationList(g)}`:""}</section>`;
     }
     function reward(g) {
         const p=C.puzzles.find(p=>p.id===puzzleId);
@@ -65,7 +106,8 @@ GameScenes.register('group', ctx => {
         return title(p.title)+`<img class="gl-unlocked-cg" src="${p.image}" alt="${h(p.title)}完整示意 CG"><article class="gl-story"><h3>阿明的補充日記</h3><p>${h(p.story)}</p></article>${btn('puzzle','← 回到拼圖')}`;
     }
     function show(next) {
-        const g=S.current(); panel=g?next:['create','join'].includes(next)?next:'welcome';
+        const g=S.current(); panel=g?next:['create','join','pending','review-demo'].includes(next)?next:'welcome';
+        if(!g&&panel==='join')result(S.prepareDirectory());
         if(panel==='puzzle') reveal=null;
         renderPanel();
         // SPA 掛載時先隱藏 root，待掛載完成再進入原生對話框頂層。
@@ -74,53 +116,78 @@ GameScenes.register('group', ctx => {
     function renderPanel() {
         const g=S.current();
         dialog.dataset.panel=panel;
-        body.innerHTML=!g ? welcome(panel) : panel==='wall'?wall(g):panel==='puzzle'?puzzle(g):panel==='members'?members(g):panel==='reward'?reward(g):manage(g);
-        dialog.setAttribute('aria-busy',String(drawing));
+        ctx.query('.gl-close').disabled=boarding;
+        ctx.query('.gl-close').setAttribute('aria-label',g?'返回旅團小屋':'返回車站入口');
+        body.innerHTML=boarding ? title(stampLabel)+`<div class="gl-boarding-stamp" role="status">${h(stampLabel)}</div>${stampLabel==='旅程啟程'?`<p class="gl-ticket-destination">${h(g?.name)}</p><p class="gl-code">${h(g?.code)}</p>`:''}` : !g ? welcome(panel) : panel==='wall'?wall(g):panel==='puzzle'?puzzle(g):panel==='members'?members(g):panel==='reward'?reward(g):manage(g);
+        dialog.setAttribute('aria-busy',String(drawing||boarding));
     }
-    function close() { if(drawing){notify('請等紙片翻開後再離開。');return;} panel='';dialog.close(); }
-    background();renderRoom();
+    function close() { if(drawing||boarding){return;} panel='';dialog.close(); }
+    renderRoom();
     ctx.on(ctx.root,'click',async e=>{
         const button=e.target.closest('button');if(!button||button.disabled)return;
         const action=button.dataset.gl;
+        if(boarding)return;
+        if(button.dataset.joinMode){joinMethod=button.dataset.joinMode;renderPanel();return;}
+        if(button.dataset.apply){if(result(S.apply(button.dataset.apply)))show('pending');return;}
+        if(button.dataset.review){
+            const approve=button.dataset.approve==='true',simulate=button.dataset.simulate==='true';
+            const operation=()=>S.reviewApplication(button.dataset.review,approve,simulate);
+            if(approve&&simulate)board(operation,'同行確認');
+            else if(result(operation(),approve?'申請已核准。':'申請已拒絕。')){if(simulate)show('pending');else renderPanel();}
+            return;
+        }
         if(button.dataset.member){show('members');ctx.delay(()=>ctx.id('gl-member-'+button.dataset.member)?.scrollIntoView({block:'nearest'}),0);return;}
         if(button.dataset.puzzle){if(drawing)return;puzzleId=button.dataset.puzzle;show('puzzle');return;}
         if(button.dataset.piece!==undefined){if(drawing)return;const r=S.exchange(puzzleId,Number(button.dataset.piece));if(result(r,'這片回憶已加入共同拼圖。')){reveal=null;renderPanel();}return;}
         if(action==='close'){close();return;}
-        if(['welcome','create','join','wall','puzzle','members','manage','reward'].includes(action)){if(!drawing)show(action);return;}
+        if(['welcome','create','join','pending','review-demo','wall','puzzle','members','manage','reward'].includes(action)){if(!drawing)show(action);return;}
         if(action==='explore'){close();ctx.go('explore.html');return;}
         if(action==='draw'){
             if(drawing)return;drawing=true;reveal=null;
             const r=S.draw(puzzleId);if(!r.ok){drawing=false;notify(r.message);renderPanel();return;}
             reveal=r.value;renderPanel();ctx.delay(()=>{drawing=false;renderPanel();},650);return;
         }
+        if(action==='cancel-application'){if(result(S.cancelApplication()))close();return;}
+        if(action==='toggle-applications'){if(result(S.setApplications(!S.current().openApplications)))renderPanel();return;}
+        if(action==='test-application'){if(result(S.addDemoApplication()))renderPanel();return;}
         if(action==='copy'){
             const code=S.current()?.code;if(!code)return;
             try{await navigator.clipboard.writeText(code);if(!disposed)notify('邀請碼已複製。');}catch(_){notify('無法自動複製，請選取手帳中的邀請碼。');}return;
         }
         if(action==='invite'){if(result(S.inviteDemo(),'示範同伴已加入小屋。'))renderPanel();}
-        if(action==='leave'&&confirm('要退出旅團嗎？不足 2 人的小屋會解散，主線日記與回憶不受影響。')){if(result(S.leave()))show('welcome');}
-        if(action==='reset'&&confirm('清除本機旅團示範？主線與活動存檔不受影響。')){if(result(S.reset())){draft='';reveal=null;show('welcome');}}
+        if(action==='leave'&&confirm('要退出旅團嗎？不足 2 人的小屋會解散，主線日記與回憶不受影響。')){if(result(S.leave()))close();}
+        if(action==='reset'&&confirm('清除本機旅團示範？主線與活動存檔不受影響。')){if(result(S.reset())){draft='';reveal=null;close();}}
     });
     ctx.on(ctx.root,'submit',e=>{
-        if(!['gl-create-form','gl-join-form','gl-share-form'].includes(e.target.id))return;e.preventDefault();const f=new FormData(e.target);
+        if(!['gl-create-form','gl-join-form','gl-share-form','gl-search-form'].includes(e.target.id))return;e.preventDefault();const f=new FormData(e.target);
+        if(boarding)return;
+        if(e.target.id==='gl-search-form'){search=String(f.get('query'));if(result(S.prepareDirectory()))renderPanel();return;}
         if(e.target.id==='gl-share-form'){
             const r=S.share(f.get('station'),f.get('summary'));
             if(result(r,r.value?.earned?'已分享日記，獲得 1 次拼圖抽取機會。':'已分享日記。')){draft='';renderPanel();}return;
         }
-        const r=e.target.id==='gl-create-form'?S.create(f.get('name')):S.join(f.get('code'));
-        if(result(r)){panel='';dialog.close();renderRoom();}
+        if(e.target.id==='gl-create-form')board(()=>S.create(f.get('name'),f.get('introduction')),'旅程啟程');
+        else board(()=>S.join(f.get('code')),'同行確認');
     });
     ctx.on(ctx.root,'input',e=>{if(e.target.name==='summary')draft=e.target.value;});
     ctx.on(ctx.root,'change',e=>{if(e.target.name==='station'){selectedStation=e.target.value;draft='';renderPanel();}});
     ctx.on(dialog,'close',()=>ctx.root.append(noticeElement));
     ctx.on(dialog,'cancel',e=>{e.preventDefault();close();});
     ctx.on(window,'storage',e=>{if(e.key===C.storageKey||e.key===null)S.refresh();});
-    ctx.cleanup(S.subscribe(()=>{renderRoom();if(panel&&!drawing){if(!S.current()&&!['welcome','create','join'].includes(panel))panel='welcome';renderPanel();}}));
+    ctx.cleanup(S.subscribe(()=>{
+        const g=S.current(), entryPanels=['welcome','create','join','pending','review-demo'];
+        if(panel&&!drawing&&!boarding&&((g&&entryPanels.includes(panel))||(!g&&!entryPanels.includes(panel)))){
+            panel='';dialog.close();
+        }
+        renderRoom();
+        if(panel&&!drawing&&!boarding)renderPanel();
+    }));
     ctx.subscribe(()=>{if(panel==='wall')renderPanel();});
-    ctx.beforeLeave(()=>!drawing);
+    ctx.beforeLeave(()=>!drawing&&!boarding);
     ctx.cleanup(()=>{disposed=true;if(dialog.open)dialog.close();});
     ctx.delay(()=>{
         const room=ctx.query('.gl-room');room.scrollLeft=(room.scrollWidth-room.clientWidth)/2;
-        if(!S.current())show('welcome');
+        if(!S.current()&&S.latestApplication()?.status==='pending')show('pending');
+        else if(S.status().blocked)show('welcome');
     },0);
 });

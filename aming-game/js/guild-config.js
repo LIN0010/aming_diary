@@ -3,19 +3,25 @@
     const config = {
         storageKey: 'aming-diary-guild-v1', maxMembers: 6, minMembers: 2,
         player: { id: 'you', name: '旅人・你', avatar: 'images/aming.png' },
+        entrance: { image: 'images/guild-station-bg.png', width: 1536, height: 1024,
+            hotspots: [
+                { id: 'create', label: '建立旅團', x: .12, y: .19, w: .30, h: .32 },
+                { id: 'join', label: '加入旅團', x: .57, y: .475, w: .30, h: .24 }
+            ] },
         room: { image: 'images/guild-room-bg.png', width: 1536, height: 1024,
             hotspots: [
                 { id: 'puzzle', label: '共同回憶拼圖', x: .429, y: .217, w: .341, h: .303 },
                 { id: 'wall', label: '翻開旅行手帳', x: .341, y: .705, w: .224, h: .09 }
             ], progress: { x: .60, y: .535 } },
-        invite: 'RAIL2027', demoName: '沿線慢慢走', initialDraws: 3, initialPoints: 160,
+        invite: 'RAIL2027', demoName: '沿線慢慢走', demoIntroduction: '沿著鐵道慢慢旅行，一起收藏日記與拼圖。', initialDraws: 3, initialPoints: 160,
         duplicatePoints: 4, exchangeCost: 10,
         members: [
             { id: 'demo-mori', name: '小森', avatar: 'images/cow.png', shares: 3, contribution: 8 },
             { id: 'demo-light', name: '拾光', avatar: 'images/aming.png', shares: 2, contribution: 6 },
             { id: 'demo-wind', name: '風旅人', avatar: 'images/cow.png', shares: 2, contribution: 3 },
             { id: 'demo-rain', name: '雨禾', avatar: 'images/aming.png', shares: 0, contribution: 0 },
-            { id: 'demo-sea', name: '海生', avatar: 'images/cow.png', shares: 0, contribution: 0 }
+            { id: 'demo-sea', name: '海生', avatar: 'images/cow.png', shares: 0, contribution: 0 },
+            { id: 'demo-river', name: '川旅人', avatar: 'images/aming.png', shares: 0, contribution: 0 }
         ],
         demoPosts: [
             { memberId: 'demo-mori', station: '花蓮', summary: '把山線的風收進手帳，下一次想和大家一起出發。' },

@@ -17,10 +17,11 @@ def closed(page):
 def opened(page,action):
  page.locator(f'#gl-menu [data-gl="{action}"]').click();expect(page.locator('#gl-dialog')).to_be_visible()
 def joined(page):
- expect(page.locator('#gl-dialog')).to_be_visible()
- page.locator('[data-gl="join"]').click()
+ expect(page.locator('.gl-entry-hotspot[data-gl="join"]')).to_be_visible()
+ page.locator('.gl-entry-hotspot[data-gl="join"]').click()
+ page.locator('[data-join-mode="code"]').click()
  page.locator('#gl-join-form [name="code"]').fill('WRONG')
- page.locator('#gl-join-form .gl-button').click();expect(page.locator('#gl-notice')).to_contain_text('找不到')
+ page.locator('#gl-join-form .gl-button').click();expect(page.locator('#gl-notice')).to_contain_text('不正確')
  page.locator('#gl-join-form [name="code"]').fill('rail2027')
  page.locator('#gl-join-form .gl-button').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
  expect(page.locator('.gl-room-heading h1')).to_have_text('沿線慢慢走')
@@ -40,7 +41,7 @@ try:
   expect(page.locator('#group-screen')).to_be_visible(timeout=20000)
   expect(page.locator('[data-destination="group"]')).to_have_attribute('aria-current','page')
   expect(page.locator('[data-game-nav] .nav-item')).to_have_count(5)
-  page.locator('[data-gl="create"]').click()
+  page.locator('.gl-entry-hotspot[data-gl="create"]').click()
   page.locator('#gl-create-form [name="name"]').fill('沿線朋友')
   page.locator('#gl-create-form .gl-button').click()
   expect(page.locator('#gl-dialog')).not_to_be_visible()
@@ -100,8 +101,8 @@ try:
   expect(page.locator('[data-gl="invite"]')).to_be_disabled()
   expect(page.locator('.gl-avatars button')).to_have_count(6)
   page.once('dialog',lambda d:d.accept());page.locator('[data-gl="leave"]').click()
-  expect(page.locator('[data-gl="join"]')).to_be_visible()
-  page.locator('[data-gl="join"]').click();page.locator('[name="code"]').fill(code);page.locator('#gl-join-form .gl-button').click()
+  expect(page.locator('.gl-entry-hotspot[data-gl="join"]')).to_be_visible()
+  page.locator('.gl-entry-hotspot[data-gl="join"]').click();page.locator('[data-join-mode="code"]').click();page.locator('[name="code"]').fill(code);page.locator('#gl-join-form .gl-button').click()
   opened(page,'manage');expect(page.locator('[data-gl="invite"]')).to_be_disabled();closed(page)
   page.reload();expect(page.locator('.gl-room-heading h1')).to_have_text('沿線朋友',timeout=20000)
   assert page.evaluate('GuildStore.current().puzzles.spring.owned.length')==12
@@ -134,7 +135,7 @@ try:
    page.set_viewport_size({'width':844,'height':390});aligned(page)
    context.close()
   context=browser.new_context();page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(BASE+'game.html#/group');expect(page.locator('#gl-dialog')).to_be_visible(timeout=20000);closed(page)
+  page.goto(BASE+'game.html#/group');expect(page.locator('.gl-entry-hotspot[data-gl="create"]')).to_be_visible(timeout=20000)
   page.locator('[data-destination="explore"]').click();expect(page.locator('#explore-screen')).to_be_visible(timeout=20000)
   assert page.evaluate('GuildStore.current()') is None
   print('PASS: 320／390 手機、橫向 resize 熱區、示範加入及未加入旅團仍可探索。',flush=True)

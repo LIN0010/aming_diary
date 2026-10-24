@@ -96,3 +96,62 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-puzzle-notes progress::-webkit-progress-bar { background:#e1e5d3; }
 .gl-puzzle-notes progress::-webkit-progress-value { background:linear-gradient(90deg,#b8c8a7,#7c987c); }
 .gl-puzzle-notes progress::-moz-progress-bar { background:#7c987c; }
+
+/* 車站入口：使用上傳原圖與同一座標面，僅在物件上疊加金色角框。 */
+.gl-entry-mode::before { content:''; position:absolute; inset:-16px; background-image:var(--gl-entry-image); background-size:cover; background-position:center; filter:blur(10px); opacity:.6; }
+.gl-entry-heading { position:absolute; top:32px; left:24px; right:24px; text-align:center; pointer-events:none; }
+#group-screen .gl-entry-heading h1 { font-size:clamp(20px,2.3vw,29px); letter-spacing:.08em; color:#fff3d7; text-shadow:0 2px 7px #28281ed9; }
+.gl-entry-hotspot, .gl-entry-hotspot:hover, .gl-entry-hotspot:focus-visible, .gl-entry-hotspot:active { border:1px solid #e9d6a729; border-radius:4px; background:
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) left top/24px 2px no-repeat,
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) left top/2px 24px no-repeat,
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) right top/24px 2px no-repeat,
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) right top/2px 24px no-repeat,
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) left bottom/24px 2px no-repeat,
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) left bottom/2px 24px no-repeat,
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) right bottom/24px 2px no-repeat,
+ linear-gradient(#e8d1a1b3,#e8d1a1b3) right bottom/2px 24px no-repeat; transition:box-shadow .3s,border-color .3s; }
+.gl-entry-hotspot::after { content:''; position:absolute; inset:-3px; border-radius:6px; border:1px solid #f4deb400; transition:border-color .3s,box-shadow .3s; pointer-events:none; }
+.gl-entry-hotspot span { opacity:1; bottom:-16px; font-size:14px; padding:4px 16px; background:#fff2d8d9; color:#60543e; border:1px solid #d3bb8280; box-shadow:0 2px 12px #473e2820; transition:transform .3s; }
+.gl-entry-hotspot:hover, .gl-entry-hotspot:focus-visible { background-color:#ffe7a60d; border-color:#f6dfab80; box-shadow:0 0 24px #f5ce7640,inset 0 0 24px #f5ce7620; }
+.gl-entry-hotspot:is(:hover,:focus-visible)::after { border-color:#f4deb4a6; box-shadow:0 0 13px #f5ce7650; }
+.gl-entry-hotspot:is(:hover,:focus-visible) span { transform:translate(-50%,-4px); }
+.gl-entry-hotspot:active { background-color:#fff0c428; }
+.gl-application-badge { position:absolute; bottom:120px; left:24px; }
+.gl-application-badge .gl-button { background:#fbf1d6df; color:#685739; border-color:#d3bd8b; }
+.gl-modal:is([data-panel='create'],[data-panel='join'],[data-panel='pending'],[data-panel='review-demo'],[data-panel='stamp']) { width:min(640px,calc(100vw - 28px)); border:1px solid #cdb982; border-radius:12px; background:
+ radial-gradient(circle at left 56px, #e6d8b933, transparent 110px),#fbf5e6;
+ box-shadow:0 18px 65px #2b32284d; animation:gl-ticket-in .25s ease both; }
+.gl-modal:is([data-panel='create'],[data-panel='join'],[data-panel='pending'],[data-panel='review-demo'],[data-panel='stamp'])::before { content:''; display:block; height:8px; margin:-8px 44px 22px 0; border-top:1px dashed #bca46b; border-bottom:1px solid #decea7; opacity:.7; }
+.gl-ticket-kicker { color:#9c8754; font-size:10px; letter-spacing:.16em; }
+.gl-ticket-destination { font-family:'PMingLiU',serif; font-size:23px; margin:15px 0 !important; }
+.gl-join-tabs { display:flex; flex-wrap:wrap; gap:10px; margin:20px 0; }
+.gl-guild-result { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 16px; padding:18px 0; border-top:1px dashed #cfbd91; }
+.gl-guild-result h3, .gl-guild-result p { grid-column:1 / -1; overflow-wrap:anywhere; }
+.gl-guild-result p, .gl-guild-result span { color:#82806a; font-size:13px; }
+.gl-application-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:12px 0; border-top:1px dashed #cfbd91; }
+.gl-application-row small { display:block; color:#89816d; font-size:11px; }
+.gl-applications { margin-top:24px; }
+.gl-boarding-stamp { width:190px; padding:20px; margin:35px auto; border:3px double #9e7461; border-radius:8px; color:#9e7461; text-align:center; font:26px/1.5 'PMingLiU',serif; letter-spacing:.13em; transform:rotate(-8deg); animation:gl-stamp .8s ease both; }
+.gl-modal[data-panel='stamp'] { text-align:center; }
+@keyframes gl-ticket-in { from { opacity:0; translate:0 8px; } to { opacity:1; translate:0 0; } }
+@keyframes gl-stamp { 0% { opacity:0; transform:scale(1.7) rotate(-14deg); } 45% { opacity:1; transform:scale(.96) rotate(-8deg); } 65%,100% { opacity:1; transform:scale(1) rotate(-8deg); } }
+@media(max-aspect-ratio:3/2) { .gl-entry-mode .gl-world { width:100%; } .gl-entry-mode .gl-room { overflow:hidden; } }
+@media(max-width:700px) {
+ .gl-entry-heading { top:24px; left:14px; right:14px; }
+ .gl-entry-hotspot { background-size:14px 2px,2px 14px,14px 2px,2px 14px,14px 2px,2px 14px,14px 2px,2px 14px; }
+ .gl-entry-hotspot span { font-size:12px; padding:3px 9px; bottom:-12px; }
+ .gl-application-badge { left:12px; }
+ .gl-guild-result { grid-template-columns:minmax(0,1fr); }
+ .gl-guild-result h3,.gl-guild-result p { grid-column:auto; }
+}
+
+.gl-modal:is([data-panel='create'],[data-panel='join'],[data-panel='pending'],[data-panel='review-demo'],[data-panel='stamp']) {
+ -webkit-mask-image:radial-gradient(circle at left 58px,transparent 8px,#000 9px),radial-gradient(circle at right 58px,transparent 8px,#000 9px);
+ mask-image:radial-gradient(circle at left 58px,transparent 8px,#000 9px),radial-gradient(circle at right 58px,transparent 8px,#000 9px);
+ -webkit-mask-size:51% 100%;mask-size:51% 100%;-webkit-mask-position:left,right;mask-position:left,right;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+}
+/* 短橫向螢幕讓完整互動物件留在底部導覽上方。 */
+@media(max-height:520px) and (min-aspect-ratio:3/2) {
+ .gl-entry-mode .gl-world { width:calc((100dvh - 110px) * var(--gl-room-ratio));left:50%;top:calc(50% - 55px);transform:translate(-50%,-50%); }
+ .gl-entry-mode .gl-room { overflow:hidden; }
+}
