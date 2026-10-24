@@ -51,6 +51,10 @@ GameScenes.register('group', ctx => {
         const requests=S.snapshot().applications.filter(r=>r.guildId===g.id&&r.status==='pending'&&(!simulate||r.applicantId===C.player.id));
         return `<section class="gl-applications"><h3>${simulate?'本機團長審核':'加入申請'}</h3>${simulate?'<p class="gl-subtle">本機模擬審核，不會跨裝置同步。</p>':''}${requests.length?requests.map(r=>`<article class="gl-application-row">${avatar(r.applicantId)}<div><strong>${h(memberInfo(r.applicantId).name)}</strong><small>${date(r.at)} 申請</small></div><div class="gl-actions"><button type="button" class="gl-button" data-review="${h(r.id)}" data-approve="true" data-simulate="${simulate}">核准</button><button type="button" class="gl-button gl-plain" data-review="${h(r.id)}" data-approve="false" data-simulate="${simulate}">拒絕</button></div></article>`).join(''):'<p class="gl-subtle">目前沒有等待審核的申請。</p>'}</section>`;
     }
+    function directoryRows() {
+        const pending=S.latestApplication()?.status==='pending';
+        return S.directory(search).map(g=>`<article class="gl-guild-result"><div><h3>${h(g.name)}</h3><p>${h(g.introduction)}</p></div><span>${g.count}/${C.maxMembers}<small>${g.open?'開放申請':'暫停申請'}</small></span><button type="button" class="gl-button" data-apply="${h(g.id)}"${!g.open||g.count>=C.maxMembers||pending?' disabled':''}>${g.count>=C.maxMembers?'已滿':'申請加入'}</button></article>`).join('')||'<p class="gl-subtle">沒有符合的旅團。</p>';
+    }
     function welcome(mode='welcome') {
         const issue=S.status().issue, localNote='<p class="gl-subtle">本機旅團 · 邀請碼與審核不跨裝置同步</p>';
         if(mode==='pending')return pending();
@@ -58,11 +62,11 @@ GameScenes.register('group', ctx => {
             const r=S.latestApplication(),g=r&&S.snapshot().guilds.find(g=>g.id===r.guildId);
             return title('審核旅程通行證')+(g?applicationList(g,true):'')+btn('pending','← 申請狀態',false,'gl-plain');
         }
-        if(mode==='create')return title('建立旅團')+`<p class="gl-ticket-kicker">DEPARTURE / 旅程通行證</p><form id="gl-create-form"><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="替我們的小屋取個名字"></label><label>旅團介紹（選填）<textarea name="introduction" maxlength="120" rows="2" placeholder="簡短寫下想一起走的旅程"></textarea></label><button class="gl-button">確認建立</button></form>`+localNote;
+        if(mode==='create')return title('旅團成立登記')+`<p class="gl-clip-subtitle">為這段旅程取個名字吧。</p><form id="gl-create-form"><div class="gl-clip-fields"><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="旅團名稱"></label><label>旅團介紹（選填）<textarea name="introduction" maxlength="120" rows="2" placeholder="簡短寫下想一起走的旅程"></textarea></label></div><footer class="gl-clip-footer"><button class="gl-button">確認建立</button></footer></form>`;
         if(mode==='join'){
-            const request=S.latestApplication(),guilds=S.directory(search);
-            return title('加入旅團')+`<p class="gl-ticket-kicker">TRAVEL TOGETHER / 同行車票</p><div class="gl-join-tabs" role="group" aria-label="加入方式"><button type="button" class="gl-button ${joinMethod==='apply'?'':'gl-plain'}" data-join-mode="apply" aria-pressed="${joinMethod==='apply'}">申請加入</button><button type="button" class="gl-button ${joinMethod==='code'?'':'gl-plain'}" data-join-mode="code" aria-pressed="${joinMethod==='code'}">邀請碼加入</button></div>`+
-            (joinMethod==='code'?`<form id="gl-join-form"><label>旅團邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="輸入邀請碼"></label><button class="gl-button">確認加入</button></form>`:`<form id="gl-search-form"><label>搜尋旅團<input name="query" maxlength="24" value="${h(search)}" autocomplete="off" placeholder="旅團名稱"></label><button class="gl-button gl-plain">搜尋</button></form><div class="gl-guild-directory">${guilds.map(g=>`<article class="gl-guild-result"><h3>${h(g.name)}</h3>${g.introduction?`<p>${h(g.introduction)}</p>`:''}<span>${g.count}/${C.maxMembers} 人 · ${g.open?'開放申請':'暫停申請'}</span><button type="button" class="gl-button" data-apply="${h(g.id)}"${!g.open||g.count>=C.maxMembers||request?.status==='pending'?' disabled':''}>${g.count>=C.maxMembers?'旅團已滿':'送出申請'}</button></article>`).join('')||'<p class="gl-subtle">沒有符合的旅團。</p>'}</div>${request?.status==='pending'?btn('pending','查看等待中的申請',false,'gl-plain'):''}`)+localNote;
+            const request=S.latestApplication();
+            if(joinMethod==='code')return title('邀請碼加入')+`<form id="gl-join-form"><div class="gl-clip-fields"><label>請輸入旅伴提供的邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="邀請碼"></label></div><footer class="gl-clip-footer"><button type="button" class="gl-button gl-plain" data-join-mode="apply">返回尋找旅團</button><button class="gl-button">確認加入</button></footer></form>`;
+            return title('尋找同行旅伴')+`<p class="gl-clip-subtitle">沿著鐵道，尋找下一段同行的旅程。</p><form id="gl-search-form"><label><span class="gl-search-label">搜尋旅團名稱</span><input name="query" maxlength="24" value="${h(search)}" autocomplete="off" placeholder="搜尋旅團名稱"></label></form><div class="gl-guild-directory">${directoryRows()}</div><footer class="gl-clip-footer">${request?.status==='pending'?btn('pending','等待團長審核',false,'gl-plain'):''}<button type="button" class="gl-button gl-plain" data-join-mode="code">✦ 使用邀請碼加入</button></footer>`;
         }
         return title('旅團入口')+(issue?`<p role="alert">${h(issue)}</p>${btn('reset','重置旅團資料')}`:'')+btn('close','返回車站');
     }
@@ -116,6 +120,7 @@ GameScenes.register('group', ctx => {
     function renderPanel() {
         const g=S.current();
         dialog.dataset.panel=panel;
+        dialog.classList.toggle('gl-clipboard',boarding||(!g&&['create','join'].includes(panel)));
         ctx.query('.gl-close').disabled=boarding;
         ctx.query('.gl-close').setAttribute('aria-label',g?'返回旅團小屋':'返回車站入口');
         body.innerHTML=boarding ? title(stampLabel)+`<div class="gl-boarding-stamp" role="status">${h(stampLabel)}</div>${stampLabel==='旅程啟程'?`<p class="gl-ticket-destination">${h(g?.name)}</p><p class="gl-code">${h(g?.code)}</p>`:''}` : !g ? welcome(panel) : panel==='wall'?wall(g):panel==='puzzle'?puzzle(g):panel==='members'?members(g):panel==='reward'?reward(g):manage(g);
@@ -127,7 +132,7 @@ GameScenes.register('group', ctx => {
         const button=e.target.closest('button');if(!button||button.disabled)return;
         const action=button.dataset.gl;
         if(boarding)return;
-        if(button.dataset.joinMode){joinMethod=button.dataset.joinMode;renderPanel();return;}
+        if(button.dataset.joinMode){joinMethod=button.dataset.joinMode;if(joinMethod==='apply')search='';renderPanel();return;}
         if(button.dataset.apply){if(result(S.apply(button.dataset.apply)))show('pending');return;}
         if(button.dataset.review){
             const approve=button.dataset.approve==='true',simulate=button.dataset.simulate==='true';
@@ -169,7 +174,8 @@ GameScenes.register('group', ctx => {
         if(e.target.id==='gl-create-form')board(()=>S.create(f.get('name'),f.get('introduction')),'旅程啟程');
         else board(()=>S.join(f.get('code')),'同行確認');
     });
-    ctx.on(ctx.root,'input',e=>{if(e.target.name==='summary')draft=e.target.value;});
+    ctx.on(ctx.root,'input',e=>{if(e.target.name==='summary')draft=e.target.value;
+        if(e.target.name==='query'){search=e.target.value;ctx.query('.gl-guild-directory').innerHTML=directoryRows();}});
     ctx.on(ctx.root,'change',e=>{if(e.target.name==='station'){selectedStation=e.target.value;draft='';renderPanel();}});
     ctx.on(dialog,'close',()=>ctx.root.append(noticeElement));
     ctx.on(dialog,'cancel',e=>{e.preventDefault();close();});

@@ -157,3 +157,46 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
  .gl-entry-mode .gl-world { width:calc((100dvh - 110px) * var(--gl-room-ratio));left:50%;top:calc(50% - 55px);transform:translate(-50%,-50%); }
  .gl-entry-mode .gl-room { overflow:hidden; }
 }
+
+/* 三種登記模式共用透明板夾；紙張範圍與原圖保持比例。 */
+.gl-clipboard-art { display:none; }
+#group-screen .gl-modal.gl-clipboard { width:min(1120px,98vw,calc(94dvh * 1.5)); height:auto; aspect-ratio:1.5; max-height:none; padding:0; border:0; overflow:visible; background:transparent; box-shadow:none; border-radius:0; mask:none; -webkit-mask:none; }
+.gl-modal.gl-clipboard::before { display:none; }
+.gl-clipboard .gl-clipboard-art { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
+.gl-clipboard #gl-dialog-content { position:absolute; left:22%; top:32%; width:63%; height:48%; display:flex; flex-direction:column; gap:8px; overflow:hidden; color:#513e28; }
+#group-screen .gl-clipboard h2 { margin:0; font-size:clamp(16px,2.4vw,28px); line-height:1.3; }
+.gl-clipboard .gl-close { top:21%; right:12%; width:32px; height:32px; z-index:2; background:#f7edce99; border-color:#b99b63; color:#594b32; }
+.gl-clip-subtitle { font-size:13px; color:#8b7754; }
+.gl-clipboard form { margin:0; min-height:0; flex:1; display:flex; flex-direction:column; gap:10px; }
+.gl-clip-fields { min-height:0; overflow:auto; flex:1; display:flex; flex-direction:column; gap:14px; scrollbar-width:thin; }
+.gl-clipboard label { color:#625039; font-size:14px; }
+.gl-clipboard input, .gl-clipboard textarea { border:0; border-bottom:1px solid #b99b6380; border-radius:0; padding:6px 2px; background:#fff9e51a; color:#513e28; }
+.gl-clipboard textarea { resize:none; }
+.gl-clip-footer { flex-shrink:0; display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-top:auto; }
+.gl-clipboard .gl-button { border-radius:8px; padding:7px 13px; min-height:36px; }
+.gl-clipboard #gl-search-form { flex:none; }
+.gl-search-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.gl-clipboard .gl-guild-directory { min-height:0; flex:1; overflow:auto; scrollbar-width:thin; scrollbar-color:#b99b6366 transparent; }
+.gl-clipboard .gl-guild-result { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; padding:10px 2px; gap:10px; border-top:1px solid #c6ac7455; }
+#group-screen .gl-clipboard .gl-guild-result h3 { font-size:17px; margin:0; }
+.gl-clipboard .gl-guild-result h3, .gl-clipboard .gl-guild-result p { grid-column:auto; }
+.gl-clipboard .gl-guild-result p { font-size:12px; }
+.gl-clipboard .gl-guild-result small { display:block; font-size:10px; white-space:nowrap; }
+@media(max-width:700px) {
+ .gl-clipboard #gl-dialog-content { gap:3px; }
+ .gl-clip-subtitle { font-size:10px; }
+ .gl-clipboard form { gap:4px; }
+ .gl-clipboard label { font-size:12px; gap:2px; }
+ .gl-clipboard input,.gl-clipboard textarea { padding:4px 2px; font-size:13px; }
+ .gl-clipboard .gl-button { padding:4px 7px; min-height:36px; font-size:11px !important; }
+ .gl-clipboard .gl-guild-result { gap:5px; padding:6px 0; }
+ #group-screen .gl-clipboard .gl-guild-result h3 { font-size:13px; }
+ .gl-clipboard .gl-guild-result p { font-size:10px; }
+ .gl-clipboard .gl-close { width:28px; height:28px; font-size:20px !important; }
+}
+@media(max-width:700px) {
+ .gl-clipboard .gl-clip-subtitle { display:none; }
+ .gl-clipboard[data-panel='join']:has(#gl-search-form) h2 { font-size:13px; max-width:50%; height:22px; }
+ .gl-clipboard #gl-search-form { margin-top:-25px; margin-left:52%; }
+ .gl-clipboard .gl-guild-result p { display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+}

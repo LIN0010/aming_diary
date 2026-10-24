@@ -21,9 +21,9 @@ def joined(page):
  page.locator('.gl-entry-hotspot[data-gl="join"]').click()
  page.locator('[data-join-mode="code"]').click()
  page.locator('#gl-join-form [name="code"]').fill('WRONG')
- page.locator('#gl-join-form .gl-button').click();expect(page.locator('#gl-notice')).to_contain_text('不正確')
+ page.locator('#gl-join-form .gl-button:not([type="button"])').click();expect(page.locator('#gl-notice')).to_contain_text('不正確')
  page.locator('#gl-join-form [name="code"]').fill('rail2027')
- page.locator('#gl-join-form .gl-button').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
+ page.locator('#gl-join-form .gl-button:not([type="button"])').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
  expect(page.locator('.gl-room-heading h1')).to_have_text('沿線慢慢走')
 def aligned(page):
  image=page.locator('.gl-room-bg').bounding_box()
@@ -102,7 +102,7 @@ try:
   expect(page.locator('.gl-avatars button')).to_have_count(6)
   page.once('dialog',lambda d:d.accept());page.locator('[data-gl="leave"]').click()
   expect(page.locator('.gl-entry-hotspot[data-gl="join"]')).to_be_visible()
-  page.locator('.gl-entry-hotspot[data-gl="join"]').click();page.locator('[data-join-mode="code"]').click();page.locator('[name="code"]').fill(code);page.locator('#gl-join-form .gl-button').click()
+  page.locator('.gl-entry-hotspot[data-gl="join"]').click();page.locator('[data-join-mode="code"]').click();page.locator('[name="code"]').fill(code);page.locator('#gl-join-form .gl-button:not([type="button"])').click()
   opened(page,'manage');expect(page.locator('[data-gl="invite"]')).to_be_disabled();closed(page)
   page.reload();expect(page.locator('.gl-room-heading h1')).to_have_text('沿線朋友',timeout=20000)
   assert page.evaluate('GuildStore.current().puzzles.spring.owned.length')==12

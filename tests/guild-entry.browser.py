@@ -32,12 +32,12 @@ def close(page):
  page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
 def join_screen(page,method='apply'):
  page.locator('.gl-entry-hotspot[data-gl="join"]').click()
- page.locator(f'[data-join-mode="{method}"]').click()
+ if page.locator(f'[data-join-mode="{method}"]').count():page.locator(f'[data-join-mode="{method}"]').click()
  assert 'RAIL2027' not in page.locator('#gl-dialog').inner_text()
 def apply(page):
  join_screen(page)
  page.locator('#gl-search-form [name="query"]').fill('慢慢')
- page.locator('#gl-search-form button').click()
+ page.locator('#gl-search-form [name="query"]').press('Enter')
  expect(page.locator('.gl-guild-result')).to_have_count(1)
  expect(page.locator('.gl-guild-result')).to_contain_text('3/6')
  expect(page.locator('.gl-guild-result')).to_contain_text('開放申請')
@@ -109,9 +109,9 @@ try:
    page.goto(BASE+'group.html');entry(page);aligned(page)
    page.screenshot(path=f'/workspace/work/guild-entrance-{width}.png')
    page.locator('.gl-entry-hotspot[data-gl="create"]').tap();expect(page.locator('#gl-create-form')).to_be_visible();close(page)
-   join_screen(page,'code');page.locator('[name="code"]').fill('BADCODE');page.locator('#gl-join-form button').tap();expect(page.locator('#gl-notice')).to_contain_text('不正確')
+   join_screen(page,'code');page.locator('[name="code"]').fill('BADCODE');page.locator('#gl-join-form button:not([type="button"])').tap();expect(page.locator('#gl-notice')).to_contain_text('不正確')
    assert page.evaluate('GuildStore.current()') is None
-   page.locator('[name="code"]').fill('RAIL2027');page.locator('#gl-join-form button').tap();expect(page.locator('.gl-boarding-stamp')).to_have_text('同行確認');expect(page.locator('#gl-dialog')).not_to_be_visible(timeout=10000)
+   page.locator('[name="code"]').fill('RAIL2027');page.locator('#gl-join-form button:not([type="button"])').tap();expect(page.locator('.gl-boarding-stamp')).to_have_text('同行確認');expect(page.locator('#gl-dialog')).not_to_be_visible(timeout=10000)
    expect(page.locator('.gl-room-heading h1')).to_have_text('沿線慢慢走')
    page.locator('#gl-menu [data-gl="manage"]').click();page.once('dialog',lambda d:d.accept());page.locator('[data-gl="leave"]').click();entry(page)
    page.set_viewport_size({'width':844,'height':390});aligned(page)
