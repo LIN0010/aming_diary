@@ -200,3 +200,46 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
  .gl-clipboard #gl-search-form { margin-top:-25px; margin-left:52%; }
  .gl-clipboard .gl-guild-result p { display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
 }
+
+/* 加入模式：紙張上的旅團名冊與詳細資料。 */
+.gl-roster { display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:16px; flex:1; min-height:0; }
+.gl-roster-detail { display:flex; flex-direction:column; min-height:0; min-width:0; padding-right:16px; border-right:1px solid #c6ac7470; }
+.gl-roster-info { min-height:0; overflow:auto; scrollbar-width:thin; flex:1; padding-right:5px; }
+.gl-roster-info header { display:flex; align-items:center; gap:12px; }
+#group-screen .gl-roster-info h3 { margin:0; font-size:23px; overflow-wrap:anywhere; }
+.gl-guild-emblem { display:grid; place-items:center; width:48px; height:48px; flex-shrink:0; border:1px solid #b99b63; border-radius:50%; color:#886b36; font-size:27px; background:#dfc89533; }
+.gl-roster-info p { font-size:13px; margin:9px 0 !important; overflow-wrap:anywhere; }
+.gl-roster-info progress { width:100%; height:7px; accent-color:#8a9b74; }
+.gl-roster-apply { display:flex; gap:6px; flex-shrink:0; padding-top:8px; flex-wrap:wrap; }
+.gl-roster-list { display:flex; flex-direction:column; gap:8px; min-height:0; min-width:0; }
+.gl-clipboard .gl-roster-list #gl-search-form { margin:0; flex:none; }
+.gl-roster-list footer { flex-shrink:0; }
+.gl-roster-list footer button { width:100%; }
+.gl-roster-row { width:100%; display:flex; align-items:center; gap:8px; min-height:40px; padding:9px 6px; border:0; border-bottom:1px solid #c6ac7438; background:transparent; color:#685234; text-align:left; }
+.gl-roster-row span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gl-roster-row[aria-pressed='true'] { background:#e6ca843b; color:#8c6427; }
+.gl-roster-row:hover { background:#ead59b44; }
+.gl-clipboard .gl-close { right:16%; top:30%; width:28px; height:28px; border:0; border-radius:0; background:transparent; color:#51351e; font-size:0 !important; }
+.gl-clipboard .gl-close::before,.gl-clipboard .gl-close::after { content:''; position:absolute; left:50%; top:50%; width:13px; height:2px; background:currentColor; transform:translate(-50%,-50%) rotate(45deg); }
+.gl-clipboard .gl-close::after { transform:translate(-50%,-50%) rotate(-45deg); }
+.gl-clipboard[data-panel='join']:has(.gl-roster) h2 { padding-right:35px; }
+@media(max-width:700px) {
+ .gl-roster { gap:7px; }
+ .gl-roster-detail { padding-right:6px; }
+ .gl-roster-info header { gap:4px; }
+ #group-screen .gl-roster-info h3 { font-size:13px; }
+ .gl-guild-emblem { width:26px; height:26px; font-size:18px; }
+ .gl-roster-info p { font-size:10px; margin:4px 0 !important; }
+ .gl-roster-list { gap:3px; }
+ .gl-roster-row { font-size:11px !important; gap:3px; min-height:32px; padding:6px 1px; }
+ .gl-roster-list input { font-size:10px !important; }
+ .gl-roster-list footer button { font-size:9px !important; padding:2px; min-height:30px; }
+ .gl-roster-apply { padding-top:3px; }
+ .gl-clipboard[data-panel='join']:has(.gl-roster) #gl-dialog-title { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+}
+.gl-clipboard .gl-close { right:26%; top:25%; }
+.gl-roster-info progress { appearance:none; border:0; border-radius:8px; overflow:hidden; background:#dfd6ba; }
+.gl-roster-info progress::-webkit-progress-bar { background:#dfd6ba; }
+.gl-roster-info progress::-webkit-progress-value { background:#9caa81; }
+.gl-roster-info progress::-moz-progress-bar { background:#9caa81; }
+.gl-roster-list input:focus-visible { outline:1px solid #b99b63; outline-offset:1px; }

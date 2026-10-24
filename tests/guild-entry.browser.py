@@ -38,9 +38,9 @@ def apply(page):
  join_screen(page)
  page.locator('#gl-search-form [name="query"]').fill('慢慢')
  page.locator('#gl-search-form [name="query"]').press('Enter')
- expect(page.locator('.gl-guild-result')).to_have_count(1)
- expect(page.locator('.gl-guild-result')).to_contain_text('3/6')
- expect(page.locator('.gl-guild-result')).to_contain_text('開放申請')
+ expect(page.locator('.gl-roster-row')).to_have_count(1)
+ expect(page.locator('.gl-roster-detail')).to_contain_text('3 / 6')
+ expect(page.locator('[data-apply]')).to_be_enabled()
  page.locator('[data-apply]').click()
  expect(page.locator('#gl-dialog-title')).to_have_text('等待團長審核')
  assert page.evaluate('GuildStore.current()') is None

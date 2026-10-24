@@ -3,7 +3,7 @@ GameScenes.register('group', ctx => {
     const C = GuildConfig, S = GuildStore, dialog = ctx.id('gl-dialog'), body = ctx.id('gl-dialog-content');
     const noticeElement=ctx.id('gl-notice');
     let panel = '', puzzleId = C.puzzles[0].id, drawing = false, reveal = null, noticeTimer, draft = '', selectedStation = '', disposed = false;
-    let sceneMode='', joinMethod='apply', search='', boarding=false, stampLabel='';
+    let sceneMode='', joinMethod='apply', search='', boarding=false, stampLabel='', selectedGuildId=null;
     const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const btn = (action,label,off=false,extra='') => `<button type="button" class="gl-button ${extra}" data-gl="${action}"${off?' disabled':''}>${h(label)}</button>`;
     const date = s => new Date(s).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -51,9 +51,25 @@ GameScenes.register('group', ctx => {
         const requests=S.snapshot().applications.filter(r=>r.guildId===g.id&&r.status==='pending'&&(!simulate||r.applicantId===C.player.id));
         return `<section class="gl-applications"><h3>${simulate?'本機團長審核':'加入申請'}</h3>${simulate?'<p class="gl-subtle">本機模擬審核，不會跨裝置同步。</p>':''}${requests.length?requests.map(r=>`<article class="gl-application-row">${avatar(r.applicantId)}<div><strong>${h(memberInfo(r.applicantId).name)}</strong><small>${date(r.at)} 申請</small></div><div class="gl-actions"><button type="button" class="gl-button" data-review="${h(r.id)}" data-approve="true" data-simulate="${simulate}">核准</button><button type="button" class="gl-button gl-plain" data-review="${h(r.id)}" data-approve="false" data-simulate="${simulate}">拒絕</button></div></article>`).join(''):'<p class="gl-subtle">目前沒有等待審核的申請。</p>'}</section>`;
     }
+    function rosterGuilds() {
+        const groups=S.directory(search).filter(g=>g.open);
+        if(!groups.some(g=>g.id===selectedGuildId))selectedGuildId=groups[0]?.id||null;
+        return groups;
+    }
     function directoryRows() {
-        const pending=S.latestApplication()?.status==='pending';
-        return S.directory(search).map(g=>`<article class="gl-guild-result"><div><h3>${h(g.name)}</h3><p>${h(g.introduction)}</p></div><span>${g.count}/${C.maxMembers}<small>${g.open?'開放申請':'暫停申請'}</small></span><button type="button" class="gl-button" data-apply="${h(g.id)}"${!g.open||g.count>=C.maxMembers||pending?' disabled':''}>${g.count>=C.maxMembers?'已滿':'申請加入'}</button></article>`).join('')||'<p class="gl-subtle">沒有符合的旅團。</p>';
+        return rosterGuilds().map(g=>`<button type="button" class="gl-roster-row" data-select-guild="${h(g.id)}" aria-pressed="${g.id===selectedGuildId}"><span aria-hidden="true">${g.id===selectedGuildId?'◆':'◇'}</span><span>${h(g.name)}</span></button>`).join('')||'<p class="gl-subtle">找不到符合條件的旅團</p>';
+    }
+    function guildDetail() {
+        const g=S.snapshot().guilds.find(g=>g.id===selectedGuildId);
+        if(!g)return '<p class="gl-subtle">目前沒有可顯示的旅團。</p>';
+        const p=C.puzzles[0],pieces=g.puzzles[p.id].owned.length,total=p.rows*p.cols,request=S.latestApplication(),waiting=request?.status==='pending',full=g.members.length>=C.maxMembers;
+        return `<div class="gl-roster-info"><header><span class="gl-guild-emblem" role="img" aria-label="預設鐵道徽章">🚆</span><h3>${h(g.name)}</h3></header><p>目前旅伴：${g.members.length} / ${C.maxMembers} 人${full?' · 旅團已滿':''}</p><p class="gl-guild-introduction">${h(g.introduction||'尚未填寫旅團介紹。')}</p><p>共同拼圖：${pieces} / ${total} 片</p><progress max="${total}" value="${pieces}" aria-label="共同拼圖進度"></progress><p>旅行牆紀錄：${g.posts.length} 則</p>${g.code===C.invite?'<small class="gl-subtle">本機模擬旅團</small>':''}</div><footer class="gl-roster-apply"><button type="button" class="gl-button" data-apply="${h(g.id)}"${full||!g.openApplications||waiting?' disabled':''}>${full?'旅團已滿':!g.openApplications?'暫停申請':waiting?'等待團長審核':'申請加入旅團'}</button>${waiting?btn('pending','查看申請',false,'gl-plain'):''}</footer>`;
+    }
+    function updateRoster(preserveScroll=false) {
+        const list=ctx.query('.gl-guild-directory'),top=list.scrollTop;
+        ctx.query('.gl-guild-directory').innerHTML=directoryRows();
+        ctx.query('.gl-roster-detail').innerHTML=guildDetail();
+        if(preserveScroll){list.scrollTop=top;[...list.querySelectorAll('button')].find(b=>b.dataset.selectGuild===selectedGuildId)?.focus({preventScroll:true});}
     }
     function welcome(mode='welcome') {
         const issue=S.status().issue, localNote='<p class="gl-subtle">本機旅團 · 邀請碼與審核不跨裝置同步</p>';
@@ -65,8 +81,9 @@ GameScenes.register('group', ctx => {
         if(mode==='create')return title('旅團成立登記')+`<p class="gl-clip-subtitle">為這段旅程取個名字吧。</p><form id="gl-create-form"><div class="gl-clip-fields"><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="旅團名稱"></label><label>旅團介紹（選填）<textarea name="introduction" maxlength="120" rows="2" placeholder="簡短寫下想一起走的旅程"></textarea></label></div><footer class="gl-clip-footer"><button class="gl-button">確認建立</button></footer></form>`;
         if(mode==='join'){
             const request=S.latestApplication();
-            if(joinMethod==='code')return title('邀請碼加入')+`<form id="gl-join-form"><div class="gl-clip-fields"><label>請輸入旅伴提供的邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="邀請碼"></label></div><footer class="gl-clip-footer"><button type="button" class="gl-button gl-plain" data-join-mode="apply">返回尋找旅團</button><button class="gl-button">確認加入</button></footer></form>`;
-            return title('尋找同行旅伴')+`<p class="gl-clip-subtitle">沿著鐵道，尋找下一段同行的旅程。</p><form id="gl-search-form"><label><span class="gl-search-label">搜尋旅團名稱</span><input name="query" maxlength="24" value="${h(search)}" autocomplete="off" placeholder="搜尋旅團名稱"></label></form><div class="gl-guild-directory">${directoryRows()}</div><footer class="gl-clip-footer">${request?.status==='pending'?btn('pending','等待團長審核',false,'gl-plain'):''}<button type="button" class="gl-button gl-plain" data-join-mode="code">✦ 使用邀請碼加入</button></footer>`;
+            if(joinMethod==='code')return title('邀請碼加入')+`<form id="gl-join-form"><div class="gl-clip-fields"><label>請輸入旅伴提供的邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="邀請碼"></label></div><footer class="gl-clip-footer"><button type="button" class="gl-button gl-plain" data-join-mode="apply">返回旅團列表</button><button class="gl-button">確認加入</button></footer></form>`;
+            rosterGuilds();
+            return title('尋找同行旅伴')+`<div class="gl-roster"><section class="gl-roster-detail" aria-live="polite">${guildDetail()}</section><section class="gl-roster-list"><form id="gl-search-form"><label><span class="gl-search-label">搜尋旅團名稱</span><input name="query" maxlength="24" value="${h(search)}" autocomplete="off" placeholder="搜尋旅團名稱"></label></form><div class="gl-guild-directory" role="group" aria-label="旅團名冊">${directoryRows()}</div><footer><button type="button" class="gl-button gl-plain" data-join-mode="code">✦ 使用邀請碼加入</button></footer></section></div>`;
         }
         return title('旅團入口')+(issue?`<p role="alert">${h(issue)}</p>${btn('reset','重置旅團資料')}`:'')+btn('close','返回車站');
     }
@@ -133,6 +150,7 @@ GameScenes.register('group', ctx => {
         const action=button.dataset.gl;
         if(boarding)return;
         if(button.dataset.joinMode){joinMethod=button.dataset.joinMode;if(joinMethod==='apply')search='';renderPanel();return;}
+        if(button.dataset.selectGuild){selectedGuildId=button.dataset.selectGuild;updateRoster(true);return;}
         if(button.dataset.apply){if(result(S.apply(button.dataset.apply)))show('pending');return;}
         if(button.dataset.review){
             const approve=button.dataset.approve==='true',simulate=button.dataset.simulate==='true';
@@ -175,7 +193,7 @@ GameScenes.register('group', ctx => {
         else board(()=>S.join(f.get('code')),'同行確認');
     });
     ctx.on(ctx.root,'input',e=>{if(e.target.name==='summary')draft=e.target.value;
-        if(e.target.name==='query'){search=e.target.value;ctx.query('.gl-guild-directory').innerHTML=directoryRows();}});
+        if(e.target.name==='query'){search=e.target.value;updateRoster();}});
     ctx.on(ctx.root,'change',e=>{if(e.target.name==='station'){selectedStation=e.target.value;draft='';renderPanel();}});
     ctx.on(dialog,'close',()=>ctx.root.append(noticeElement));
     ctx.on(dialog,'cancel',e=>{e.preventDefault();close();});

@@ -1,0 +1,37 @@
+"""旅團名冊選取、真實進度、獨立捲動與響應式檢查。"""
+from functools import partial
+from http.server import SimpleHTTPRequestHandler,ThreadingHTTPServer
+from threading import Thread
+from pathlib import Path
+from playwright.sync_api import sync_playwright,expect
+import shutil
+class Q(SimpleHTTPRequestHandler):
+ def log_message(self,*a):pass
+server=ThreadingHTTPServer(('127.0.0.1',0),partial(Q,directory=str(Path(__file__).resolve().parents[1]/'aming-game')));Thread(target=server.serve_forever,daemon=True).start()
+try:
+ with sync_playwright() as p:
+  browser=p.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
+  for width,height in [(1280,800),(390,844),(320,844)]:
+   page=browser.new_page(viewport={'width':width,'height':height});page.goto(f'http://127.0.0.1:{server.server_port}/group.html');page.locator('[data-gl="join"]').click()
+   expect(page.locator('.gl-roster-row').first).to_have_attribute('aria-pressed','true');expect(page.locator('.gl-roster-detail h3')).to_have_text('沿線慢慢走')
+   expect(page.locator('.gl-roster-detail')).to_contain_text('7 / 12');expect(page.locator('.gl-roster-detail')).to_contain_text('3 則')
+   # 只在測試工作階段複製示範資料，不變更產品資料格式或建立額外正式旅團。
+   page.evaluate("""()=>{const s=GuildStore.snapshot(),g=s.guilds[0];for(let i=0;i<9;i++){const x=structuredClone(g);x.id='fixture-'+i;x.code='FIX'+i;x.name='測試旅團'+i;x.introduction='本機測試資料';x.puzzles.spring.owned=[0,1];x.posts=[];s.guilds.push(x);}localStorage.setItem(GuildConfig.storageKey,JSON.stringify(s));GuildStore.refresh();}""")
+   page.locator('.gl-roster-row').nth(2).click();expect(page.locator('.gl-roster-detail h3')).to_have_text('測試旅團1');expect(page.locator('.gl-roster-detail')).to_contain_text('2 / 12');expect(page.locator('.gl-roster-detail')).to_contain_text('0 則')
+   page.locator('[name="query"]').fill('測試');expect(page.locator('.gl-roster-detail h3')).to_have_text('測試旅團1')
+   page.locator('[name="query"]').fill('旅團7');expect(page.locator('.gl-roster-detail h3')).to_have_text('測試旅團7')
+   page.locator('[name="query"]').fill('找不到');expect(page.locator('.gl-guild-directory')).to_have_text('找不到符合條件的旅團');expect(page.locator('[data-apply]')).to_have_count(0)
+   page.locator('[name="query"]').fill('');expect(page.locator('.gl-roster-detail h3')).to_have_text('沿線慢慢走')
+   page.locator('#gl-dialog').evaluate('(e)=>Promise.all(e.getAnimations().map(a=>a.finished))')
+   board=page.locator('#gl-dialog').bounding_box();cross=page.locator('.gl-close').bounding_box();assert cross['x']+cross['width']<=board['x']+.77*board['width']
+   box=page.locator('#gl-dialog').bounding_box();detail=page.locator('.gl-roster-detail').bounding_box();page.locator('.gl-guild-directory').evaluate('(e)=>e.scrollTop=10000');assert page.locator('.gl-guild-directory').evaluate('(e)=>e.scrollTop')>0
+   assert page.locator('#gl-dialog').bounding_box()==box and page.locator('.gl-roster-detail').bounding_box()==detail
+   paper=page.locator('#gl-dialog-content').bounding_box()
+   for selector in ['.gl-roster-detail','.gl-roster-list']:
+    r=page.locator(selector).bounding_box();assert r['x']>=paper['x'] and r['x']+r['width']<=paper['x']+paper['width']+1 and r['y']+r['height']<=paper['y']+paper['height']+1
+   page.screenshot(path=f'/workspace/work/roster-{width}.png')
+   page.locator('[data-join-mode="code"]').click();page.locator('[data-join-mode="apply"]').click();expect(page.locator('.gl-roster')).to_be_visible()
+   page.locator('[name="query"]').fill('旅團7');target=page.locator('[data-apply]').get_attribute('data-apply');page.locator('[data-apply]').click();expect(page.locator('#gl-dialog-title')).to_have_text('等待團長審核');assert page.evaluate('GuildStore.latestApplication().guildId')==target
+   page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible();page.close();print(f'PASS {width}: default/select/filter/progress/scroll/bounds/invite-mode/apply target')
+  browser.close()
+finally:server.shutdown()
