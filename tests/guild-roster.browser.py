@@ -52,8 +52,13 @@ try:
    expect(page.locator('.gl-clip-subtitle')).to_have_count(0)
    for selector in ['#gl-create-form input[name="name"]','#gl-create-form textarea']:
     field=page.locator(selector)
-    assert field.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
-    assert field.evaluate('(e)=>getComputedStyle(e).borderTopWidth')=='0px'
+    is_intro=selector.endswith('textarea')
+    assert field.evaluate('(e)=>getComputedStyle(e).backgroundColor')==('rgba(255, 248, 232, 0.22)' if is_intro else 'rgba(0, 0, 0, 0)')
+    assert field.evaluate('(e)=>getComputedStyle(e).borderTopWidth')==('1px' if is_intro else '0px')
+    if is_intro:
+     assert field.evaluate('(e)=>getComputedStyle(e).height')=='100px'
+     assert field.evaluate('(e)=>getComputedStyle(e).borderRadius')=='7px'
+     field.fill('第一行旅行心得\n第二行同行記憶');assert '\n' in field.input_value();field.blur()
     assert field.evaluate('(e)=>getComputedStyle(e).borderBottomColor')=='rgb(196, 173, 122)'
     field.focus();assert field.evaluate('(e)=>getComputedStyle(e).borderBottomColor')=='rgb(139, 100, 46)'
     field.blur()
@@ -69,6 +74,7 @@ try:
     page.locator(f'[name="avatarId"][value="{value}"]').check();expect(page.locator(f'[name="avatarId"][value="{value}"]')).to_be_checked()
    page.locator('[name="avatarId"][value="ocean"]').check();page.locator('[name="name"]').fill('海洋旅團');page.locator('#gl-create-form button').click()
    page.wait_for_function('!document.querySelector("#gl-dialog").open');expect(page.locator('.gl-room-heading > .gl-guild-portrait img')).to_have_attribute('src','images/guild-ocean.png')
+   assert page.evaluate('GuildStore.current().introduction')=='第一行旅行心得\n第二行同行記憶'
    page.reload();expect(page.locator('.gl-room-heading > .gl-guild-portrait img')).to_have_attribute('src','images/guild-ocean.png')
    assert page.evaluate('GuildStore.current().avatarId')=='ocean'
    page.close();print(f'PASS {width}: five assets, selection, create, room portrait, reload')
