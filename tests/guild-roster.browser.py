@@ -17,6 +17,7 @@ try:
    expect(page.locator('.gl-roster-detail progress')).to_have_count(0)
    img=page.locator('.gl-roster-info header img');expect(img).to_be_visible()
    assert img.evaluate('(e)=>e.complete&&e.naturalWidth>0')
+   page.locator('#gl-dialog').evaluate('(e)=>Promise.all(e.getAnimations().map(a=>a.finished))')
    detail=page.locator('.gl-roster-detail').bounding_box();pic=img.locator('..').bounding_box();assert abs(pic['x']+pic['width']/2-detail['x']-(detail['width']-float(page.locator('.gl-roster-detail').evaluate('(e)=>parseFloat(getComputedStyle(e).paddingRight)'))-1)/2)<2
    expect(page.locator('.gl-roster-detail')).to_contain_text('7 / 12');expect(page.locator('.gl-roster-detail')).not_to_contain_text('旅行牆紀錄');expect(page.locator('.gl-roster-detail')).not_to_contain_text('本機模擬旅團')
    assert page.locator('.gl-roster-row > span:not(.gl-guild-portrait)').all_text_contents()==['沿線慢慢走','星光末班車','迷途旅人協會']
@@ -42,7 +43,8 @@ try:
    for selector in ['.gl-roster-detail','.gl-roster-list']:
     r=page.locator(selector).bounding_box();assert r['x']>=paper['x'] and r['x']+r['width']<=paper['x']+paper['width']+1 and r['y']+r['height']<=paper['y']+paper['height']+1
    page.screenshot(path=f'/workspace/work/roster-{width}.png')
-   close=page.locator('.gl-close');assert close.evaluate('(e)=>getComputedStyle(e).borderRadius')=='50%';assert close.bounding_box()['width']==38
+   close=page.locator('.gl-close');expect(close).to_have_text('← 返回');assert close.bounding_box()['height']>=40
+   heading=page.locator('#gl-dialog-title').bounding_box();back=close.bounding_box();text_bottom=close.evaluate('(e)=>{const r=document.createRange();r.selectNodeContents(e);return r.getBoundingClientRect().bottom}');assert text_bottom<=heading['y']+1;assert abs(back['x']-heading['x'])<2
    page.locator('[data-join-mode="code"]').click();expect(close).to_be_visible();close.click();expect(page.locator('#gl-dialog')).not_to_be_visible()
    page.locator('[data-gl="join"]').click();page.locator('[data-join-mode="apply"]').click();expect(page.locator('.gl-roster')).to_be_visible()
    page.locator('[name="query"]').fill('旅團7');target=page.locator('[data-apply]').get_attribute('data-apply');page.locator('[data-apply]').click();expect(page.locator('#gl-dialog-title')).to_have_text('等待團長審核');assert page.evaluate('GuildStore.latestApplication().guildId')==target

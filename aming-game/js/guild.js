@@ -148,6 +148,9 @@ GameScenes.register('group', ctx => {
         const g=S.current();
         dialog.dataset.panel=panel;
         dialog.classList.toggle('gl-clipboard',boarding||(!g&&['create','join'].includes(panel)));
+        const back=dialog.classList.contains('gl-clipboard');
+        ctx.query('.gl-close').classList.toggle('gl-clipboard-back',back);
+        ctx.query('.gl-close').textContent=back?'← 返回':'×';
         ctx.query('.gl-close').disabled=boarding;
         ctx.query('.gl-close').setAttribute('aria-label',g?'返回旅團小屋':'返回車站入口');
         body.innerHTML=boarding ? title(stampLabel)+`<div class="gl-boarding-stamp" role="status">${h(stampLabel)}</div>${stampLabel==='旅程啟程'?`<p class="gl-ticket-destination">${h(g?.name)}</p><p class="gl-code">${h(g?.code)}</p>`:''}` : !g ? welcome(panel) : panel==='wall'?wall(g):panel==='puzzle'?puzzle(g):panel==='members'?members(g):panel==='reward'?reward(g):manage(g);
