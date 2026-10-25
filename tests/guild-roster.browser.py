@@ -47,6 +47,14 @@ try:
    page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible();page.close();print(f'PASS {width}: default/select/filter/progress/scroll/bounds/invite-mode/apply target')
   for width in [1280,390,320]:
    page=browser.new_page(viewport={'width':width,'height':844});page.goto(f'http://127.0.0.1:{server.server_port}/group.html');page.locator('[data-gl="create"]').click()
+   expect(page.locator('.gl-clip-subtitle')).to_have_count(0)
+   for selector in ['#gl-create-form input[name="name"]','#gl-create-form textarea']:
+    field=page.locator(selector)
+    assert field.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
+    assert field.evaluate('(e)=>getComputedStyle(e).borderTopWidth')=='0px'
+    assert field.evaluate('(e)=>getComputedStyle(e).borderBottomColor')=='rgb(196, 173, 122)'
+    field.focus();assert field.evaluate('(e)=>getComputedStyle(e).borderBottomColor')=='rgb(139, 100, 46)'
+    field.blur()
    expect(page.locator('.gl-avatar-picker img')).to_have_count(5)
    page.wait_for_function('Array.from(document.querySelectorAll(".gl-avatar-picker img")).every(e=>e.complete&&e.naturalWidth===1024)')
    expect(page.locator('[name="avatarId"][value="station"]')).to_be_checked()
