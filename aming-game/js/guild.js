@@ -60,7 +60,8 @@ GameScenes.register('group', ctx => {
         const record=S.snapshot().guilds.find(x=>x.id===g.id)||g;
         const custom=typeof record.avatar==='string'&&(/^(?:images\/[\w.-]+\.(?:png|jpe?g|webp)|data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+)$/i).test(record.avatar)?record.avatar:null;
         const hash=[...g.id].reduce((n,c)=>(n*31+c.charCodeAt(0))>>>0,0);
-        return `<img class="gl-guild-portrait" data-fallback="${h(C.guildBadges[hash%C.guildBadges.length])}" src="${h(custom||C.guildBadges[hash%C.guildBadges.length])}" alt="${h(g.name)}旅團徽章">`;
+        const fallback=C.directoryGuilds.find(d=>d.id===record.id||d.code===record.code)?.avatar||C.guildBadges[hash%C.guildBadges.length];
+        return `<img class="gl-guild-portrait" data-fallback="${h(fallback)}" src="${h(custom||fallback)}" alt="${h(g.name)}旅團徽章">`;
     }
     function directoryRows() {
         return rosterGuilds().map(g=>`<button type="button" class="gl-roster-row" data-select-guild="${h(g.id)}" aria-pressed="${g.id===selectedGuildId}">${guildPortrait(g)}<span>${h(g.name)}</span><small class="gl-roster-mark" aria-hidden="true">${g.id===selectedGuildId?'◆':''}</small></button>`).join('')||'<p class="gl-subtle">找不到符合條件的旅團</p>';
@@ -69,7 +70,7 @@ GameScenes.register('group', ctx => {
         const g=S.snapshot().guilds.find(g=>g.id===selectedGuildId);
         if(!g)return '<p class="gl-subtle">目前沒有可顯示的旅團。</p>';
         const p=C.puzzles[0],pieces=g.puzzles[p.id].owned.length,total=p.rows*p.cols,request=S.latestApplication(),waiting=request?.status==='pending',full=g.members.length>=C.maxMembers;
-        return `<div class="gl-roster-info"><header>${guildPortrait(g)}<h3>${h(g.name)}</h3></header><p class="gl-guild-count">目前旅伴：${g.members.length} / ${C.maxMembers} 人${full?' · 旅團已滿':''}</p><p class="gl-guild-introduction">${h(g.introduction||'尚未填寫旅團介紹。')}</p><p>🧩 共同拼圖：${pieces} / ${total} 片</p><p>📖 旅行牆紀錄：${g.posts.length} 則</p>${g.code===C.invite?'<small class="gl-subtle">本機模擬旅團</small>':''}</div><footer class="gl-roster-apply"><button type="button" class="gl-button" data-apply="${h(g.id)}"${full||!g.openApplications||waiting?' disabled':''}>${full?'旅團已滿':!g.openApplications?'暫停申請':waiting?'等待團長審核':'申請加入旅團'}</button>${waiting?btn('pending','查看申請',false,'gl-plain'):''}</footer>`;
+        return `<div class="gl-roster-info"><header>${guildPortrait(g)}<h3>${h(g.name)}</h3></header><p class="gl-guild-count">目前旅伴：${g.members.length} / ${C.maxMembers} 人${full?' · 旅團已滿':''}</p><p class="gl-guild-introduction">${h(g.introduction||'尚未填寫旅團介紹。')}</p><p>🧩 共同拼圖：${pieces} / ${total} 片</p></div><footer class="gl-roster-apply"><button type="button" class="gl-button" data-apply="${h(g.id)}"${full||!g.openApplications||waiting?' disabled':''}>${full?'旅團已滿':!g.openApplications?'暫停申請':waiting?'等待團長審核':'申請加入旅團'}</button>${waiting?btn('pending','查看申請',false,'gl-plain'):''}</footer>`;
     }
     function updateRoster(preserveScroll=false) {
         const list=ctx.query('.gl-guild-directory'),top=list.scrollTop;

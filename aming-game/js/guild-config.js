@@ -15,6 +15,11 @@
                 { id: 'wall', label: '翻開旅行手帳', x: .341, y: .705, w: .224, h: .09 }
             ], progress: { x: .60, y: .535 } },
         invite: 'RAIL2027', demoName: '沿線慢慢走', demoIntroduction: '沿著鐵道慢慢旅行，一起收藏日記與拼圖。', initialDraws: 3, initialPoints: 160,
+        directoryGuilds: [
+            { id: 'demo-along-rail', code: 'RAIL2027', name: '沿線慢慢走', count: 3, introduction: '沿著鐵道慢慢旅行，一起收藏日記與拼圖。', avatar: 'images/guild-station-bg.png' },
+            { id: 'demo-starlight-last-train', code: 'STAR2027', name: '星光末班車', count: 4, introduction: '錯過末班車也沒關係，我們陪你等天亮。', avatar: 'images/home-bg.jpg' },
+            { id: 'demo-lost-travelers', code: 'LOST2027', name: '迷途旅人協會', count: 2, introduction: '方向感不好沒關係，反正每條路都有風景。', avatar: 'images/ruisui-bg.jpg' }
+        ],
         duplicatePoints: 4, exchangeCost: 10,
         members: [
             { id: 'demo-mori', name: '小森', avatar: 'images/cow.png', shares: 3, contribution: 8 },

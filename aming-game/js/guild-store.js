@@ -64,13 +64,16 @@
             puzzles: Object.fromEntries(C.puzzles.map(p => [p.id, { owned: [...p.initial], contributions: {} }])) };
     }
     function ensureDirectory(s) {
-        let g = s.guilds.find(g => g.code === C.invite);
-        if (!g) {
-            g = makeGuild(C.demoName, C.invite, C.members[0].id, 3, false);
-            g.introduction = C.demoIntroduction; s.guilds.push(g);
+        for (const demo of C.directoryGuilds) {
+            // 只補缺少的展示旅團；既有 ID、成員、收藏與玩家旅團完全保留。
+            if (s.guilds.some(g => g.id === demo.id || g.code === demo.code)) continue;
+            const g = makeGuild(demo.name, demo.code, C.members[0].id, demo.count, false);
+            g.id = demo.id; g.introduction = demo.introduction; g.avatar = demo.avatar;
+            s.guilds.push(g);
         }
-        return g;
+        return s.guilds.find(g => g.code === C.invite);
     }
+
     function cancelPending(s) { s.applications.forEach(r => { if (r.applicantId === C.player.id && r.status === 'pending') r.status='cancelled'; }); }
     function admit(s,g,applicantId) {
         if (g.members.length >= C.maxMembers) throw Error('旅團已滿 6 人。');
@@ -91,7 +94,10 @@
         subscribe(f) { listeners.add(f); return () => listeners.delete(f); },
         refresh() { read(); notify(); },
         latestApplication: () => copy([...state.applications].reverse().find(r=>r.applicantId===C.player.id) || null),
-        directory: query => copy(state.guilds.filter(g=>g.name.toLocaleLowerCase().includes(String(query||'').trim().toLocaleLowerCase())).map(g=>({id:g.id,name:g.name,introduction:g.introduction,count:g.members.length,open:g.openApplications}))),
+        directory: query => copy([...state.guilds].sort((a,b) => {
+            const rank = g => { const n=C.directoryGuilds.findIndex(d=>d.id===g.id||d.code===g.code); return n<0?C.directoryGuilds.length:n; };
+            return rank(a)-rank(b);
+        }).filter(g=>g.name.toLocaleLowerCase().includes(String(query||'').trim().toLocaleLowerCase())).map(g=>({id:g.id,name:g.name,introduction:g.introduction,count:g.members.length,open:g.openApplications}))),
         prepareDirectory: () => change(s => { ensureDirectory(s); }),
         create(name, introduction = '') { return change(s => {
             if (s.activeId) throw Error('一次只能加入一個旅團。');

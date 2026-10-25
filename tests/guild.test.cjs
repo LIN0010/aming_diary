@@ -63,3 +63,13 @@ test('等待期間滿團不能核准，失敗不修改申請；儲存失敗不�
  assert.equal(s.reviewApplication(s.latestApplication().id,true,true).ok,false);assert.equal(s.latestApplication().status,'pending');assert.equal(s.current(),null);
  assert.equal(s.join(c.invite).ok,false);const before=JSON.stringify(s.snapshot());full(true);assert.equal(s.reviewApplication(s.latestApplication().id,false,true).ok,false);assert.equal(JSON.stringify(s.snapshot()),before);
 });
+
+test('展示名冊穩定排序、不重複新增、不覆寫舊團與玩家資料',()=>{
+ const {s,c,data}=setup();assert(s.create('我的旅團','保留介紹').ok);const player=JSON.stringify(s.current());
+ assert(s.prepareDirectory().ok);assert.equal(JSON.stringify(s.current()),player);
+ assert.deepEqual(Array.from(s.directory().slice(0,3),g=>g.name),['沿線慢慢走','星光末班車','迷途旅人協會']);
+ const demos=s.snapshot().guilds.filter(g=>g.code!==s.current().code);assert.deepEqual(demos.map(g=>g.members.length).join(','),'3,4,2');assert.equal(new Set(demos.map(g=>g.avatar)).size,3);
+ const raw=JSON.parse(data.get(c.storageKey)),old=raw.guilds.find(g=>g.code===c.invite);old.id='legacy-rail-id';old.introduction='既有介紹';old.puzzles.spring.owned=[0,2];raw.guilds=raw.guilds.filter(g=>!['STAR2027','LOST2027'].includes(g.code));data.set(c.storageKey,JSON.stringify(raw));s.refresh();
+ assert(s.prepareDirectory().ok);const preserved=s.snapshot().guilds.find(g=>g.code===c.invite);assert.equal(preserved.id,'legacy-rail-id');assert.equal(preserved.introduction,'既有介紹');assert.equal(preserved.puzzles.spring.owned.join(','),'0,2');assert.equal(JSON.stringify(s.current()),player);
+ const once=JSON.stringify(s.snapshot());assert(s.prepareDirectory().ok);s.refresh();assert(s.prepareDirectory().ok);assert.equal(JSON.stringify(s.snapshot()),once);assert.equal(setup(data.get(c.storageKey)).s.directory()[0].id,'legacy-rail-id');
+});
