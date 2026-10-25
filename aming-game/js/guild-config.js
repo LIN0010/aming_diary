@@ -4,6 +4,13 @@
         storageKey: 'aming-diary-guild-v1', maxMembers: 6, minMembers: 2,
         avatars: ['compass','ocean','journal','moon','station'].map(id=>({id, image:`images/guild-${id}.png`, name:({compass:'指南針',ocean:'海洋',journal:'手帳',moon:'月夜',station:'車站'})[id]})),
         defaultAvatar: 'station',
+        avatarCrops: {
+            compass: { scale: 1.45, x: 0, y: 0 },
+            ocean: { scale: 1.65, x: 0, y: -32 },
+            journal: { scale: 1, x: 0, y: 0 },
+            moon: { scale: 2, x: -44, y: 48 },
+            station: { scale: 1, x: 0, y: 0 }
+        },
         guildBadges: ['images/guild-station-bg.png','images/ruisui-bg.jpg','images/home-bg.jpg'],
         player: { id: 'you', name: '旅人・你', avatar: 'images/aming.png' },
         entrance: { image: 'images/guild-station-bg.png', width: 1536, height: 1024,

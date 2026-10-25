@@ -56,10 +56,14 @@ GameScenes.register('group', ctx => {
         if(!groups.some(g=>g.id===selectedGuildId))selectedGuildId=groups[0]?.id||null;
         return groups;
     }
+    function portraitCrop(src) {
+        const preset=C.avatars.find(a=>a.image===src),crop=C.avatarCrops[preset?.id]||{scale:1,x:0,y:0};
+        return `--gl-crop-scale:${crop.scale};--gl-crop-x:${crop.x}%;--gl-crop-y:${crop.y}%`;
+    }
     function guildPortrait(g) {
         const record=S.snapshot().guilds.find(x=>x.id===g.id)||g;
         const fallback=C.avatars.find(a=>a.id===C.defaultAvatar).image;
-        return `<img class="gl-guild-portrait" data-fallback="${h(fallback)}" src="${h(S.avatar(record))}" alt="${h(g.name)}旅團徽章">`;
+        return `<span class="gl-guild-portrait" style="${portraitCrop(S.avatar(record))}"><img class="gl-portrait-image" data-fallback="${h(fallback)}" src="${h(S.avatar(record))}" alt="${h(g.name)}旅團徽章"></span>`;
     }
 
     function directoryRows() {
@@ -84,7 +88,7 @@ GameScenes.register('group', ctx => {
             const r=S.latestApplication(),g=r&&S.snapshot().guilds.find(g=>g.id===r.guildId);
             return title('審核旅程通行證')+(g?applicationList(g,true):'')+btn('pending','← 申請狀態',false,'gl-plain');
         }
-        if(mode==='create')return title('旅團成立登記')+`<p class="gl-clip-subtitle">為這段旅程取個名字吧。</p><form id="gl-create-form"><div class="gl-clip-fields"><fieldset class="gl-avatar-picker"><legend>選擇旅團大頭貼</legend><div>${C.avatars.map(a=>`<label title="${h(a.name)}"><input type="radio" name="avatarId" value="${h(a.id)}" aria-label="${h(a.name)}"${a.id===C.defaultAvatar?' checked':''}><img src="${h(a.image)}" alt="${h(a.name)}"></label>`).join('')}</div></fieldset><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="旅團名稱"></label><label>旅團介紹（選填）<textarea name="introduction" maxlength="120" rows="2" placeholder="簡短寫下想一起走的旅程"></textarea></label></div><footer class="gl-clip-footer"><button class="gl-button">確認建立</button></footer></form>`;
+        if(mode==='create')return title('旅團成立登記')+`<p class="gl-clip-subtitle">為這段旅程取個名字吧。</p><form id="gl-create-form"><div class="gl-clip-fields"><fieldset class="gl-avatar-picker"><legend>選擇旅團大頭貼</legend><div>${C.avatars.map(a=>`<label title="${h(a.name)}"><input type="radio" name="avatarId" value="${h(a.id)}" aria-label="${h(a.name)}"${a.id===C.defaultAvatar?' checked':''}><span class="gl-guild-portrait" style="${portraitCrop(a.image)}"><img class="gl-portrait-image" src="${h(a.image)}" alt="${h(a.name)}"></span></label>`).join('')}</div></fieldset><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="旅團名稱"></label><label>旅團介紹（選填）<textarea name="introduction" maxlength="120" rows="2" placeholder="簡短寫下想一起走的旅程"></textarea></label></div><footer class="gl-clip-footer"><button class="gl-button">確認建立</button></footer></form>`;
         if(mode==='join'){
             const request=S.latestApplication();
             if(joinMethod==='code')return title('邀請碼加入')+`<form id="gl-join-form"><div class="gl-clip-fields"><label>請輸入旅伴提供的邀請碼<input name="code" maxlength="24" required autocomplete="off" placeholder="邀請碼"></label></div><footer class="gl-clip-footer"><button type="button" class="gl-button gl-plain" data-join-mode="apply">返回旅團列表</button><button class="gl-button">確認加入</button></footer></form>`;
@@ -200,7 +204,7 @@ GameScenes.register('group', ctx => {
     });
     ctx.on(ctx.root,'error',e=>{
         const img=e.target;
-        if(img.matches?.('img.gl-guild-portrait')&&img.src!==new URL(img.dataset.fallback,document.baseURI).href)img.src=img.dataset.fallback;
+        if(img.matches?.('img.gl-portrait-image[data-fallback]')&&img.src!==new URL(img.dataset.fallback,document.baseURI).href){img.src=img.dataset.fallback;img.parentElement.style.cssText=portraitCrop(img.dataset.fallback);}
     },{capture:true});
     ctx.on(ctx.root,'input',e=>{if(e.target.name==='summary')draft=e.target.value;
         if(e.target.name==='query'){search=e.target.value;updateRoster();}});

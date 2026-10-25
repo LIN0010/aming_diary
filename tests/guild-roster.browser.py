@@ -17,9 +17,9 @@ try:
    expect(page.locator('.gl-roster-detail progress')).to_have_count(0)
    img=page.locator('.gl-roster-info header img');expect(img).to_be_visible()
    assert img.evaluate('(e)=>e.complete&&e.naturalWidth>0')
-   detail=page.locator('.gl-roster-detail').bounding_box();pic=img.bounding_box();assert abs(pic['x']+pic['width']/2-detail['x']-(detail['width']-float(page.locator('.gl-roster-detail').evaluate('(e)=>parseFloat(getComputedStyle(e).paddingRight)'))-1)/2)<2
+   detail=page.locator('.gl-roster-detail').bounding_box();pic=img.locator('..').bounding_box();assert abs(pic['x']+pic['width']/2-detail['x']-(detail['width']-float(page.locator('.gl-roster-detail').evaluate('(e)=>parseFloat(getComputedStyle(e).paddingRight)'))-1)/2)<2
    expect(page.locator('.gl-roster-detail')).to_contain_text('7 / 12');expect(page.locator('.gl-roster-detail')).not_to_contain_text('旅行牆紀錄');expect(page.locator('.gl-roster-detail')).not_to_contain_text('本機模擬旅團')
-   assert page.locator('.gl-roster-row span').all_text_contents()==['沿線慢慢走','星光末班車','迷途旅人協會']
+   assert page.locator('.gl-roster-row > span:not(.gl-guild-portrait)').all_text_contents()==['沿線慢慢走','星光末班車','迷途旅人協會']
    assert len(set(page.locator('.gl-roster-row img').evaluate_all('(es)=>es.map(e=>e.getAttribute("src"))')))==3
    page.locator('.gl-roster-row').nth(1).click();expect(page.locator('.gl-guild-count')).to_contain_text('4 / 6');expect(page.locator('.gl-guild-introduction')).to_have_text('錯過末班車也沒關係，我們陪你等天亮。')
    page.locator('.gl-roster-row').nth(2).click();expect(page.locator('.gl-guild-count')).to_contain_text('2 / 6');expect(page.locator('.gl-guild-introduction')).to_have_text('方向感不好沒關係，反正每條路都有風景。')
@@ -50,11 +50,16 @@ try:
    expect(page.locator('.gl-avatar-picker img')).to_have_count(5)
    page.wait_for_function('Array.from(document.querySelectorAll(".gl-avatar-picker img")).every(e=>e.complete&&e.naturalWidth===1024)')
    expect(page.locator('[name="avatarId"][value="station"]')).to_be_checked()
+   crops=page.locator('.gl-avatar-picker .gl-guild-portrait').evaluate_all('(es)=>es.map(e=>({style:e.getAttribute("style"),overflow:getComputedStyle(e).overflow,radius:getComputedStyle(e).borderRadius,border:getComputedStyle(e).borderWidth,transform:getComputedStyle(e.querySelector("img")).transform}))')
+   assert all(c['overflow']=='hidden' and c['radius']=='50%' and c['border']=='2px' for c in crops)
+   assert len(set(c['style'] for c in crops))==4
+   page.locator('#gl-dialog').evaluate('(e)=>Promise.all(e.getAnimations().map(a=>a.finished))')
+   page.screenshot(path=f'/workspace/work/avatar-crops-{width}.png')
    for value in ['compass','ocean','journal','moon','station']:
     page.locator(f'[name="avatarId"][value="{value}"]').check();expect(page.locator(f'[name="avatarId"][value="{value}"]')).to_be_checked()
    page.locator('[name="avatarId"][value="ocean"]').check();page.locator('[name="name"]').fill('海洋旅團');page.locator('#gl-create-form button').click()
-   page.wait_for_function('!document.querySelector("#gl-dialog").open');expect(page.locator('.gl-room-heading > img')).to_have_attribute('src','images/guild-ocean.png')
-   page.reload();expect(page.locator('.gl-room-heading > img')).to_have_attribute('src','images/guild-ocean.png')
+   page.wait_for_function('!document.querySelector("#gl-dialog").open');expect(page.locator('.gl-room-heading > .gl-guild-portrait img')).to_have_attribute('src','images/guild-ocean.png')
+   page.reload();expect(page.locator('.gl-room-heading > .gl-guild-portrait img')).to_have_attribute('src','images/guild-ocean.png')
    assert page.evaluate('GuildStore.current().avatarId')=='ocean'
    page.close();print(f'PASS {width}: five assets, selection, create, room portrait, reload')
   browser.close()

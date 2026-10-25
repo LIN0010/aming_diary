@@ -247,14 +247,14 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 /* 名冊以共用圖片建立左右一致的旅團辨識。 */
 .gl-roster { grid-template-columns:minmax(0,45fr) minmax(0,55fr); }
 .gl-roster-info header { flex-direction:column; gap:8px; text-align:center; }
-.gl-guild-portrait { display:block; width:80px; height:80px; flex-shrink:0; border-radius:50%; object-fit:cover; object-position:center; border:2px solid #C5A46D; padding:0; background:#efe2c4; box-shadow:0 2px 6px #66502a1a; }
+.gl-guild-portrait { display:block; width:80px; height:80px; flex-shrink:0; border-radius:50%; overflow:hidden; box-sizing:border-box; border:2px solid #C5A46D; padding:0; background:#efe2c4; box-shadow:0 2px 6px #66502a1a; }
 .gl-roster-info header .gl-guild-portrait { margin:0 auto; }
 #group-screen .gl-roster-info h3 { font-size:21px; }
 .gl-roster-info .gl-guild-count { text-align:center; color:#7a6b54; }
 .gl-guild-introduction { line-height:1.7; white-space:pre-wrap; }
 .gl-roster-apply { justify-content:center; }
 .gl-roster-row { min-height:54px; gap:9px; }
-.gl-roster-row .gl-guild-portrait { width:40px; height:40px; padding:1px; }
+.gl-roster-row .gl-guild-portrait { width:40px; height:40px; padding:0; }
 .gl-roster-row span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .gl-roster-mark { margin-left:auto; color:#b88a42; }
 .gl-roster-list #gl-search-form label { position:relative; display:block; }
@@ -276,10 +276,11 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-avatar-picker legend { font-size:13px; color:#66503d; margin-bottom:6px; }
 .gl-avatar-picker > div { display:flex; gap:8px; }
 .gl-avatar-picker label { position:relative; cursor:pointer; min-width:0; flex:0 1 60px; }
-.gl-avatar-picker img { display:block; width:100%; aspect-ratio:1; border-radius:50%; object-fit:cover; object-position:center; border:2px solid #c5a46d; box-sizing:border-box; transition:box-shadow .2s; }
-.gl-avatar-picker input { position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer; }
-.gl-avatar-picker input:checked + img { border-color:#a87828; box-shadow:0 0 0 2px #f0d58f,0 0 8px #c5a46d88; }
-.gl-avatar-picker label:hover img { box-shadow:0 0 10px #d0ac60aa; }
-.gl-avatar-picker input:focus-visible + img { outline:2px solid #765624; outline-offset:3px; }
+.gl-portrait-image { display:block; width:100%; height:100%; object-fit:cover; object-position:center; transform:translate(var(--gl-crop-x,0%),var(--gl-crop-y,0%)) scale(var(--gl-crop-scale,1)); }
+.gl-avatar-picker .gl-guild-portrait { width:100%; height:auto; aspect-ratio:1; transition:box-shadow .2s; }
+.gl-avatar-picker input { position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer; z-index:1; }
+.gl-avatar-picker input:checked + .gl-guild-portrait { border-color:#a87828; box-shadow:0 0 0 2px #f0d58f,0 0 8px #c5a46d88; }
+.gl-avatar-picker label:hover .gl-guild-portrait { box-shadow:0 0 10px #d0ac60aa; }
+.gl-avatar-picker input:focus-visible + .gl-guild-portrait { outline:2px solid #765624; outline-offset:3px; }
 .gl-room-heading > .gl-guild-portrait { width:48px; height:48px; grid-row:1 / span 3; }
 .gl-manage > .gl-guild-portrait { width:60px; height:60px; }
