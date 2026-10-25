@@ -73,3 +73,11 @@ test('展示名冊穩定排序、不重複新增、不覆寫舊團與玩家資�
  assert(s.prepareDirectory().ok);const preserved=s.snapshot().guilds.find(g=>g.code===c.invite);assert.equal(preserved.id,'legacy-rail-id');assert.equal(preserved.introduction,'既有介紹');assert.equal(preserved.puzzles.spring.owned.join(','),'0,2');assert.equal(JSON.stringify(s.current()),player);
  const once=JSON.stringify(s.snapshot());assert(s.prepareDirectory().ok);s.refresh();assert(s.prepareDirectory().ok);assert.equal(JSON.stringify(s.snapshot()),once);assert.equal(setup(data.get(c.storageKey)).s.directory()[0].id,'legacy-rail-id');
 });
+
+test('內建頭貼選擇保存、舊存檔預設與玩家自訂圖片保留',()=>{
+ const {s,c,data}=setup();assert(s.create('海旅','介紹','ocean').ok);assert.equal(s.current().avatarId,'ocean');assert.equal(s.avatar(s.current()),'images/guild-ocean.png');assert.equal(setup(data.get(c.storageKey)).s.avatar(s.current()),'images/guild-ocean.png');
+ assert.equal(s.avatar({id:'old'}),'images/guild-station.png');assert.equal(s.avatar({id:'old',avatar:'images/cow.png'}),'images/cow.png');
+ assert.equal(s.avatar({id:'legacy',code:c.invite,avatar:'images/guild-station-bg.png'}),'images/guild-station.png');assert.equal(s.avatar({id:'legacy',code:c.invite,avatar:'images/cow.png'}),'images/cow.png');
+ s.reset();assert(s.create('預設').ok);assert.equal(s.current().avatarId,'station');s.reset();assert.equal(s.create('錯誤','','unknown').ok,false);
+ s.prepareDirectory();assert.equal(s.snapshot().guilds.map(g=>s.avatar(g)).join(','),'images/guild-station.png,images/guild-moon.png,images/guild-compass.png');
+});

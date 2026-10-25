@@ -45,5 +45,17 @@ try:
    page.locator('[data-join-mode="code"]').click();page.locator('[data-join-mode="apply"]').click();expect(page.locator('.gl-roster')).to_be_visible()
    page.locator('[name="query"]').fill('旅團7');target=page.locator('[data-apply]').get_attribute('data-apply');page.locator('[data-apply]').click();expect(page.locator('#gl-dialog-title')).to_have_text('等待團長審核');assert page.evaluate('GuildStore.latestApplication().guildId')==target
    page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible();page.close();print(f'PASS {width}: default/select/filter/progress/scroll/bounds/invite-mode/apply target')
+  for width in [1280,390,320]:
+   page=browser.new_page(viewport={'width':width,'height':844});page.goto(f'http://127.0.0.1:{server.server_port}/group.html');page.locator('[data-gl="create"]').click()
+   expect(page.locator('.gl-avatar-picker img')).to_have_count(5)
+   page.wait_for_function('Array.from(document.querySelectorAll(".gl-avatar-picker img")).every(e=>e.complete&&e.naturalWidth===1024)')
+   expect(page.locator('[name="avatarId"][value="station"]')).to_be_checked()
+   for value in ['compass','ocean','journal','moon','station']:
+    page.locator(f'[name="avatarId"][value="{value}"]').check();expect(page.locator(f'[name="avatarId"][value="{value}"]')).to_be_checked()
+   page.locator('[name="avatarId"][value="ocean"]').check();page.locator('[name="name"]').fill('海洋旅團');page.locator('#gl-create-form button').click()
+   page.wait_for_function('!document.querySelector("#gl-dialog").open');expect(page.locator('.gl-room-heading > img')).to_have_attribute('src','images/guild-ocean.png')
+   page.reload();expect(page.locator('.gl-room-heading > img')).to_have_attribute('src','images/guild-ocean.png')
+   assert page.evaluate('GuildStore.current().avatarId')=='ocean'
+   page.close();print(f'PASS {width}: five assets, selection, create, room portrait, reload')
   browser.close()
 finally:server.shutdown()

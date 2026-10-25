@@ -2,6 +2,8 @@
 (() => {
     const config = {
         storageKey: 'aming-diary-guild-v1', maxMembers: 6, minMembers: 2,
+        avatars: ['compass','ocean','journal','moon','station'].map(id=>({id, image:`images/guild-${id}.png`, name:({compass:'指南針',ocean:'海洋',journal:'手帳',moon:'月夜',station:'車站'})[id]})),
+        defaultAvatar: 'station',
         guildBadges: ['images/guild-station-bg.png','images/ruisui-bg.jpg','images/home-bg.jpg'],
         player: { id: 'you', name: '旅人・你', avatar: 'images/aming.png' },
         entrance: { image: 'images/guild-station-bg.png', width: 1536, height: 1024,
@@ -16,9 +18,9 @@
             ], progress: { x: .60, y: .535 } },
         invite: 'RAIL2027', demoName: '沿線慢慢走', demoIntroduction: '沿著鐵道慢慢旅行，一起收藏日記與拼圖。', initialDraws: 3, initialPoints: 160,
         directoryGuilds: [
-            { id: 'demo-along-rail', code: 'RAIL2027', name: '沿線慢慢走', count: 3, introduction: '沿著鐵道慢慢旅行，一起收藏日記與拼圖。', avatar: 'images/guild-station-bg.png' },
-            { id: 'demo-starlight-last-train', code: 'STAR2027', name: '星光末班車', count: 4, introduction: '錯過末班車也沒關係，我們陪你等天亮。', avatar: 'images/home-bg.jpg' },
-            { id: 'demo-lost-travelers', code: 'LOST2027', name: '迷途旅人協會', count: 2, introduction: '方向感不好沒關係，反正每條路都有風景。', avatar: 'images/ruisui-bg.jpg' }
+            { id: 'demo-along-rail', code: 'RAIL2027', name: '沿線慢慢走', count: 3, introduction: '沿著鐵道慢慢旅行，一起收藏日記與拼圖。', avatar: 'images/guild-station.png', legacyAvatar: 'images/guild-station-bg.png' },
+            { id: 'demo-starlight-last-train', code: 'STAR2027', name: '星光末班車', count: 4, introduction: '錯過末班車也沒關係，我們陪你等天亮。', avatar: 'images/guild-moon.png', legacyAvatar: 'images/home-bg.jpg' },
+            { id: 'demo-lost-travelers', code: 'LOST2027', name: '迷途旅人協會', count: 2, introduction: '方向感不好沒關係，反正每條路都有風景。', avatar: 'images/guild-compass.png', legacyAvatar: 'images/ruisui-bg.jpg' }
         ],
         duplicatePoints: 4, exchangeCost: 10,
         members: [

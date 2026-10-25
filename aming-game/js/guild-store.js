@@ -99,12 +99,19 @@
             return rank(a)-rank(b);
         }).filter(g=>g.name.toLocaleLowerCase().includes(String(query||'').trim().toLocaleLowerCase())).map(g=>({id:g.id,name:g.name,introduction:g.introduction,count:g.members.length,open:g.openApplications}))),
         prepareDirectory: () => change(s => { ensureDirectory(s); }),
-        create(name, introduction = '') { return change(s => {
+        avatar(g) {
+            const preset=C.directoryGuilds.find(d=>d.id===g.id||d.code===g.code);
+            if (g.avatarId && C.avatars.some(a=>a.id===g.avatarId)) return C.avatars.find(a=>a.id===g.avatarId).image;
+            if (typeof g.avatar==='string' && /^(?:images\/[\w.-]+\.(?:png|jpe?g|webp)|data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+)$/i.test(g.avatar) && g.avatar!==preset?.legacyAvatar) return g.avatar;
+            return preset?.avatar || C.avatars.find(a=>a.id===C.defaultAvatar).image;
+        },
+        create(name, introduction = '', avatarId = C.defaultAvatar) { return change(s => {
             if (s.activeId) throw Error('一次只能加入一個旅團。');
             name = String(name).trim(); if (!name || name.length > 24) throw Error('旅團名稱請填寫 1～24 個字。');
             let code; do { code = id().replaceAll('-', '').slice(0,8).toUpperCase(); } while (code === C.invite || s.guilds.some(g => g.code === code));
             introduction=String(introduction).trim(); if (introduction.length>120) throw Error('旅團介紹最多 120 個字。');
-            const g = makeGuild(name, code, C.player.id, C.minMembers-1); g.introduction=introduction; s.guilds.push(g); s.activeId = g.id; cancelPending(s);
+            if(!C.avatars.some(a=>a.id===avatarId)) throw Error('請選擇有效的旅團大頭貼。');
+            const g = makeGuild(name, code, C.player.id, C.minMembers-1); g.introduction=introduction; g.avatarId=avatarId; s.guilds.push(g); s.activeId = g.id; cancelPending(s);
         }); },
         join(code) { return change(s => {
             if (s.activeId) throw Error('請先退出目前的旅團。');
