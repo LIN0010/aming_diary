@@ -237,7 +237,8 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
  .gl-roster-apply { padding-top:3px; }
  .gl-clipboard[data-panel='join']:has(.gl-roster) #gl-dialog-title { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 }
-.gl-clipboard .gl-close { right:26%; top:25%; }
+.gl-clipboard .gl-close { right:26%; top:25%; width:38px; height:38px; border:1px solid #b99b63; border-radius:50%; background:#fff5ded9; color:#51351e; box-shadow:0 2px 6px #51351e26; transition:background .2s,box-shadow .2s; }
+.gl-clipboard .gl-close:hover { background:#f3dfa9e8; box-shadow:0 2px 8px #8b642e33; }
 .gl-roster-info progress { appearance:none; border:0; border-radius:8px; overflow:hidden; background:#dfd6ba; }
 .gl-roster-info progress::-webkit-progress-bar { background:#dfd6ba; }
 .gl-roster-info progress::-webkit-progress-value { background:#9caa81; }

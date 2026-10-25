@@ -6,9 +6,9 @@
         defaultAvatar: 'station',
         avatarCrops: {
             compass: { scale: 1.45, x: 0, y: 0 },
-            ocean: { scale: 1.65, x: 0, y: -32 },
+            ocean: { scale: 1.8, x: 5, y: -40 },
             journal: { scale: 1, x: 0, y: 0 },
-            moon: { scale: 2, x: -44, y: 48 },
+            moon: { scale: 1.12, x: 0, y: 0 },
             station: { scale: 1, x: 0, y: 0 }
         },
         guildBadges: ['images/guild-station-bg.png','images/ruisui-bg.jpg','images/home-bg.jpg'],

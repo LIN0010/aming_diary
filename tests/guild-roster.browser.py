@@ -42,7 +42,9 @@ try:
    for selector in ['.gl-roster-detail','.gl-roster-list']:
     r=page.locator(selector).bounding_box();assert r['x']>=paper['x'] and r['x']+r['width']<=paper['x']+paper['width']+1 and r['y']+r['height']<=paper['y']+paper['height']+1
    page.screenshot(path=f'/workspace/work/roster-{width}.png')
-   page.locator('[data-join-mode="code"]').click();page.locator('[data-join-mode="apply"]').click();expect(page.locator('.gl-roster')).to_be_visible()
+   close=page.locator('.gl-close');assert close.evaluate('(e)=>getComputedStyle(e).borderRadius')=='50%';assert close.bounding_box()['width']==38
+   page.locator('[data-join-mode="code"]').click();expect(close).to_be_visible();close.click();expect(page.locator('#gl-dialog')).not_to_be_visible()
+   page.locator('[data-gl="join"]').click();page.locator('[data-join-mode="apply"]').click();expect(page.locator('.gl-roster')).to_be_visible()
    page.locator('[name="query"]').fill('旅團7');target=page.locator('[data-apply]').get_attribute('data-apply');page.locator('[data-apply]').click();expect(page.locator('#gl-dialog-title')).to_have_text('等待團長審核');assert page.evaluate('GuildStore.latestApplication().guildId')==target
    page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible();page.close();print(f'PASS {width}: default/select/filter/progress/scroll/bounds/invite-mode/apply target')
   for width in [1280,390,320]:
