@@ -32,7 +32,8 @@
                 ![C.player.id,...C.members.map(m=>m.id)].includes(r.applicantId) ||
                 !['pending','approved','rejected','cancelled'].includes(r.status) || !Number.isFinite(Date.parse(r.at))) throw Error('invalid');
         }
-        if (s.applications.filter(r => r.applicantId === C.player.id && r.status === 'pending').length > 1) throw Error('invalid');
+        const pending=s.applications.filter(r=>r.status==='pending').map(r=>r.applicantId+'|'+r.guildId);
+        if(new Set(pending).size!==pending.length) throw Error('invalid');
         if (new Set(s.guilds.map(g => g.code)).size !== s.guilds.length || new Set(s.guilds.map(g => g.id)).size !== s.guilds.length ||
             (s.activeId !== null && !s.guilds.some(g => g.id === s.activeId && g.members.some(m => m.id === C.player.id))) ||
             s.guilds.filter(g => g.members.some(m => m.id === C.player.id)).length > 1) throw Error('invalid');
@@ -74,12 +75,13 @@
         return s.guilds.find(g => g.code === C.invite);
     }
 
-    function cancelPending(s) { s.applications.forEach(r => { if (r.applicantId === C.player.id && r.status === 'pending') r.status='cancelled'; }); }
+    function cancelPending(s, applicantId=C.player.id, guildId=null) { s.applications.forEach(r => { if (r.applicantId === applicantId && (!guildId||r.guildId===guildId) && r.status === 'pending') {r.status='cancelled';r.decidedAt=new Date().toISOString();} }); }
     function admit(s,g,applicantId) {
         if (g.members.length >= C.maxMembers) throw Error('旅團已滿 6 人。');
         if (s.guilds.some(g => g.members.some(m => m.id === applicantId))) throw Error('這位旅人已加入其他旅團。');
         g.members.push({ id: applicantId, joinedAt: new Date().toISOString() });
-        if (applicantId === C.player.id) { s.activeId=g.id; cancelPending(s); }
+        cancelPending(s,applicantId);
+        if (applicantId === C.player.id) s.activeId=g.id;
     }
     const needGuild = s => { const g = active(s); if (!g) throw Error('請先建立或加入旅團。'); return g; };
     function leave(s) {
@@ -93,7 +95,7 @@
         snapshot: () => copy(state), current: () => copy(active(state) || null), status: () => ({ issue, blocked }),
         subscribe(f) { listeners.add(f); return () => listeners.delete(f); },
         refresh() { read(); notify(); },
-        latestApplication: () => copy([...state.applications].reverse().find(r=>r.applicantId===C.player.id) || null),
+        latestApplication: guildId => { const requests=[...state.applications].reverse().filter(r=>r.applicantId===C.player.id&&(!guildId||r.guildId===guildId));return copy((!guildId&&requests.find(r=>r.status==='pending'))||requests[0]||null); },
         directory: query => copy([...state.guilds].sort((a,b) => {
             const rank = g => { const n=C.directoryGuilds.findIndex(d=>d.id===g.id||d.code===g.code); return n<0?C.directoryGuilds.length:n; };
             return rank(a)-rank(b);
@@ -122,13 +124,13 @@
         }); },
         apply(guildId) { return change(s => {
             if(s.activeId) throw Error('一次只能加入一個旅團。');
-            if(s.applications.some(r=>r.applicantId===C.player.id&&r.status==='pending')) throw Error('已有等待審核的申請，請先取消或等待結果。');
+            if(s.applications.some(r=>r.applicantId===C.player.id&&r.guildId===guildId&&r.status==='pending')) throw Error('已向這個旅團送出申請，請等待審核。');
             const g=s.guilds.find(g=>g.id===guildId);
             if(!g||!g.openApplications) throw Error('這個旅團目前未開放申請。');
             if(g.members.length>=C.maxMembers) throw Error('旅團已滿 6 人。');
             s.applications.push({id:id(),guildId,applicantId:C.player.id,status:'pending',at:new Date().toISOString()});
         }); },
-        cancelApplication() { return change(s => { cancelPending(s); }); },
+        cancelApplication(guildId) { return change(s => { const target=guildId||[...s.applications].reverse().find(r=>r.applicantId===C.player.id&&r.status==='pending')?.guildId;if(target)cancelPending(s,C.player.id,target); }); },
         setApplications(open) { return change(s => {
             const g=needGuild(s); if(g.leader!==C.player.id) throw Error('只有團長可以管理申請。');
             g.openApplications=Boolean(open);

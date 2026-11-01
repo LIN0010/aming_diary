@@ -81,3 +81,15 @@ test('內建頭貼選擇保存、舊存檔預設與玩家自訂圖片保留',()=
  s.reset();assert(s.create('預設').ok);assert.equal(s.current().avatarId,'station');s.reset();assert.equal(s.create('錯誤','','unknown').ok,false);
  s.prepareDirectory();assert.equal(s.snapshot().guilds.map(g=>s.avatar(g)).join(','),'images/guild-station.png,images/guild-moon.png,images/guild-compass.png');
 });
+
+test('三團獨立申請、取消、首個核准優先、舊審核失效與重載',()=>{
+ const {s,c,data}=setup();s.prepareDirectory();const [a,b,d]=s.directory();
+ for(const g of [a,b,d])assert(s.apply(g.id).ok);
+ assert.equal(s.snapshot().applications.filter(r=>r.status==='pending').length,3);assert.equal(s.apply(a.id).ok,false);
+ const ar=s.latestApplication(a.id),cr=s.latestApplication(d.id);assert(s.cancelApplication(b.id).ok);
+ assert.equal(s.latestApplication(b.id).status,'cancelled');assert.equal(s.latestApplication(a.id).status,'pending');assert.equal(s.latestApplication(d.id).status,'pending');
+ assert(s.reviewApplication(ar.id,true,true).ok);assert.equal(s.current().id,a.id);assert.equal(s.latestApplication(d.id).status,'cancelled');assert.equal(s.reviewApplication(cr.id,true,true).ok,false);
+ assert.equal(s.apply(b.id).ok,false);assert.equal(s.apply(d.id).ok,false);
+ const restored=setup(data.get(c.storageKey)).s;assert.equal(restored.current().id,a.id);assert.equal(restored.latestApplication(d.id).status,'cancelled');assert.equal(restored.snapshot().guilds.filter(g=>g.members.some(m=>m.id==='you')).length,1);
+ assert(s.leave().ok);assert(s.apply(b.id).ok);assert(s.reviewApplication(s.latestApplication(b.id).id,false,true).ok);assert.equal(s.latestApplication(b.id).status,'rejected');assert(s.apply(b.id).ok);
+});
