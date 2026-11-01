@@ -3,7 +3,7 @@ GameScenes.register('group', ctx => {
     const C = GuildConfig, S = GuildStore, dialog = ctx.id('gl-dialog'), body = ctx.id('gl-dialog-content');
     const noticeElement=ctx.id('gl-notice');
     let panel = '', puzzleId = C.puzzles[0].id, drawing = false, reveal = null, noticeTimer, draft = '', selectedStation = '', disposed = false;
-    let sceneMode='', joinMethod='apply', search='', boarding=false, stampLabel='', selectedGuildId=null, applicationGuildId=null;
+    let sceneMode='', joinMethod='apply', search='', boarding=false, stampLabel='', selectedGuildId=null;
     const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const btn = (action,label,off=false,extra='') => `<button type="button" class="gl-button ${extra}" data-gl="${action}"${off?' disabled':''}>${h(label)}</button>`;
     const date = s => new Date(s).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -34,18 +34,12 @@ GameScenes.register('group', ctx => {
         if(sceneMode!==(entry?'entry':'room'))background(entry?'entry':'room');
         if(entry){
             ctx.id('gl-hud').innerHTML=`<header class="gl-entry-heading"><h1>下一段旅程，你想與誰同行？</h1></header>`;
-            ctx.id('gl-menu').innerHTML=request&&['pending','rejected'].includes(request.status)?`<div class="gl-application-badge">${btn('pending',request.status==='pending'?'等待團長審核':'查看申請結果')}</div>`:'';
+            ctx.id('gl-menu').innerHTML='';
         }else{
             ctx.id('gl-hud').innerHTML=`<div class="gl-room-heading">${guildPortrait(g)}<h1>${h(g.name)}</h1><span>${g.members.length}/${C.maxMembers} 位旅人</span><div class="gl-avatars">${g.members.map(m=>`<button type="button" data-member="${m.id}" aria-label="查看${h(memberInfo(m.id).name)}">${avatar(m.id)}</button>`).join('')}</div></div>`;
             ctx.id('gl-wall-progress').textContent=`共同拼圖 ${g.puzzles.spring.owned.length}/12`;
             ctx.id('gl-menu').innerHTML=`<nav class="gl-room-menu" aria-label="旅團功能">${btn('wall','旅行牆 ↗')+btn('puzzle','回憶拼圖 ↗')+btn('members','旅團成員 ↗')+btn('manage','旅團手帳 ↗')}</nav>`;
         }
-    }
-    function pending() {
-        const r=S.latestApplication(applicationGuildId), g=r&&S.snapshot().guilds.find(g=>g.id===r.guildId);
-        if(!r||!g)return title('尚未送出申請')+btn('close','返回入口');
-        const waiting=r.status==='pending';
-        return title(waiting?'等待團長審核':r.status==='rejected'?'申請未通過':'申請已取消')+`<p class="gl-ticket-destination">${h(g.name)}</p><p>${waiting?'申請已送出，核准後才會加入旅團。':r.status==='rejected'?'可以回到車站選擇其他旅團。':'可以重新選擇同行的旅團。'}</p><div class="gl-actions">${btn('close','返回入口')}${waiting?btn('cancel-application','取消申請',false,'gl-plain'):''}</div>${waiting&&C.members.some(m=>m.id===g.leader)?btn('review-demo','本機審核測試',false,'gl-plain'):''}`;
     }
     function applicationList(g, simulate=false) {
         const requests=S.snapshot().applications.filter(r=>r.guildId===g.id&&r.status==='pending'&&(!simulate||r.applicantId===C.player.id));
@@ -77,7 +71,7 @@ GameScenes.register('group', ctx => {
         const g=S.snapshot().guilds.find(g=>g.id===selectedGuildId);
         if(!g)return '<p class="gl-subtle">目前沒有可顯示的旅團。</p>';
         const p=C.puzzles[0],pieces=g.puzzles[p.id].owned.length,total=p.rows*p.cols,request=S.latestApplication(g.id),waiting=request?.status==='pending',full=g.members.length>=C.maxMembers,joined=S.current();
-        return `<div class="gl-roster-info"><header>${guildPortrait(g)}<h3>${h(g.name)}</h3></header><p class="gl-guild-count">目前旅伴：${g.members.length} / ${C.maxMembers} 人${full?' · 旅團已滿':''}</p><p class="gl-guild-introduction">${h(g.introduction||'尚未填寫旅團介紹。')}</p><p>🧩 共同拼圖：${pieces} / ${total} 片</p></div><footer class="gl-roster-apply"><button type="button" class="gl-button" data-apply="${h(g.id)}"${joined||full||!g.openApplications||waiting?' disabled':''}>${joined?(joined.id===g.id?'已加入旅團':'已加入其他旅團'):full?'旅團已滿':!g.openApplications?'暫停申請':waiting?'等待團長審核':'申請加入旅團'}</button>${waiting?`<button type="button" class="gl-button gl-plain" data-view-application="${h(g.id)}">查看申請</button><button type="button" class="gl-button gl-plain" data-cancel-application="${h(g.id)}">取消申請</button>`:''}${request?.status==='rejected'?'<small class="gl-subtle">申請未通過，可重新申請。</small>':''}</footer>`;
+        return `<div class="gl-roster-info"><header>${guildPortrait(g)}<h3>${h(g.name)}</h3></header><p class="gl-guild-count">目前旅伴：${g.members.length} / ${C.maxMembers} 人${full?' · 旅團已滿':''}</p><p class="gl-guild-introduction">${h(g.introduction||'尚未填寫旅團介紹。')}</p><p>🧩 共同拼圖：${pieces} / ${total} 片</p></div><footer class="gl-roster-apply">${waiting?`<button type="button" class="gl-button" data-cancel-application="${h(g.id)}">取消申請</button>`:`<button type="button" class="gl-button" data-apply="${h(g.id)}"${joined||full||!g.openApplications?' disabled':''}>${joined?(joined.id===g.id?'已加入旅團':'已加入其他旅團'):full?'旅團已滿':!g.openApplications?'暫停申請':'申請加入旅團'}</button>`}${request?.status==='rejected'?'<small class="gl-subtle">申請未通過，可重新申請。</small>':''}</footer>`;
     }
     function updateRoster(preserveScroll=false) {
         const list=ctx.query('.gl-guild-directory'),top=list.scrollTop;
@@ -87,11 +81,6 @@ GameScenes.register('group', ctx => {
     }
     function welcome(mode='welcome') {
         const issue=S.status().issue, localNote='<p class="gl-subtle">本機旅團 · 邀請碼與審核不跨裝置同步</p>';
-        if(mode==='pending')return pending();
-        if(mode==='review-demo'){
-            const r=S.latestApplication(applicationGuildId),g=r&&S.snapshot().guilds.find(g=>g.id===r.guildId);
-            return title('審核旅程通行證')+(g?applicationList(g,true):'')+btn('pending','← 申請狀態',false,'gl-plain');
-        }
         if(mode==='create')return title('旅團成立登記')+`<form id="gl-create-form"><div class="gl-clip-fields"><fieldset class="gl-avatar-picker"><legend>選擇旅團大頭貼</legend><div>${C.avatars.map(a=>`<label title="${h(a.name)}"><input type="radio" name="avatarId" value="${h(a.id)}" aria-label="${h(a.name)}"${a.id===C.defaultAvatar?' checked':''}><span class="gl-guild-portrait" style="${portraitCrop(a.image)}"><img class="gl-portrait-image" src="${h(a.image)}" alt="${h(a.name)}"></span></label>`).join('')}</div></fieldset><label>旅團名稱<input name="name" maxlength="24" required autocomplete="off" placeholder="旅團名稱"></label><label>旅團介紹（選填）<textarea name="introduction" maxlength="120" rows="2" placeholder="簡短寫下想一起走的旅程"></textarea></label></div><footer class="gl-clip-footer"><button class="gl-button">確認建立</button></footer></form>`;
         if(mode==='join'){
             const request=S.latestApplication();
@@ -141,7 +130,7 @@ GameScenes.register('group', ctx => {
         return title(p.title)+`<img class="gl-unlocked-cg" src="${p.image}" alt="${h(p.title)}完整示意 CG"><article class="gl-story"><h3>阿明的補充日記</h3><p>${h(p.story)}</p></article>${btn('puzzle','← 回到拼圖')}`;
     }
     function show(next) {
-        const g=S.current(); panel=g?next:['create','join','pending','review-demo'].includes(next)?next:'welcome';
+        const g=S.current(); panel=g?next:['create','join'].includes(next)?next:'welcome';
         if(!g&&panel==='join')result(S.prepareDirectory());
         if(panel==='puzzle') reveal=null;
         renderPanel();
@@ -168,29 +157,26 @@ GameScenes.register('group', ctx => {
         if(boarding)return;
         if(button.dataset.joinMode){joinMethod=button.dataset.joinMode;if(joinMethod==='apply')search='';renderPanel();return;}
         if(button.dataset.selectGuild){selectedGuildId=button.dataset.selectGuild;updateRoster(true);return;}
-        if(button.dataset.viewApplication){applicationGuildId=button.dataset.viewApplication;show('pending');return;}
         if(button.dataset.cancelApplication){if(result(S.cancelApplication(button.dataset.cancelApplication)))renderPanel();return;}
-        if(button.dataset.apply){applicationGuildId=button.dataset.apply;if(result(S.apply(applicationGuildId)))show('pending');return;}
+        if(button.dataset.apply){if(result(S.apply(button.dataset.apply)))renderPanel();return;}
         if(button.dataset.review){
             const approve=button.dataset.approve==='true',simulate=button.dataset.simulate==='true';
             const operation=()=>S.reviewApplication(button.dataset.review,approve,simulate);
             if(approve&&simulate)board(operation,'同行確認');
-            else if(result(operation(),approve?'申請已核准。':'申請已拒絕。')){if(simulate)show('pending');else renderPanel();}
+            else if(result(operation(),approve?'申請已核准。':'申請已拒絕。')){renderPanel();}
             return;
         }
         if(button.dataset.member){show('members');ctx.delay(()=>ctx.id('gl-member-'+button.dataset.member)?.scrollIntoView({block:'nearest'}),0);return;}
         if(button.dataset.puzzle){if(drawing)return;puzzleId=button.dataset.puzzle;show('puzzle');return;}
         if(button.dataset.piece!==undefined){if(drawing)return;const r=S.exchange(puzzleId,Number(button.dataset.piece));if(result(r,'這片回憶已加入共同拼圖。')){reveal=null;renderPanel();}return;}
         if(action==='close'){close();return;}
-        if(action==='pending'&&!button.dataset.viewApplication)applicationGuildId=null;
-        if(['welcome','create','join','pending','review-demo','wall','puzzle','members','manage','reward'].includes(action)){if(!drawing)show(action);return;}
+        if(['welcome','create','join','wall','puzzle','members','manage','reward'].includes(action)){if(!drawing)show(action);return;}
         if(action==='explore'){close();ctx.go('explore.html');return;}
         if(action==='draw'){
             if(drawing)return;drawing=true;reveal=null;
             const r=S.draw(puzzleId);if(!r.ok){drawing=false;notify(r.message);renderPanel();return;}
             reveal=r.value;renderPanel();ctx.delay(()=>{drawing=false;renderPanel();},650);return;
         }
-        if(action==='cancel-application'){if(result(S.cancelApplication(applicationGuildId)))close();return;}
         if(action==='toggle-applications'){if(result(S.setApplications(!S.current().openApplications)))renderPanel();return;}
         if(action==='test-application'){if(result(S.addDemoApplication()))renderPanel();return;}
         if(action==='copy'){
@@ -223,7 +209,7 @@ GameScenes.register('group', ctx => {
     ctx.on(dialog,'cancel',e=>{e.preventDefault();close();});
     ctx.on(window,'storage',e=>{if(e.key===C.storageKey||e.key===null)S.refresh();});
     ctx.cleanup(S.subscribe(()=>{
-        const g=S.current(), entryPanels=['welcome','create','join','pending','review-demo'];
+        const g=S.current(), entryPanels=['welcome','create','join'];
         if(panel&&!drawing&&!boarding&&((g&&entryPanels.includes(panel))||(!g&&!entryPanels.includes(panel)))){
             panel='';dialog.close();
         }
@@ -235,7 +221,6 @@ GameScenes.register('group', ctx => {
     ctx.cleanup(()=>{disposed=true;if(dialog.open)dialog.close();});
     ctx.delay(()=>{
         const room=ctx.query('.gl-room');room.scrollLeft=(room.scrollWidth-room.clientWidth)/2;
-        if(!S.current()&&S.latestApplication()?.status==='pending')show('pending');
-        else if(S.status().blocked)show('welcome');
+        if(S.status().blocked)show('welcome');
     },0);
 });

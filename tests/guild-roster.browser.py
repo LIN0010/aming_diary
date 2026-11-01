@@ -47,7 +47,7 @@ try:
    heading=page.locator('#gl-dialog-title').bounding_box();back=close.bounding_box();text_bottom=close.evaluate('(e)=>{const r=document.createRange();r.selectNodeContents(e);return r.getBoundingClientRect().bottom}');assert text_bottom<=heading['y']+1;assert abs(back['x']-heading['x'])<2
    page.locator('[data-join-mode="code"]').click();expect(close).to_be_visible();close.click();expect(page.locator('#gl-dialog')).not_to_be_visible()
    page.locator('[data-gl="join"]').click();page.locator('[data-join-mode="apply"]').click();expect(page.locator('.gl-roster')).to_be_visible()
-   page.locator('[name="query"]').fill('旅團7');target=page.locator('[data-apply]').get_attribute('data-apply');page.locator('[data-apply]').click();expect(page.locator('#gl-dialog-title')).to_have_text('等待團長審核');assert page.evaluate('GuildStore.latestApplication().guildId')==target
+   page.locator('[name="query"]').fill('旅團7');target=page.locator('[data-apply]').get_attribute('data-apply');page.locator('[data-apply]').click();expect(page.locator('[data-cancel-application]')).to_have_count(1);assert page.evaluate('GuildStore.latestApplication().guildId')==target
    page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible();page.close();print(f'PASS {width}: default/select/filter/progress/scroll/bounds/invite-mode/apply target')
   for width in [1280,390,320]:
    page=browser.new_page(viewport={'width':width,'height':844});page.goto(f'http://127.0.0.1:{server.server_port}/group.html');page.locator('[data-gl="create"]').click()
