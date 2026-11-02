@@ -1734,7 +1734,9 @@ body {
 #diary-screen { background:#bba58b; }
 .pf-book { position:absolute; left:6%; top:16%; width:88%; height:68%; }
 .pf-frame { position:absolute; inset:44px 0 42px; }
-.pf-stage { width:100%; height:100%; }
+.pf-stage { width:100%; height:100%; min-width:0; min-height:0; }
+.pf-stage > .stf__wrapper { width:100%; height:100%; }
+.pf-stage .stf__block { width:100%; height:100%; }
 .pf-page { box-sizing:border-box; padding:24px; background:#f5ecdb; color:#503b2c; overflow:hidden; }
 .pf-hard { background:#4a2f22; color:#ead9b7; }
 .pf-hard h2 { text-align:center; margin-top:50%; font:clamp(24px,4vw,48px)/1.5 'PMingLiU',serif; }
@@ -1769,4 +1771,11 @@ body {
  .pf-book .back-to-index { position:static; padding:5px; }
  .pf-book .diary-tab { padding:6px; font-size:11px; }
  .pf-aming-right .memory-fragment { width:min(110px,70%); right:10px; bottom:14px; }
+}
+
+/* 矮橫向視窗預留既有底部導覽空間；不縮小文字或改成單頁。 */
+@media(orientation:landscape) and (max-height:500px) {
+ .pf-book { height:calc(var(--game-height,100dvh) * .84 - 108px - env(safe-area-inset-bottom,0px)); }
+ .pf-book .station-diary-toolbar { justify-content:center; gap:8px; }
+ .pf-book .back-to-index { position:static; }
 }

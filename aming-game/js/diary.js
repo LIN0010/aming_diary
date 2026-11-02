@@ -90,12 +90,36 @@ const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const pageFor=n=>n===-1?0:n===0?1:3+(n-1)*2;
 function renderBook(n){pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.querySelector('[data-book="previous"]').disabled=n<=0;controls.querySelector('[data-book="next"]').disabled=n>=entries.length;controls.querySelector('[data-book="close"]').disabled=n===-1;controls.querySelector('span').textContent=n===-1?'封面':n===0?'目錄':`${n} / ${entries.length}`;}
 let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);
-function initBook(){
- if(disposed)return;if(!stage.clientWidth||!stage.clientHeight){ctx.delay(initBook,16);return;}
- engine=new St.PageFlip(stage,{width:Math.max(100,Math.round(stage.clientWidth/2)),height:Math.max(150,Math.round(stage.clientHeight)),size:'stretch',minWidth:100,maxWidth:1200,minHeight:150,maxHeight:1200,autoSize:false,usePortrait:false,showCover:true,useMouseEvents:false,clickEventForward:true,flippingTime:reduced.matches?1:350,startPage:pageFor(pageNumber)});
- engine.on('init',()=>resolveReady());engine.loadFromHTML(stage.querySelectorAll(':scope > .pf-page'));
+let sizeObserver,layoutFrame=0,stableSize='',appliedSize='';
+function measureBook(){return {width:Math.round(frame.clientWidth),height:Math.round(frame.clientHeight)};}
+function scheduleBookLayout(){
+ if(disposed||layoutFrame)return;
+ layoutFrame=requestAnimationFrame(()=>{
+  layoutFrame=0;if(disposed)return;
+  const size=measureBook(),key=`${size.width}x${size.height}`;
+  if(size.width<2||size.height<2)return;
+  // 等連續兩個繪製週期取得相同尺寸，避開Safari旋轉過渡值。
+  if(stableSize!==key){stableSize=key;scheduleBookLayout();return;}
+  if(!engine){initBook(size);return;}
+  if(flipping||engine.getState()!=='read')return;
+  if(appliedSize!==key){
+   // 2.0.7的Render持有同一份settings；update重算bounds並保留當前書頁。
+   const settings=engine.getSettings();settings.width=size.width/2;settings.height=size.height;
+   engine.update();appliedSize=key;
+  }
+ });
 }
-ctx.delay(initBook,0);
+function initBook(size){
+ if(disposed||engine)return;
+ engine=new St.PageFlip(stage,{width:size.width/2,height:size.height,size:'stretch',minWidth:1,maxWidth:1200,minHeight:1,maxHeight:1200,autoSize:false,usePortrait:false,showCover:true,useMouseEvents:false,clickEventForward:true,flippingTime:reduced.matches?1:350,startPage:pageFor(pageNumber)});
+ engine.on('init',()=>{appliedSize=`${size.width}x${size.height}`;resolveReady();scheduleBookLayout();});
+ engine.on('changeState',e=>{if(e.data==='read')scheduleBookLayout();});
+ engine.loadFromHTML(stage.querySelectorAll(':scope > .pf-page'));
+}
+if(typeof ResizeObserver!=='undefined'){sizeObserver=new ResizeObserver(scheduleBookLayout);sizeObserver.observe(frame);}
+ctx.on(window,'resize',scheduleBookLayout);ctx.on(window,'orientationchange',scheduleBookLayout);
+if(window.visualViewport)ctx.on(window.visualViewport,'resize',scheduleBookLayout);
+ctx.delay(scheduleBookLayout,0);
 async function oneFlip(forward){
  const before=engine.getCurrentPageIndex();if(forward)engine.flipNext();else engine.flipPrev();
  const start=performance.now();
@@ -106,12 +130,12 @@ async function turnTo(target){
  flipping=true;book.setAttribute('aria-busy','true');frame.inert=true;controls.inert=true;stationDiary.inert=true;
  try{await ready;if(disposed)return;const targetPage=pageFor(target);while(engine.getCurrentPageIndex()!==targetPage&&!disposed){await oneFlip(engine.getCurrentPageIndex()<targetPage);}if(!disposed){renderBook(target);rememberDiaryView();markVisibleMemoryRead();}}
  catch(error){controls.querySelector('span').textContent=error.message;}
- finally{flipping=false;book.removeAttribute('aria-busy');frame.inert=false;controls.inert=false;stationDiary.inert=false;}
+ finally{flipping=false;book.removeAttribute('aria-busy');frame.inert=false;controls.inert=false;stationDiary.inert=false;scheduleBookLayout();}
 }
 ctx.on(cover,'click',()=>turnTo(0));
 ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber===-1?0:pageNumber+(action==='next'?1:-1));});
 ctx.beforeLeave(()=>!flipping);
-ctx.cleanup(()=>{disposed=true;resolveReady();engine?.destroy();});
+ctx.cleanup(()=>{disposed=true;cancelAnimationFrame(layoutFrame);sizeObserver?.disconnect();resolveReady();engine?.destroy();});
 renderBook(-1);
 
 /* 打開回憶碎片 */

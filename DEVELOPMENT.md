@@ -323,3 +323,9 @@ SPA 的不同主場景切換共用 `travel-transition.js` 與 `app.css`，首次
 navigation.js共用手機UA判斷與portrait media query。直向用原生dialog頂層阻擋底層點擊，避免被其他dialog穿透；轉橫向close即可恢復，無方向鎖定API。支援減少動畫。
 
 測試：tests/mobile-viewport.browser.py使用Chromium的iPhone UA/觸控模擬、一般與standalone旗標、直橫轉換、五頁導覽elementFromPoint檢查及桌面窄視窗。無實體iPhone，因此未驗證真正Safari工具列、Home Indicator與加入主畫面生命週期；仍需實機驗收。
+
+### 日記旋轉後尺寸同步
+
+Chromium模擬量測：390×844初始化頁面參考180×446；旋轉至844×390時，frame已743×179，但舊比例仍讓單頁縮至72×179。wrapper高度也為0。此次透過ResizeObserver、visualViewport/resize/orientationchange排程，同尺寸連續兩個繪製週期後初始化或更新既有實例；按2.0.7實際API的共享getSettings物件同步width/height，再呼叫update，保留目前頁碼。翻動中延後到read／操作完成後同步。observer、RAF及事件依場景生命週期清理，不重建實例或增加transform。
+
+wrapper/block明確填滿stage；矮橫向視窗只調整書本周圍留白，避開底部導覽，文字字級不縮小，頁內維持原捲動。實測同步後844×390的frame/wrapper均743×134、單頁372×134（包含新增導覽留白）。tests/pageflip-size.browser.py以iPhone Safari UA的Chromium模擬反覆旋轉及可視高度改變，檢查實例始終1個、實際頁寬、瑞穗頁碼、心得保留與翻頁。無實體iPhone Safari，仍需實機確認。
