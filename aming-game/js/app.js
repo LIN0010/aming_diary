@@ -80,12 +80,14 @@
         retry.hidden = true;
         cancel.hidden = !active;
         fallback.href = route.url;
-        const animate=Boolean(current && current.name!==route.name);
+        const initialEntry=!active&&!current;
+        const animate=!initialEntry && Boolean(current && current.name!==route.name);
         const covered=animate?travel.begin():Promise.resolve();
         if(animate)host.inert=true;
         let style;
         try {
-            const result = await JourneyLoader.load(route.url, undefined, { signal, firstScreen:animate });
+            const handed=initialEntry?JourneyEntryCache.take(route.url):null;
+            const result = handed || await JourneyLoader.load(route.url, undefined, { signal, firstScreen:animate });
             const parsed = new DOMParser().parseFromString(result.html, "text/html");
             const definition = GameNavigation.scenes[route.name];
             const template = parsed.getElementById(definition.root);
@@ -94,7 +96,7 @@
             // 只取既有主畫面，不重複執行原頁的 script。
             root.querySelectorAll("script").forEach(script => script.remove());
             root.querySelector("[data-game-nav]")?.remove();
-            style = await prepareStyle(definition.style, signal);
+            style = handed && window.JourneyEntryPreview?.url===route.url ? JourneyEntryPreview.style : await prepareStyle(definition.style, signal);
             if (signal.aborted) { style.remove(); return false; }
 
             if(animate)await covered;
@@ -136,6 +138,8 @@
             active?.dispose();
             activeStyle?.remove();
             host.replaceChildren(root);
+            if(window.JourneyEntryPreview && JourneyEntryPreview.style!==style)JourneyEntryPreview.style.remove();
+            window.JourneyEntryPreview=null;
             active = next;
             activeStyle = style;
             style.media = "all";
@@ -143,7 +147,8 @@
             current = normalized;
             document.title = definition.title;
             if(!historyRequest)writeRoute(current, replace);
-            await travel.finish();
+            try { JourneyEntryCache.save(route.url,result.html,[...style.sheet.cssRules].map(rule=>rule.cssText).join('\n'),definition.style,definition.root); } catch(_) {}
+            if(animate)await travel.finish();
             hideLoading();
             root.tabIndex = -1;
             root.focus({ preventScroll: true });
@@ -151,7 +156,7 @@
         } catch (error) {
             style?.remove();
             if (signal.aborted) return false;
-            await travel.finish();
+            if(animate)await travel.finish();
             restoreRoute();
             loading.hidden = false; // 失敗時仍提供重試與取消。
             status.textContent = "這段旅程未能載入，請確認網路後重試。";

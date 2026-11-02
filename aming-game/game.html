@@ -9,6 +9,8 @@
 </head>
 <body data-scene-shell>
     <div id="scene-host"></div>
+    <script src="js/entry-cache.js"></script>
+    <script>JourneyEntryCache.preview(document.getElementById("scene-host"));</script>
     <!-- 只在載入失敗時顯示錯誤操作，不作為進場或換場遮罩。 -->
     <section id="scene-loading" class="scene-loading" aria-label="旅程載入失敗" hidden>
         <p id="scene-status" role="status" tabindex="-1"></p>

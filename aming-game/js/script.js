@@ -40,11 +40,16 @@ async function loadGame() {
     renderProgress(0, 0);
 
     try {
-        await JourneyLoader.load(destination, (completed, total) => {
+        const prepared = await JourneyLoader.load(destination, (completed, total) => {
             renderProgress(completed, total);
             if (loadingStatus.textContent !== "正在載入旅程…") loadingStatus.textContent = "正在載入旅程…";
         }, { signal, shell: "game.html" });
         if (signal.aborted) return;
+        // 在原有淡出前交接已完成的模板，避免新文件空容器再次整批預載。
+        const entryRoute=GameNavigation.route(destination),entryDefinition=GameNavigation.scenes[entryRoute.name];
+        const entryCSS=await fetch(entryDefinition.style,{signal,cache:'default'});
+        if(!entryCSS.ok)throw new Error('無法交接場景樣式');
+        JourneyEntryCache.save(entryRoute.url,prepared.html,await entryCSS.text(),entryDefinition.style,entryDefinition.root);
         // 新旅程只在內容成功載入後重設；載入失敗不會先清掉存檔。
         if (newGame && !GameProgress.reset({ activityKey: EventConfig.storageKey })) {
             starting = false;
