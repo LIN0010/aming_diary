@@ -1730,22 +1730,28 @@ body {
     .journey-return { margin-top: 8px; font-size: 10px; }
 }
 
-/* 純色翻頁書本原型：內容與儲存仍由原日記元件負責。 */
+/* 固定雙頁舞台；封面與兩個單頁目錄分別擁有自己的內容。 */
 #diary-screen { background:#bba58b; }
-.diary-book { position:absolute; left:6%; top:12%; width:88%; height:76%; perspective:1800px; filter:drop-shadow(0 12px 14px #39261955); transition:transform .7s ease-in-out; }
-.diary-book.closed { transform:translateX(-25%); }
-.db-pages { position:absolute; inset:0; background:#f5ecdb; border-radius:3px; overflow:hidden; }
-.db-pages::after { content:''; position:absolute; left:49%; width:2%; top:0; bottom:0; background:linear-gradient(90deg,transparent,#69513a24,transparent); pointer-events:none; z-index:8; }
-.db-cover { position:absolute; inset:0; width:100%; height:100%; border:1px solid #322014; border-radius:4px; background:#4a2f22; color:#ead9b7; font:clamp(24px,4vw,48px)/1.5 'PMingLiU',serif; cursor:pointer; box-shadow:inset 7px 0 10px #1e100b66; }
-.db-cover[hidden],.db-controls[hidden],.db-locked[hidden] { display:none; }
-.diary-book.closed .db-pages { visibility:hidden; }
-.diary-book .diary-index { position:absolute; inset:0; padding:28px; margin:0; width:100%; height:100%; overflow:auto; }
+.diary-book { position:absolute; left:6%; top:16%; width:88%; height:66%; perspective:1800px; transform-style:preserve-3d; }
+.db-pages { position:absolute; inset:0; border-radius:3px; }
+.diary-book[data-page-kind="station"] .db-pages { background:#f5ecdb; box-shadow:0 12px 20px #39261933; }
+.diary-book[data-page-kind="station"] .db-pages::after { content:''; position:absolute; left:49%; width:2%; top:0; bottom:0; background:linear-gradient(90deg,transparent,#69513a24,transparent); pointer-events:none; z-index:8; }
+.db-cover-hinge { position:absolute; left:50%; top:0; width:50%; height:100%; transform-origin:0 50%; transform-style:preserve-3d; z-index:18; }
+.db-cover-hinge[hidden],.db-controls[hidden],.db-locked[hidden] { display:none; }
+.db-cover,.db-cover-back { position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box; backface-visibility:hidden; -webkit-backface-visibility:hidden; border:1px solid #74543b; border-radius:3px; }
+.db-cover { margin:0; padding:18px; background:#4a2f22; color:#ead9b7; font:clamp(24px,4vw,48px)/1.5 'PMingLiU',serif; transform:translateZ(.5px); box-shadow:inset 7px 0 10px #1e100b66,0 10px 20px #39261944; cursor:pointer; }
+.db-cover-back { background:#ede0c8; transform:rotateY(180deg) translateZ(.5px); overflow:hidden; }
+.diary-book .db-toc-page { box-sizing:border-box; height:100%; margin:0; padding:28px; overflow:auto; background:#f5ecdb; }
+.diary-book .diary-index { position:absolute; left:50%; top:0; width:50%; box-shadow:0 12px 20px #39261933; }
 .diary-book .diary-index.hidden { display:none; }
-.diary-book .station-journals { display:grid; grid-template-columns:1fr 1fr; gap:14px 8%; }
+.diary-book .db-toc-left { width:100%; background:#ede0c8; }
+.diary-book .db-toc-heading { height:110px; margin:0; }
+.diary-book .station-journals { display:flex; flex-direction:column; gap:12px; }
 .diary-book .station-journal { width:100%; min-height:60px; background:transparent; border:0; border-bottom:1px solid #ae947758; border-radius:0; box-shadow:none; padding:12px; }
 .diary-book .station-journal::before,.diary-book .station-journal::after { display:none; }
 .diary-book .station-diary { position:absolute; inset:0; padding:16px; margin:0; overflow:auto; }
-.diary-book .station-diary-toolbar { position:relative; margin:0 0 10px; }
+.diary-book .station-diary-toolbar { position:sticky; top:0; z-index:16; width:100%; background:#f5ecdb; padding:4px 0; margin:0 0 10px; justify-content:space-between; gap:8px; }
+.diary-book .back-to-index { position:static; flex-shrink:0; }
 .diary-book .journal { width:100%; height:auto; min-height:calc(100% - 70px); margin:0; box-shadow:none; background:#f5ecdb; }
 .diary-book .journal-page { background:#f5ecdb; }
 .db-locked { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#735c46; }
@@ -1753,65 +1759,27 @@ body {
 .db-controls button { padding:5px 10px; border:1px solid #78604a; border-radius:3px; background:#ecdfc8; color:#503a28; cursor:pointer; }
 .db-controls span { color:#483221; font-size:12px; }
 .db-controls button:disabled { opacity:.4; }
+.diary-book.cover-moving .db-controls { visibility:hidden; }
+/* 既有站點內頁動畫：快照寬度只用於跨頁切片，不用於封面或目錄容器。 */
 .db-leaf { position:absolute; top:0; width:50%; height:100%; transform-style:preserve-3d; z-index:12; pointer-events:none; }
 .db-leaf.forward { left:50%; transform-origin:left center; }
 .db-leaf.backward { left:0; transform-origin:right center; }
 .db-face { position:absolute; inset:0; overflow:hidden; backface-visibility:hidden; background:#f5ecdb; box-shadow:inset 0 0 25px #50372033,0 4px 15px #301c1240; }
 .db-back { transform:rotateY(180deg); }
-.db-snapshot { width:200%; height:100%; pointer-events:none; }
+.db-snapshot { width:200%; height:100%; pointer-events:none; background:#f5ecdb; }
+.diary-book .db-toc-left-snapshot { position:absolute; left:0; top:0; width:50%; }
 .forward .db-front .db-snapshot,.backward .db-back .db-snapshot { left:-100%; }
 .db-hold { position:absolute; top:0; width:50%; height:100%; overflow:hidden; z-index:10; pointer-events:none; }
 .hold-left { left:0; }.hold-right { left:50%; }.hold-right .db-snapshot { left:-100%; }
 @media(max-width:700px) {
- .diary-book { top:15%; height:68%; left:4%; width:92%; }
- .diary-book.closed { transform:translateX(-25%); }
- .diary-book .diary-index { padding:16px 10px; }
- .diary-book .station-journal { padding:8px 3px; }
+ .diary-book { top:16%; height:61%; left:4%; width:92%; }
+ .diary-book .db-toc-page { padding:16px 10px; }
+ .diary-book .db-toc-heading { height:100px; }
+ .diary-book .station-journal { padding:8px 3px; grid-template-columns:24px minmax(0,1fr) auto; gap:5px; }
+ .diary-book .station-journal strong { font-size:16px; }
  .db-controls { gap:4px; flex-wrap:wrap; }.db-controls button { font-size:11px; padding:5px; }
  .diary-book .journal { display:grid; grid-template-columns:1fr 1fr; }
  .diary-book .journal-page { padding:12px 8px; min-width:0; overflow:auto; }
- .diary-book .station-diary-toolbar { flex-wrap:wrap; }
-}
-@media(prefers-reduced-motion:reduce) { .diary-book { transition:none; } }
-.diary-book.closed .db-snapshot { visibility:visible; }
-.db-cover-face { height:100%; display:grid; place-items:center; background:#4a2f22; color:#ead9b7; font:28px/1.5 'PMingLiU',serif; }
-.db-locked[hidden],.db-controls[hidden] { display:none; }
-/* 頁碼操作預留導覽列上方的空間。 */
-.diary-book { height:70%; }
-@media(max-width:700px) { .diary-book { height:62%; } }
-.diary-book { top:16%; height:66%; }
-.diary-book .station-diary-toolbar { position:sticky; top:0; z-index:16; width:100%; background:#f5ecdb; padding:4px 0; }
-.diary-book .back-to-index { position:static; flex-shrink:0; }
-.diary-book .station-diary-toolbar { justify-content:space-between; gap:8px; }
-@media(max-width:700px) {
- .diary-book { top:16%; height:61%; }
- .diary-book .station-diary-toolbar { justify-content:center; }
+ .diary-book .station-diary-toolbar { flex-wrap:wrap; justify-content:center; }
  .diary-book .diary-tab { padding:6px 9px; font-size:11px; }
- .diary-book .station-journal { grid-template-columns:24px minmax(0,1fr) auto; gap:5px; }
- .diary-book .station-journal strong { font-size:16px; }
 }
-
-/* 獨立的單張硬封面：固定半幅尺寸，標題與封面一起繞左側書脊旋轉。 */
-.db-cover-hinge { position:absolute; left:50%; top:0; width:50%; height:100%; transform-origin:0 50%; transform-style:preserve-3d; z-index:18; }
-.db-cover-hinge[hidden] { display:none; }
-.db-cover-hinge .db-cover,.db-cover-back { position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box; backface-visibility:hidden; }
-.db-cover-hinge .db-cover { transform:rotateY(0deg); margin:0; }
-.db-cover-back { transform:rotateY(180deg); background:#ede0c8; border:1px solid #74543b; box-shadow:inset -7px 0 12px #4a2f222a; }
-.diary-book.closed .db-pages { visibility:visible; clip-path:inset(0 0 0 50%); }
-.diary-book.closed .db-pages::after { display:none; }
-.diary-book.cover-moving .db-controls { visibility:hidden; }
-
-/* 同一個3D場景：目錄右頁在底層，目錄左頁位於封面內側。 */
-.diary-book { filter:none; transform-style:preserve-3d; transition:none; }
-.diary-book.closed { transform:none; }
-.diary-book .db-cover-hinge { transform-style:preserve-3d; }
-.db-cover-hinge .db-cover { transform:translateZ(.5px); -webkit-backface-visibility:hidden; }
-.db-cover-back { transform:rotateY(180deg) translateZ(.5px); -webkit-backface-visibility:hidden; overflow:hidden; }
-.diary-book.cover-stage .db-pages { visibility:visible; clip-path:inset(0 0 0 50%); }
-.diary-book.cover-stage .db-pages::after { display:none; }
-.diary-book .station-journals { grid-template-columns:1fr 1fr; grid-template-rows:repeat(3,auto); grid-auto-flow:column; }
-.diary-book .db-inside-index { display:block; width:200%; height:100%; left:0; padding:28px; background:#ede0c8; }
-.db-cover-hinge .db-cover { box-shadow:inset 7px 0 10px #1e100b66,0 10px 20px #39261944; }
-.db-pages { box-shadow:0 10px 20px #39261933; }
-@media(max-width:700px) { .diary-book .db-inside-index { padding:16px 10px; } }
-.diary-book.cover-stage .db-snapshot { clip-path:none; }

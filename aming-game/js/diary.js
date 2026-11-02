@@ -67,7 +67,13 @@ const pages=document.createElement('div');pages.className='db-pages';
 const cover=document.createElement('button');cover.type='button';cover.className='db-cover';cover.textContent='阿明的日記';
 const coverHinge=document.createElement('div');coverHinge.className='db-cover-hinge';
 const coverBack=document.createElement('div');coverBack.className='db-cover-back';coverBack.setAttribute('aria-hidden','true');
-const insideIndex=diaryIndex.cloneNode(true);insideIndex.classList.add('db-inside-index');insideIndex.removeAttribute('id');insideIndex.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));insideIndex.querySelectorAll('button').forEach((e,i)=>{e.dataset.insideEntry=i;e.tabIndex=-1;});coverBack.append(insideIndex);
+// 左右目錄分別持有原始站點節點，不複製完整目錄。
+const tocLeft=document.createElement('section');tocLeft.className='db-toc-page db-toc-left';
+const heading=diaryIndex.querySelector('.index-title');heading.classList.add('db-toc-heading');
+const leftList=document.createElement('div');leftList.className='station-journals';
+entries.slice(0,3).forEach(entry=>leftList.append(entry));tocLeft.append(heading,leftList);coverBack.append(tocLeft);
+diaryIndex.classList.add('db-toc-page');
+const rightHeading=document.createElement('div');rightHeading.className='db-toc-heading';rightHeading.setAttribute('aria-hidden','true');diaryIndex.prepend(rightHeading);
 coverHinge.append(cover,coverBack);
 const locked=document.createElement('section');locked.className='db-locked';locked.hidden=true;
 const controls=document.createElement('nav');controls.className='db-controls';controls.setAttribute('aria-label','書頁導覽');
@@ -76,8 +82,8 @@ diaryIndex.before(book);pages.append(diaryIndex,stationDiary,locked);book.append
 let pageNumber=-1, flipping=false;
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
 function renderBook(n){
-    pageNumber=n;book.classList.toggle('closed',n===-1);book.classList.toggle('cover-stage',n<=0);coverHinge.hidden=n>0;coverHinge.style.transform=n===-1?'rotateY(0deg)':'rotateY(-180deg)';cover.hidden=false;
-    diaryIndex.classList.toggle('hidden',n>0);insideIndex.classList.remove('hidden');stationDiary.classList.toggle('show',n===4);
+    pageNumber=n;book.classList.toggle('closed',n===-1);book.dataset.pageKind=n<=0?'toc':'station';coverHinge.hidden=n>0;coverHinge.style.transform=n===-1?'rotateY(0deg)':'rotateY(-180deg)';cover.hidden=false;
+    diaryIndex.classList.toggle('hidden',n>0);stationDiary.classList.toggle('show',n===4);
     locked.hidden=n<1||n===4;
     if(!locked.hidden){locked.replaceChildren();const heading=document.createElement('h2');heading.textContent=entries[n-1].querySelector('strong').textContent;const message=document.createElement('p');message.textContent='這段旅程尚未開放。';locked.append(heading,message);}
     controls.hidden=n===-1;
@@ -87,6 +93,7 @@ function renderBook(n){
 }
 function snapshot(){
     const copy=pages.cloneNode(true);
+    if(pageNumber<=0){const left=tocLeft.cloneNode(true);left.classList.add('db-toc-left-snapshot');copy.append(left);}
 copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
     copy.querySelectorAll('.memory-locked > .journal-page,script').forEach(e=>e.remove());
     copy.querySelectorAll('button,input,textarea,a').forEach(e=>{e.tabIndex=-1;e.setAttribute('aria-hidden','true');});
@@ -95,7 +102,7 @@ copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(e=>e.removeAttr
 async function turnTo(target){
     if(flipping||target===pageNumber)return;
     if(noteDirty&&!saveTravelNote())return;
-    flipping=true;book.setAttribute('aria-busy','true');pages.inert=true;controls.inert=true;cover.disabled=true;
+    flipping=true;book.setAttribute('aria-busy','true');pages.inert=true;coverBack.inert=true;controls.inert=true;cover.disabled=true;
     try{
         while(pageNumber!==target){
             if(pageNumber===-1 || (pageNumber===0 && target===-1)){
@@ -123,10 +130,10 @@ async function turnTo(target){
             await animation.finished.catch(()=>{});leaf.remove();hold.remove();
         }
         rememberDiaryView();markVisibleMemoryRead();
-    }finally{flipping=false;book.removeAttribute('aria-busy');pages.inert=false;controls.inert=false;cover.disabled=false;}
+    }finally{flipping=false;book.removeAttribute('aria-busy');pages.inert=false;coverBack.inert=false;controls.inert=false;cover.disabled=false;}
 }
 ctx.on(cover,'click',()=>turnTo(0));
-ctx.on(coverBack,'click',e=>{const item=e.target.closest('[data-inside-entry]');if(item&&!flipping&&!entries[Number(item.dataset.insideEntry)].disabled)entries[Number(item.dataset.insideEntry)].click();});
+
 ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber+(action==='next'?1:-1));});
 ctx.beforeLeave(()=>!flipping);
 renderBook(-1);
