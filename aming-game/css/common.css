@@ -157,3 +157,14 @@
     opacity: 0; visibility: hidden; pointer-events: none;
     transform: translateX(-50%) translateY(25px);
 }
+
+/* 共用SVG導覽：輕量手帳書籤選取。 */
+.bottom-nav { grid-template-columns:repeat(5,minmax(0,1fr)); }
+.bottom-nav .nav-item { min-width:0; color:#8a7d70; border-radius:14px; transition:background .2s ease,color .2s ease; }
+.bottom-nav .nav-item:hover { transform:none; background:#c5a46d0d; }
+.bottom-nav .nav-item.active { color:#624a32; background:#c5a46d12; }
+.bottom-nav .nav-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; flex-shrink:0; }
+.bottom-nav .nav-icon svg { display:block; width:24px; height:24px; }
+.bottom-nav .nav-label { position:relative; white-space:nowrap; line-height:1.5; }
+.bottom-nav .nav-label::after { content:''; position:absolute; left:50%; bottom:-5px; width:20px; height:2px; border-radius:2px; background:#bd9856; opacity:0; transform:translateX(-50%); transition:opacity .2s ease; }
+.bottom-nav .nav-item.active .nav-label::after { opacity:1; }
