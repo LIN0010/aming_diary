@@ -33,7 +33,7 @@ body {
     inset: 0;
 
     width: 100vw;
-    height: 100vh;
+    height: var(--game-height, 100vh);
 
     overflow: hidden;
 
@@ -360,7 +360,7 @@ body {
     inset: 0;
 
     width: 100vw;
-    height: 100vh;
+    height: var(--game-height, 100vh);
 
     display: flex;
 
@@ -391,7 +391,7 @@ body {
     inset: 0;
 
     width: 100vw;
-    height: 100vh;
+    height: var(--game-height, 100vh);
 
     overflow: hidden;
 

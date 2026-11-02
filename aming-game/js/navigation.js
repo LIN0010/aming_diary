@@ -1,6 +1,20 @@
 /* 導覽項目與新舊入口的網址轉換，共用同一份定義。 */
 (() => {
     "use strict";
+    // 共用可視高度與手機直向提示；不縮放場景座標。
+    const viewport=window.visualViewport;
+    const phone=/iPhone|iPod|Android.*Mobile/i.test(navigator.userAgent)||navigator.userAgentData?.mobile===true;
+    const portrait=matchMedia('(orientation: portrait)');
+    const prompt=document.createElement('dialog');prompt.className='orientation-prompt';prompt.setAttribute('aria-label','請將手機橫向擺放');
+    prompt.innerHTML='<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="19" y="8" width="26" height="48" rx="4"/><path d="M28 13h8M29 50h6M10 22a24 24 0 0 1 38-11M48 5v7h-7"/></svg><p>請將手機橫向擺放</p><small>轉動手機，繼續阿明的旅程</small>';
+    document.body.append(prompt);prompt.addEventListener('cancel',e=>e.preventDefault());
+    function updateViewport(){
+        const editing=document.activeElement?.matches('input:not([type=button]):not([type=submit]),textarea,[contenteditable=true]');
+        if(!editing&&(!viewport||viewport.scale===1))document.documentElement.style.setProperty('--game-height',`${Math.round(viewport?.height||innerHeight)}px`);
+        if(phone&&portrait.matches){if(!prompt.open)prompt.showModal();}
+        else if(prompt.open)prompt.close();
+    }
+    window.addEventListener('resize',updateViewport);viewport?.addEventListener('resize',updateViewport);window.addEventListener('pageshow',updateViewport);portrait.addEventListener('change',updateViewport);document.addEventListener('focusout',()=>requestAnimationFrame(updateViewport));updateViewport();
     const scenes = Object.freeze({
         home: Object.freeze({ page: "home.html", root: "home-screen", style: "css/home.css", title: "尋軌：阿明的日記" }),
         explore: Object.freeze({ page: "explore.html", root: "explore-screen", style: "css/explore.css", title: "鐵道探索｜尋軌" }),

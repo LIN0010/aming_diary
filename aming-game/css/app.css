@@ -1,6 +1,6 @@
 /* 單頁入口只負責載入提示；各場景仍沿用原有美術樣式。 */
 html, body { margin: 0; min-height: 100%; background: #f4eddf; }
-#scene-host { min-height: 100vh; }
+#scene-host { height:var(--game-height,100vh); min-height:0; }
 /* 錯誤提示預設隱藏；沒有全畫面遮罩或進場方框。 */
 .scene-loading {
     position: fixed; left: 50%; bottom: 24px; z-index: 10000;

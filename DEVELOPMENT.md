@@ -315,3 +315,11 @@ SPA 的不同主場景切換共用 `travel-transition.js` 與 `app.css`，首次
 瑞穗左右journal-page是原始DOM移入HTML書頁，照片、心得與碎片元件不重建；兩側同步頁籤與memory-locked狀態。尚未開放站點只建立鎖定佔位頁。原db-cover-hinge/db-leaf及自製動畫已移除，舊測試入口改為套件測試。
 
 驗證：`python tests/pageflip-prototype.browser.py`、`python tests/pageflip-diary.browser.py`、`python tests/travel.browser.py`。前兩者涵蓋桌機手機HTML頁內按鈕、輸入、照片、碎片、保存／直達恢復與開合連翻；最後者確認共用SPA過場不受影響。
+
+### 手機可視區域與直向提示
+
+根容器原混用100vh/100dvh，scene-host僅min-height，絕對定位導覽又未避開安全區。改以共用--game-height作高度來源：dvh優先、vh備援，visualViewport在非縮放與非編輯狀態同步實際高度。只改全畫面高度，不改路線與內容座標或增加整頁縮放。導覽避開底部及左右safe-area，入口加入viewport-fit及獨立顯示meta（未新增manifest或改部署）。
+
+navigation.js共用手機UA判斷與portrait media query。直向用原生dialog頂層阻擋底層點擊，避免被其他dialog穿透；轉橫向close即可恢復，無方向鎖定API。支援減少動畫。
+
+測試：tests/mobile-viewport.browser.py使用Chromium的iPhone UA/觸控模擬、一般與standalone旗標、直橫轉換、五頁導覽elementFromPoint檢查及桌面窄視窗。無實體iPhone，因此未驗證真正Safari工具列、Home Indicator與加入主畫面生命週期；仍需實機驗收。

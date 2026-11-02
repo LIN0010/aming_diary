@@ -1,6 +1,6 @@
 /* 旅團小屋：背景原圖不變，所有資訊與熱區疊加在同一座標面。 */
 html, body { margin:0; width:100%; height:100%; overflow:hidden; }
-#group-screen { position:relative; width:100%; height:100vh; height:100dvh; overflow:hidden; color:#4c5146; font:15px/1.7 'Microsoft JhengHei','Noto Sans TC',sans-serif; background:#b6baa8; }
+#group-screen { position:relative; width:100%; height:var(--game-height,100vh); height:var(--game-height,100dvh); overflow:hidden; color:#4c5146; font:15px/1.7 'Microsoft JhengHei','Noto Sans TC',sans-serif; background:#b6baa8; }
 #group-screen *, #group-screen *::before, #group-screen *::after { box-sizing:border-box; }
 #group-screen [hidden] { display:none !important; }
 #group-screen button, #group-screen input, #group-screen textarea, #group-screen select { font:inherit; }

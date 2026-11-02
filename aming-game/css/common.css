@@ -6,13 +6,13 @@
     position: absolute;
 
     left: 50%;
-    bottom: 2.5%;
+    bottom: max(2.5%, calc(env(safe-area-inset-bottom, 0px) + 8px));
 
     transform: translateX(-50%);
 
     z-index: 20;
 
-    width: min(760px, 88vw);
+    width: min(760px, calc(88vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
     height: 74px;
 
     display: grid;
@@ -168,3 +168,14 @@
 .bottom-nav .nav-label { position:relative; white-space:nowrap; line-height:1.5; }
 .bottom-nav .nav-label::after { content:''; position:absolute; left:50%; bottom:-5px; width:20px; height:2px; border-radius:2px; background:#bd9856; opacity:0; transform:translateX(-50%); transition:opacity .2s ease; }
 .bottom-nav .nav-item.active .nav-label::after { opacity:1; }
+
+:root { --game-height:100vh; }
+@supports(height:100dvh) { :root { --game-height:100dvh; } }
+.orientation-prompt { position:fixed; inset:0; width:100%; height:var(--game-height,100dvh); max-width:none; max-height:none; margin:0; border:0; padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom)); background:rgba(0,0,0,.86); color:#f5eedf; text-align:center; z-index:2147483647; }
+.orientation-prompt[open] { display:grid; place-content:center; justify-items:center; gap:16px; }
+.orientation-prompt::backdrop { background:transparent; }
+.orientation-prompt svg { width:64px; height:64px; animation:phone-turn 2.6s ease-in-out infinite; }
+.orientation-prompt p { margin:0; font-size:20px; }
+.orientation-prompt small { font-size:14px; opacity:.8; }
+@keyframes phone-turn { 0%,20%,100% { transform:rotate(0); } 55%,80% { transform:rotate(90deg); } }
+@media(prefers-reduced-motion:reduce) { .orientation-prompt svg { animation:none; } }
