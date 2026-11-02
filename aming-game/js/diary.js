@@ -67,6 +67,7 @@ const pages=document.createElement('div');pages.className='db-pages';
 const cover=document.createElement('button');cover.type='button';cover.className='db-cover';cover.textContent='阿明的日記';
 const coverHinge=document.createElement('div');coverHinge.className='db-cover-hinge';
 const coverBack=document.createElement('div');coverBack.className='db-cover-back';coverBack.setAttribute('aria-hidden','true');
+const insideIndex=diaryIndex.cloneNode(true);insideIndex.classList.add('db-inside-index');insideIndex.removeAttribute('id');insideIndex.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));insideIndex.querySelectorAll('button').forEach((e,i)=>{e.dataset.insideEntry=i;e.tabIndex=-1;});coverBack.append(insideIndex);
 coverHinge.append(cover,coverBack);
 const locked=document.createElement('section');locked.className='db-locked';locked.hidden=true;
 const controls=document.createElement('nav');controls.className='db-controls';controls.setAttribute('aria-label','書頁導覽');
@@ -75,8 +76,8 @@ diaryIndex.before(book);pages.append(diaryIndex,stationDiary,locked);book.append
 let pageNumber=-1, flipping=false;
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
 function renderBook(n){
-    pageNumber=n;book.classList.toggle('closed',n===-1);coverHinge.hidden=n!==-1;cover.hidden=false;
-    diaryIndex.classList.toggle('hidden',n!==0);stationDiary.classList.toggle('show',n===4);
+    pageNumber=n;book.classList.toggle('closed',n===-1);book.classList.toggle('cover-stage',n<=0);coverHinge.hidden=n>0;coverHinge.style.transform=n===-1?'rotateY(0deg)':'rotateY(-180deg)';cover.hidden=false;
+    diaryIndex.classList.toggle('hidden',n>0);insideIndex.classList.remove('hidden');stationDiary.classList.toggle('show',n===4);
     locked.hidden=n<1||n===4;
     if(!locked.hidden){locked.replaceChildren();const heading=document.createElement('h2');heading.textContent=entries[n-1].querySelector('strong').textContent;const message=document.createElement('p');message.textContent='這段旅程尚未開放。';locked.append(heading,message);}
     controls.hidden=n===-1;
@@ -99,8 +100,7 @@ async function turnTo(target){
         while(pageNumber!==target){
             if(pageNumber===-1 || (pageNumber===0 && target===-1)){
                 const opening=pageNumber===-1;
-                if(opening)renderBook(0);
-                else book.classList.add('closed');
+                // 目錄已在封面底層；動畫結束前不切換頁碼或互動狀態。
                 coverHinge.hidden=false;
                 coverHinge.style.transform=opening?'rotateY(0deg)':'rotateY(-180deg)';
                 book.classList.add('cover-moving');
@@ -110,7 +110,7 @@ async function turnTo(target){
                 ],{duration:reduced.matches?1:700,easing:'ease-in-out',fill:'forwards'});
                 await animation.finished.catch(()=>{});
                 renderBook(opening?0:-1);
-                animation.cancel();coverHinge.style.transform='';book.classList.remove('cover-moving');
+                animation.cancel();book.classList.remove('cover-moving');
                 continue;
             }
             const old=pageNumber,forward=target>old,next=old+(forward?1:-1),before=snapshot();
@@ -126,6 +126,7 @@ async function turnTo(target){
     }finally{flipping=false;book.removeAttribute('aria-busy');pages.inert=false;controls.inert=false;cover.disabled=false;}
 }
 ctx.on(cover,'click',()=>turnTo(0));
+ctx.on(coverBack,'click',e=>{const item=e.target.closest('[data-inside-entry]');if(item&&!flipping&&!entries[Number(item.dataset.insideEntry)].disabled)entries[Number(item.dataset.insideEntry)].click();});
 ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber+(action==='next'?1:-1));});
 ctx.beforeLeave(()=>!flipping);
 renderBook(-1);
