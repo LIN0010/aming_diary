@@ -4,7 +4,7 @@
     const pages={home:'home.html',explore:'explore.html',diary:'diary.html',event:'event.html',group:'group.html'};
     function cssText(text,href){return text.replace(/url\(\s*(["']?)([^"')]+)\1\s*\)/g,(_,q,url)=>`url("${new URL(url,new URL(href,document.baseURI)).href}")`);}
     const api={
-        save(route,html,css,style,root){try{sessionStorage.setItem(key,JSON.stringify({url:route,html,css:cssText(css,style),root,at:Date.now()}));}catch(_){}},
+        save(route,html,css,style,root,entry=false){try{sessionStorage.setItem(key,JSON.stringify({url:route,html,css:cssText(css,style),root,entry,at:Date.now()}));}catch(_){}},
         take(reference){try{const data=JSON.parse(sessionStorage.getItem(key)||'null');const url=new URL(reference,document.baseURI);return data&&data.url===url.pathname.split('/').pop()+url.search&&Date.now()-data.at<1800000?data:null;}catch(_){return null;}},
         preview(host){
             const [name,query='']=location.hash.slice(2).split('?');if(!pages[name])return;
@@ -12,6 +12,7 @@
             const root=new DOMParser().parseFromString(data.html,'text/html').getElementById(data.root);if(!root)return;
             root.querySelectorAll('script').forEach(el=>el.remove());root.inert=true;host.append(document.importNode(root,true));
             const style=document.createElement('style');style.textContent=data.css;document.head.insertBefore(style,document.getElementById('common-style'));
+            if(data.entry)host.classList.add('entry-arrival');
             window.JourneyEntryPreview={...data,style};
         }
     };

@@ -16,7 +16,7 @@ try:
    if count[0]>1:held.append(route)
    else:route.continue_()
   page.route('**/js/app.js',app);page.goto(f'http://127.0.0.1:{s.server_port}/index.html');page.locator('#start-btn').click();page.wait_for_url('**/game.html#/home',wait_until='commit',timeout=60000)
-  expect(page.locator('#home-screen')).to_be_visible(timeout=15000);assert page.evaluate('!!JourneyEntryPreview');assert page.locator('#home-screen').evaluate('(e)=>getComputedStyle(e).opacity')=='1'
+  expect(page.locator('#home-screen')).to_be_visible(timeout=15000);assert page.locator('#scene-host').evaluate('(e)=>getComputedStyle(e).animationDuration')=='0.4s';assert page.evaluate('!!JourneyEntryPreview');assert page.locator('#home-screen').evaluate('(e)=>getComputedStyle(e).opacity')=='1'
   expect(page.locator('.travel-transition')).not_to_be_visible();assert page.evaluate('!TravelTransition.active');assert held
   # 首次顯示時已具備背景，而啟動程式仍被刻意攔住。
   assert 'images/home-bg.jpg' in page.locator('.home-background').evaluate('(e)=>getComputedStyle(e).backgroundImage')

@@ -35,3 +35,8 @@ html, body { margin: 0; min-height: 100%; background: #f4eddf; }
 @keyframes travel-rails { to { clip-path:inset(0); } }
 @keyframes travel-glow { 0%,100% { opacity:.25; } 50% { opacity:.75; } }
 @media(prefers-reduced-motion:reduce) { .travel-transition,.travel-transition.leaving { animation-duration:.01s; } .travel-center p,.travel-track { animation-duration:.01s; animation-delay:0s; } .travel-center::after { animation:none; opacity:.5; } }
+
+/* 開場沿用1.2秒淡出，抵達後淡入0.4秒；不使用列車過場或等待。 */
+#scene-host.entry-arrival { animation:entry-arrival .4s ease both; }
+@keyframes entry-arrival { from { opacity:0; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) { #scene-host.entry-arrival { animation-duration:.01s; } }

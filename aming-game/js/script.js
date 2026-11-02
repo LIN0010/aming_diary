@@ -49,7 +49,7 @@ async function loadGame() {
         const entryRoute=GameNavigation.route(destination),entryDefinition=GameNavigation.scenes[entryRoute.name];
         const entryCSS=await fetch(entryDefinition.style,{signal,cache:'default'});
         if(!entryCSS.ok)throw new Error('無法交接場景樣式');
-        JourneyEntryCache.save(entryRoute.url,prepared.html,await entryCSS.text(),entryDefinition.style,entryDefinition.root);
+        JourneyEntryCache.save(entryRoute.url,prepared.html,await entryCSS.text(),entryDefinition.style,entryDefinition.root,true);
         // 新旅程只在內容成功載入後重設；載入失敗不會先清掉存檔。
         if (newGame && !GameProgress.reset({ activityKey: EventConfig.storageKey })) {
             starting = false;
