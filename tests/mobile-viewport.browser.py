@@ -15,12 +15,14 @@ try:
    context=b.new_context(viewport={'width':844,'height':390},is_mobile=True,has_touch=True,user_agent='Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1')
    context.add_init_script('Object.defineProperty(navigator,"standalone",{value:'+str(standalone).lower()+'})');page=context.new_page();page.goto(f'http://127.0.0.1:{s.server_port}/game.html#/home');expect(page.locator('#home-screen')).to_be_visible(timeout=60000)
    for name in ['explore','diary','event','group','home']:
+    page.locator('.nav-toggle').click()
+    page.locator('.bottom-nav').evaluate('(e)=>Promise.all([...e.getAnimations(),...e.querySelector(".nav-options").getAnimations()].map(a=>a.finished.catch(()=>{})))')
     link=page.locator(f'[data-destination="{name}"]');r=link.bounding_box();assert r['y']>=0 and r['y']+r['height']<=390
     assert link.evaluate('(e)=>e.contains(document.elementFromPoint(e.getBoundingClientRect().x+e.offsetWidth/2,e.getBoundingClientRect().y+e.offsetHeight/2))')
     link.click();page.wait_for_function('!TravelTransition.active');assert page.evaluate('GameNavigation.route(location.href).name')==name
     assert abs(page.locator('#scene-host').bounding_box()['height']-page.evaluate('visualViewport.height'))<2
    page.set_viewport_size({'width':390,'height':844});expect(page.locator('.orientation-prompt')).to_be_visible();assert page.locator('.orientation-prompt').evaluate('(e)=>e.open');page.screenshot(path=f'/workspace/work/portrait-{standalone}.png')
-   page.set_viewport_size({'width':844,'height':390});expect(page.locator('.orientation-prompt')).not_to_be_visible();page.locator('[data-destination="explore"]').click();page.wait_for_function('!TravelTransition.active');context.close();print('PASS mobile emulation standalone=',standalone,flush=True)
+   page.set_viewport_size({'width':844,'height':390});expect(page.locator('.orientation-prompt')).not_to_be_visible();page.locator('.nav-toggle').click();page.locator('[data-destination="explore"]').click();page.wait_for_function('!TravelTransition.active');context.close();print('PASS mobile emulation standalone=',standalone,flush=True)
   page=b.new_page(viewport={'width':390,'height':844});page.goto(f'http://127.0.0.1:{s.server_port}/index.html');expect(page.locator('.orientation-prompt')).not_to_be_visible();page.close()
   b.close()
 finally:s.shutdown()

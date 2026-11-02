@@ -339,3 +339,11 @@ wrapper/block明確填滿stage；矮橫向視窗只調整書本周圍留白，�
 沉浸版將原阿明左右內容節點組在左頁，原玩家照片／心得組在右頁，各自內部捲動；不再顯示頁籤。退出時把節點放回原容器，恢復舊版頁籤與版面。memory-locked及原心得／照片事件沿用，沒有複製資料；閱讀期間外層使用overflow:clip與捲動保護，避免聚焦儲存按鈕讓整個場景橫移。
 
 `tests/diary-reading.browser.py`驗證桌機與844×390橫向模擬：開合與尺寸、左右內容、鎖定與解鎖、照片、心得、原版比較、場景無偏移、單一引擎實例、update只在read狀態。無實體iPhone Safari驗證。
+
+### 手機橫向收合導覽
+
+沿用共用GameNavigation與原五個連結：以手機UA／userAgentData.mobile配合orientation啟用mobile-nav，桌面窄視窗不啟用。收合顯示目前頁面SVG／名稱／箭頭；展開保留五格。狀態存於導覽DOM，不新增存檔；render換場、點選、外部點擊、焦點離開或Escape會收合。一般visualViewport尺寸更新不強制關閉，避免Safari工具列造成誤收合。
+
+披露按鈕提供aria-expanded/controls，收合選項設inert/aria-hidden/tabindex；Enter/Space沿用按鈕、ArrowDown待選項動畫完成後聚焦目前頁、左右鍵/Home/End移動、Escape關閉並還原焦點。事件只在首次建立導覽時註冊。沉浸閱讀沿用同一nav的inert與隱藏，退出恢復。
+
+CSS保留米白外框與safe-area底部／左右邊距，手機收合高度52px、展開126px。--game-nav-space桌面108px、手機橫向76px，日記矮橫向容器使用同一預留值增加書頁空間。tests/compact-nav.browser.py、nav.browser.py、mobile-viewport.browser.py與pageflip-size.browser.py涵蓋SPA五頁、鍵盤、閱讀模式、桌面不變、直橫與standalone旗標模擬。無實體iPhone Safari/PWA驗證。

@@ -13,6 +13,9 @@
         if(!editing&&(!viewport||viewport.scale===1))document.documentElement.style.setProperty('--game-height',`${Math.round(viewport?.height||innerHeight)}px`);
         if(phone&&portrait.matches){if(!prompt.open)prompt.showModal();}
         else if(prompt.open)prompt.close();
+        const compact=phone&&!portrait.matches,changed=document.documentElement.classList.contains('mobile-nav')!==compact;
+        document.documentElement.classList.toggle('mobile-nav',compact);
+        if(changed)document.querySelectorAll('[data-navigation-ready]').forEach(nav=>setExpanded(nav,false));
     }
     window.addEventListener('resize',updateViewport);viewport?.addEventListener('resize',updateViewport);window.addEventListener('pageshow',updateViewport);portrait.addEventListener('change',updateViewport);document.addEventListener('focusout',()=>requestAnimationFrame(updateViewport));updateViewport();
     const scenes = Object.freeze({
@@ -32,6 +35,15 @@
         ["group", "group.html", "users-round", "旅團"]
     ];
 
+    let navSequence=0;
+    function setExpanded(nav,open){
+        const button=nav.querySelector('.nav-toggle'),options=nav.querySelector('.nav-options');if(!button||!options)return;
+        const compact=phone&&!portrait.matches;
+        nav.dataset.expanded=String(compact&&open);button.hidden=!compact;button.setAttribute('aria-expanded',String(compact&&open));
+        options.inert=compact&&!open;options.setAttribute('aria-hidden',String(compact&&!open));
+        options.querySelectorAll('a').forEach(link=>{if(compact&&!open)link.tabIndex=-1;else link.removeAttribute('tabindex');});
+    }
+    document.addEventListener('pointerdown',event=>{document.querySelectorAll('[data-game-nav][data-expanded="true"]').forEach(nav=>{if(!nav.contains(event.target))setExpanded(nav,false);});});
     function render(nav, active) {
         if (!nav.dataset.navigationReady) {
             nav.replaceChildren();
@@ -56,6 +68,19 @@
                 }
                 nav.appendChild(link);
             }
+            const options=document.createElement('div');options.className='nav-options';options.id='game-nav-options-'+(++navSequence);options.append(...nav.children);
+            const toggle=document.createElement('button');toggle.type='button';toggle.className='nav-toggle';toggle.setAttribute('aria-controls',options.id);toggle.setAttribute('aria-expanded','false');
+            nav.append(toggle,options);
+            toggle.addEventListener('click',()=>setExpanded(nav,nav.dataset.expanded!=='true'));
+            nav.addEventListener('click',event=>{if(event.target.closest('a'))setExpanded(nav,false);});
+            nav.addEventListener('focusout',event=>{if(!nav.contains(event.relatedTarget))setExpanded(nav,false);});
+            nav.addEventListener('keydown',event=>{
+                if(!phone||portrait.matches)return;
+                const links=[...options.querySelectorAll('a')],index=links.indexOf(document.activeElement);
+                if(event.key==='Escape'){event.preventDefault();setExpanded(nav,false);toggle.focus();return;}
+                if(event.target===toggle&&event.key==='ArrowDown'){event.preventDefault();setExpanded(nav,true);options.getBoundingClientRect();Promise.all(options.getAnimations().map(a=>a.finished.catch(()=>{}))).then(()=>{if(nav.dataset.expanded==='true')(options.querySelector('[aria-current]')||links[0]).focus();});return;}
+                if(index>=0&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();links[event.key==='Home'?0:event.key==='End'?links.length-1:(index+(event.key==='ArrowRight'?1:-1)+links.length)%links.length].focus();}
+            });
             nav.dataset.navigationReady = "true";
             nav.setAttribute("aria-label", "遊戲導覽");
         }
@@ -74,6 +99,11 @@
             dot.setAttribute("aria-hidden", "true");
             nav.querySelector('[data-destination="explore"]').prepend(dot);
         }
+        const selected=nav.querySelector('a.active'),toggle=nav.querySelector('.nav-toggle');
+        toggle.replaceChildren(selected.querySelector('.nav-icon').cloneNode(true));
+        const name=document.createElement('span');name.textContent=selected.querySelector('.nav-label').textContent;toggle.append(name);
+        const arrow=document.createElementNS('http://www.w3.org/2000/svg','svg');arrow.setAttribute('viewBox','0 0 24 24');arrow.setAttribute('aria-hidden','true');arrow.innerHTML='<path d="m6 15 6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>';arrow.classList.add('nav-toggle-arrow');toggle.append(arrow);toggle.setAttribute('aria-label','遊戲導覽，目前為'+name.textContent);
+        setExpanded(nav,false);
         return nav;
     }
 

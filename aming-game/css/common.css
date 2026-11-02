@@ -179,3 +179,19 @@
 .orientation-prompt small { font-size:14px; opacity:.8; }
 @keyframes phone-turn { 0%,20%,100% { transform:rotate(0); } 55%,80% { transform:rotate(90deg); } }
 @media(prefers-reduced-motion:reduce) { .orientation-prompt svg { animation:none; } }
+
+/* 桌機仍為原五格；只有手機UA且橫向時改用導覽膠囊。 */
+:root { --game-nav-space:108px; }
+.mobile-nav { --game-nav-space:76px; }
+.nav-options { display:contents; }
+.nav-toggle { display:none; }
+.mobile-nav .bottom-nav { width:180px; height:52px; padding:4px 8px; display:flex; flex-direction:column; border-radius:24px; transition:width .22s ease,height .22s ease,opacity .3s ease,transform .3s ease,visibility .3s ease; }
+.mobile-nav .bottom-nav[data-expanded="true"] { width:min(760px,calc(92vw - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px))); height:126px; }
+.mobile-nav .nav-toggle { display:flex; flex-shrink:0; justify-content:center; align-items:center; gap:10px; min-height:44px; width:100%; border:0; padding:0 10px; border-radius:20px; color:#624a32; background:transparent; font:13px/1.5 'Microsoft JhengHei',sans-serif; cursor:pointer; }
+.mobile-nav .nav-toggle-arrow { width:18px; height:18px; transition:transform .22s ease; }
+.mobile-nav [data-expanded="true"] .nav-toggle-arrow { transform:rotate(180deg); }
+.mobile-nav .nav-options { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); width:100%; height:0; opacity:0; overflow:hidden; visibility:hidden; transition:height .22s ease,opacity .22s ease,visibility .22s ease; }
+.mobile-nav [data-expanded="true"] .nav-options { height:70px; opacity:1; visibility:visible; }
+.mobile-nav .nav-options .nav-item { min-height:0; }
+.mobile-nav .nav-toggle:focus-visible { outline:2px solid #987744; outline-offset:0; }
+@media(prefers-reduced-motion:reduce) { .mobile-nav .bottom-nav,.mobile-nav .nav-options,.mobile-nav .nav-toggle-arrow { transition:none; } }

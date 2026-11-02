@@ -1775,7 +1775,7 @@ body {
 
 /* 矮橫向視窗預留既有底部導覽空間；不縮小文字或改成單頁。 */
 @media(orientation:landscape) and (max-height:500px) {
- .pf-book { height:calc(var(--game-height,100dvh) * .84 - 108px - env(safe-area-inset-bottom,0px)); }
+ .pf-book { height:calc(var(--game-height,100dvh) * .84 - var(--game-nav-space,108px) - env(safe-area-inset-bottom,0px)); }
  .pf-book .station-diary-toolbar { justify-content:center; gap:8px; }
  .pf-book .back-to-index { position:static; }
 }
