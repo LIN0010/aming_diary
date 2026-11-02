@@ -329,3 +329,13 @@ navigation.js共用手機UA判斷與portrait media query。直向用原生dialog
 Chromium模擬量測：390×844初始化頁面參考180×446；旋轉至844×390時，frame已743×179，但舊比例仍讓單頁縮至72×179。wrapper高度也為0。此次透過ResizeObserver、visualViewport/resize/orientationchange排程，同尺寸連續兩個繪製週期後初始化或更新既有實例；按2.0.7實際API的共享getSettings物件同步width/height，再呼叫update，保留目前頁碼。翻動中延後到read／操作完成後同步。observer、RAF及事件依場景生命週期清理，不重建實例或增加transform。
 
 wrapper/block明確填滿stage；矮橫向視窗只調整書本周圍留白，避開底部導覽，文字字級不縮小，頁內維持原捲動。實測同步後844×390的frame/wrapper均743×134、單頁372×134（包含新增導覽留白）。tests/pageflip-size.browser.py以iPhone Safari UA的Chromium模擬反覆旋轉及可視高度改變，檢查實例始終1個、實際頁寬、瑞穗頁碼、心得保留與翻頁。無實體iPhone Safari，仍需實機確認。
+
+### 沉浸式日記試作（預設關閉）
+
+封面旁勾選「沉浸式試作」，或掛載前設定 `window.DiaryReadingOptions={enabled:true}`。開關只在闔書時可改，保留原本模式作比較，不新增進度存檔格式。
+
+進入時先將標題、碎片計數、底部導覽與試作開關淡出並inert，書本擴至90%可用區域；幾何轉場結束且尺寸同步後才呼叫StPageFlip翻開。幾何調整期間引擎保持read；實際翻頁時不更新尺寸。闔書則反向先翻到封面、再縮回、最後恢復UI；例外時恢復導覽避免困在書內。
+
+沉浸版將原阿明左右內容節點組在左頁，原玩家照片／心得組在右頁，各自內部捲動；不再顯示頁籤。退出時把節點放回原容器，恢復舊版頁籤與版面。memory-locked及原心得／照片事件沿用，沒有複製資料；閱讀期間外層使用overflow:clip與捲動保護，避免聚焦儲存按鈕讓整個場景橫移。
+
+`tests/diary-reading.browser.py`驗證桌機與844×390橫向模擬：開合與尺寸、左右內容、鎖定與解鎖、照片、心得、原版比較、場景無偏移、單一引擎實例、update只在read狀態。無實體iPhone Safari驗證。

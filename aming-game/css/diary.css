@@ -1779,3 +1779,20 @@ body {
  .pf-book .station-diary-toolbar { justify-content:center; gap:8px; }
  .pf-book .back-to-index { position:static; }
 }
+
+/* 開發試作：只在封面開啟前、闔上後改變尺寸。 */
+.pf-book { transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease; }
+#diary-screen { transition:background .35s ease; }
+.pf-mode-switch { position:absolute; right:7%; top:max(8px,env(safe-area-inset-top)); z-index:7; font-size:12px; color:#503b2c; display:flex; gap:6px; align-items:center; }
+.diary-header,.bottom-nav,.pf-mode-switch { transition:opacity .25s ease; }
+.pf-ui-hidden .diary-header,.pf-ui-hidden .bottom-nav,.pf-ui-hidden .pf-mode-switch { opacity:0; pointer-events:none; }
+#diary-screen.pf-reading { background:#8e765e; overflow:clip; }
+#diary-screen.pf-reading .pf-book { left:5%; top:5%; width:90%; height:90%; }
+.pf-reading .pf-frame { top:0; }
+.pf-reading .pf-book .station-diary.show { display:none; }
+.pf-column-label { display:none; }
+.pf-reading .pf-column-label { display:block; margin:0 0 14px; font:18px/1.5 serif; }
+.pf-reading .pf-page #aming-journal,.pf-reading .pf-page #player-journal { display:block; overflow-y:auto; overflow-x:hidden; }
+.pf-reading .pf-page .journal-page { height:auto; min-height:0; overflow:visible; }
+.pf-reading .pf-page .memory-fragment { position:relative; right:auto; bottom:auto; margin:16px auto; }
+@media(prefers-reduced-motion:reduce) { .pf-book,.diary-header,.bottom-nav,.pf-mode-switch,#diary-screen { transition:none; } }

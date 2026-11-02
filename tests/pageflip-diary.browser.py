@@ -13,7 +13,7 @@ try:
   browser=p.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
   for width in [1280,390]:
    page=browser.new_page(viewport={'width':width,'height':844});errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.goto(f'http://127.0.0.1:{server.server_port}/diary.html');page.wait_for_function('document.querySelectorAll(".stf__item").length===16')
-   assert page.locator('.db-cover-hinge,.db-leaf').count()==0
+   page.locator('.pf-mode-switch input').uncheck();assert page.locator('.db-cover-hinge,.db-leaf').count()==0
    expect(page.locator('.pf-hard').first).to_be_visible();page.locator('.pf-hard').first.click();page.wait_for_function('!document.querySelector(".pf-book").hasAttribute("aria-busy")');expect(page.locator('#ruisui-journal')).to_be_visible()
    page.screenshot(path=f'/workspace/work/pageflip-toc-{width}.png');page.locator('#ruisui-journal').click();page.wait_for_function('!document.querySelector(".pf-book").hasAttribute("aria-busy")');expect(page.locator('#station-diary')).to_be_visible()
    expect(page.locator('#aming-journal .journal-page')).not_to_be_visible();page.locator('#player-tab').click();page.locator('#travel-note').fill('StPageFlip心得測試');page.locator('#save-travel').click();assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='StPageFlip心得測試'

@@ -85,10 +85,37 @@ for(let n=1;n<=entries.length;n++){
  stage.append(left,right);
 }
 stage.append(makePage('阿明的日記',true));
+const immersiveOptions=window.DiaryReadingOptions||(window.DiaryReadingOptions={enabled:false});
+let readingActive=false,layoutPhase=false;
+const modeLabel=document.createElement('label');modeLabel.className='pf-mode-switch';
+modeLabel.innerHTML='<input type="checkbox">沉浸式試作';const modeInput=modeLabel.querySelector('input');modeInput.checked=immersiveOptions.enabled!==false;ctx.root.append(modeLabel);
+const readingUI=[ctx.query('.diary-header'),ctx.query('.bottom-nav'),modeLabel];
+const ruisuiLeft=amingJournal.parentElement,ruisuiRight=rightAming.parentElement;
+const amingRightPage=rightAming.querySelector('.journal-page'),playerRightPage=rightPlayer.querySelector('.journal-page');
+const columnLabels=[amingJournal,playerJournal].map((journal,i)=>{const label=document.createElement('h3');label.className='pf-column-label';label.textContent=i?'我的旅程':'阿明的記憶';journal.prepend(label);return label;});
+function arrangeReading(active){
+ if(active){rightAming.remove();rightPlayer.remove();amingJournal.append(amingRightPage);playerJournal.append(playerRightPage);ruisuiRight.append(playerJournal);}
+ else{ruisuiRight.append(rightAming,rightPlayer);rightAming.append(amingRightPage);rightPlayer.append(playerRightPage);ruisuiLeft.append(playerJournal);}
+}
+function syncBookSize(){
+ if(!engine||engine.getState()!=='read')return;
+ const size=measureBook();if(size.width<2||size.height<2)return;
+ const settings=engine.getSettings();settings.width=size.width/2;settings.height=size.height;engine.update();appliedSize=`${size.width}x${size.height}`;
+}
+async function setReading(active){
+ layoutPhase=true;
+ if(active){readingUI.forEach(el=>el.inert=true);ctx.root.classList.add('pf-ui-hidden');}
+ readingActive=active;arrangeReading(active);ctx.root.classList.toggle('pf-reading',active);
+ book.getBoundingClientRect();
+ await Promise.all(book.getAnimations().map(animation=>animation.finished.catch(()=>{})));
+ await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+ if(!disposed)syncBookSize();layoutPhase=false;
+ if(!active){ctx.root.classList.remove('pf-ui-hidden');readingUI.forEach(el=>el.inert=false);}
+}
 let pageNumber=-1,flipping=false,engine,disposed=false;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const pageFor=n=>n===-1?0:n===0?1:3+(n-1)*2;
-function renderBook(n){pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.querySelector('[data-book="previous"]').disabled=n<=0;controls.querySelector('[data-book="next"]').disabled=n>=entries.length;controls.querySelector('[data-book="close"]').disabled=n===-1;controls.querySelector('span').textContent=n===-1?'封面':n===0?'目錄':`${n} / ${entries.length}`;}
+function renderBook(n){pageNumber=n;modeInput.disabled=n!==-1;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.querySelector('[data-book="previous"]').disabled=n<=0;controls.querySelector('[data-book="next"]').disabled=n>=entries.length;controls.querySelector('[data-book="close"]').disabled=n===-1;controls.querySelector('span').textContent=n===-1?'封面':n===0?'目錄':`${n} / ${entries.length}`;}
 let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);
 let sizeObserver,layoutFrame=0,stableSize='',appliedSize='';
 function measureBook(){return {width:Math.round(frame.clientWidth),height:Math.round(frame.clientHeight)};}
@@ -99,6 +126,7 @@ function scheduleBookLayout(){
   const size=measureBook(),key=`${size.width}x${size.height}`;
   if(size.width<2||size.height<2)return;
   // 等連續兩個繪製週期取得相同尺寸，避開Safari旋轉過渡值。
+  if(layoutPhase&&engine){syncBookSize();return;}
   if(stableSize!==key){stableSize=key;scheduleBookLayout();return;}
   if(!engine){initBook(size);return;}
   if(flipping||engine.getState()!=='read')return;
@@ -128,14 +156,16 @@ async function oneFlip(forward){
 async function turnTo(target){
  if(flipping||target===pageNumber)return;if(noteDirty&&!saveTravelNote())return;
  flipping=true;book.setAttribute('aria-busy','true');frame.inert=true;controls.inert=true;stationDiary.inert=true;
- try{await ready;if(disposed)return;const targetPage=pageFor(target);while(engine.getCurrentPageIndex()!==targetPage&&!disposed){await oneFlip(engine.getCurrentPageIndex()<targetPage);}if(!disposed){renderBook(target);rememberDiaryView();markVisibleMemoryRead();}}
- catch(error){controls.querySelector('span').textContent=error.message;}
+ try{await ready;if(disposed)return;if(pageNumber===-1&&target>=0&&modeInput.checked)await setReading(true);const targetPage=pageFor(target);while(engine.getCurrentPageIndex()!==targetPage&&!disposed){await oneFlip(engine.getCurrentPageIndex()<targetPage);}if(!disposed){renderBook(target);if(target===-1&&readingActive)await setReading(false);rememberDiaryView();markVisibleMemoryRead();}}
+ catch(error){controls.querySelector('span').textContent=error.message;if(readingActive){ctx.root.classList.remove('pf-ui-hidden');readingUI.forEach(el=>el.inert=false);}}
  finally{flipping=false;book.removeAttribute('aria-busy');frame.inert=false;controls.inert=false;stationDiary.inert=false;scheduleBookLayout();}
 }
 ctx.on(cover,'click',()=>turnTo(0));
 ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber===-1?0:pageNumber+(action==='next'?1:-1));});
 ctx.beforeLeave(()=>!flipping);
-ctx.cleanup(()=>{disposed=true;cancelAnimationFrame(layoutFrame);sizeObserver?.disconnect();resolveReady();engine?.destroy();});
+ctx.on(modeInput,'change',()=>{immersiveOptions.enabled=modeInput.checked;});
+ctx.on(ctx.root,'scroll',()=>{if(readingActive){ctx.root.scrollLeft=0;ctx.root.scrollTop=0;}},{passive:true});
+ctx.cleanup(()=>{readingUI.forEach(el=>el.inert=false);disposed=true;cancelAnimationFrame(layoutFrame);sizeObserver?.disconnect();resolveReady();engine?.destroy();});
 renderBook(-1);
 
 /* 打開回憶碎片 */
@@ -299,7 +329,7 @@ ctx.on(ruisuiJournal, "click", () => {
 ctx.on(backToIndex,'click',()=>turnTo(0));
 
 function markVisibleMemoryRead() {
-    if (stationDiary.classList.contains("show") && amingJournal.classList.contains("active")) {
+    if (stationDiary.classList.contains("show") && (readingActive || amingJournal.classList.contains("active"))) {
         GameProgress.readMemory("ruisui-01");
     }
 }
