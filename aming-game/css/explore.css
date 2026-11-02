@@ -1759,3 +1759,26 @@ body {
 .mission-diary[hidden], .scene-diary[hidden] { display: none; }
 .scene-diary { pointer-events: auto; color: #617f70; font-size: 11px; }
 .explore-mission { max-width: 88vw; flex-wrap: wrap; }
+
+/* 旅程地圖專用背景；獨立圖層，不濾鏡前景或車站場景。 */
+#explore-screen {
+    --explore-map-saturation: 75%;
+    --explore-map-veil-opacity: 0.38;
+    isolation: isolate;
+    background: #f5eedf;
+}
+#explore-screen::before,
+#explore-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+#explore-screen::before {
+    background: url('../images/explore-map-bg.png') center / cover no-repeat;
+    filter: saturate(var(--explore-map-saturation));
+}
+#explore-screen::after {
+    background: rgba(245, 238, 223, var(--explore-map-veil-opacity));
+}
