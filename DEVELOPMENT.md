@@ -267,3 +267,9 @@ python tests/events.browser.py
 ### 精簡申請介面
 
 送出申請留在名冊，待審核左側只有取消按鈕；不再提供玩家申請詳情彈窗或重載自動彈窗。團長仍在旅團手帳審核。開發測試可於瀏覽器主控台以 `GuildStore.reviewApplication(GuildStore.latestApplication(guildId).id, true, true)` 模擬核准該團自己的申請（拒絕用第二參數 false）；沿用原有權限與狀態檢查，沒有跨裝置同步。
+
+### 全畫面列車過場
+
+SPA 的不同主場景切換共用 `travel-transition.js` 與 `app.css`，首次進場與同頁操作不播放。遮罩置於 body，300ms覆蓋、1200ms鐵軌、400ms退出；頁面未備妥則維持完整鐵軌與柔光。首屏模式只略過非必要圖片預載，再等待目標畫面可見圖片及背景（15秒上限），不影響開始遊戲的完整預載流程。切換期間鎖定內容與重複點擊，歷史導覽排隊處理；錯誤沿用重試／取消。支援減少動畫偏好。
+
+驗證：`python tests/travel.browser.py`（五頁、全viewport、最低時間、連點、前後頁、錯誤復原）與 `python tests/entry.browser.py`（原始開始／繼續流程）。

@@ -36,7 +36,9 @@ try:
   expect(page.locator('#continuous-journey')).to_be_disabled()
   page.locator('#start-btn').click()
   expect(page.locator('#loading-progress')).to_be_visible()
-  page.wait_for_timeout(200)
+  for _ in range(100):
+   if held:break
+   page.wait_for_timeout(50)
   assert held
   assert int(page.locator('#percentage').inner_text())<100
   assert page.evaluate("localStorage.getItem('aming-diary-progress')") is None
@@ -59,7 +61,9 @@ try:
   hold[0]=True
   page.locator('#continuous-journey').click()
   expect(page.locator('#loading-progress')).to_be_visible()
-  page.wait_for_timeout(200)
+  for _ in range(100):
+   if held:break
+   page.wait_for_timeout(50)
   assert held and int(page.locator('#percentage').inner_text())<100
   assert page.evaluate("localStorage.getItem('aming-diary-progress')")==original
   assert page.evaluate('localStorage.getItem(EventConfig.storageKey)')==activity
@@ -98,6 +102,7 @@ try:
   assert not page.evaluate('EventStore.snapshot().photoJoined')
   assert page.evaluate('EventStore.snapshot().completed')==[]
   page.locator('[data-destination="event"]').click()
+  page.wait_for_function('!TravelTransition.active')
   page.locator('#ev-cards').press('ArrowRight')
   page.locator('[data-action="open-race"]').click()
   expect(page.locator('.ev-start-modal')).to_be_visible()

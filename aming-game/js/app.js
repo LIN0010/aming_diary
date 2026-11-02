@@ -14,6 +14,8 @@
     let pending;
     let requested;
     let requestedReplace;
+    let historyRequest;
+    const travel=window.TravelTransition;
 
     function writeRoute(route, replace) {
         if (location.hash !== route.hash) history[replace ? "replaceState" : "pushState"]({}, "", route.hash);
@@ -53,6 +55,7 @@
     }
 
     async function navigate(reference, replace = false) {
+        if(travel.active){return false;}
         const route = GameNavigation.route(reference);
         if (!route || current?.hash === route.hash) {
             if (current) {
@@ -77,9 +80,12 @@
         retry.hidden = true;
         cancel.hidden = !active;
         fallback.href = route.url;
+        const animate=Boolean(current && current.name!==route.name);
+        const covered=animate?travel.begin():Promise.resolve();
+        if(animate)host.inert=true;
         let style;
         try {
-            const result = await JourneyLoader.load(route.url, undefined, { signal });
+            const result = await JourneyLoader.load(route.url, undefined, { signal, firstScreen:animate });
             const parsed = new DOMParser().parseFromString(result.html, "text/html");
             const definition = GameNavigation.scenes[route.name];
             const template = parsed.getElementById(definition.root);
@@ -91,6 +97,8 @@
             style = await prepareStyle(definition.style, signal);
             if (signal.aborted) { style.remove(); return false; }
 
+            if(animate)await covered;
+            if(signal.aborted){style.remove();return false;}
             // 先以隱藏的新畫面完成初始化；失敗仍保留舊場景。
             root.hidden = true;
             const oldNavParent = nav.parentElement;
@@ -119,6 +127,12 @@
                 }
                 throw error;
             }
+            if(animate){
+                await covered;
+                style.media='all';root.hidden=false;
+                try { await firstScreenReady(root,signal); }
+                catch(error){next.dispose();root.remove();if(oldNavParent){GameNavigation.render(nav,current.name);oldNavParent.append(nav);}throw error;}
+            }
             active?.dispose();
             activeStyle?.remove();
             host.replaceChildren(root);
@@ -128,7 +142,8 @@
             root.hidden = false;
             current = normalized;
             document.title = definition.title;
-            writeRoute(current, replace);
+            if(!historyRequest)writeRoute(current, replace);
+            await travel.finish();
             hideLoading();
             root.tabIndex = -1;
             root.focus({ preventScroll: true });
@@ -136,6 +151,7 @@
         } catch (error) {
             style?.remove();
             if (signal.aborted) return false;
+            await travel.finish();
             restoreRoute();
             loading.hidden = false; // 失敗時仍提供重試與取消。
             status.textContent = "這段旅程未能載入，請確認網路後重試。";
@@ -143,7 +159,30 @@
             return false;
         } finally {
             if (pending === controller) pending = null;
+            host.inert=false;
+            if(historyRequest){const target=historyRequest;historyRequest=null;navigate(target,true);}
+
         }
+    }
+
+    async function firstScreenReady(root,signal) {
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        const urls=new Set();
+        for(const el of [root,...root.querySelectorAll('*')]){
+            const box=el.getBoundingClientRect(),css=getComputedStyle(el);
+            if(!box.width||!box.height||box.bottom<=0||box.top>=innerHeight||css.visibility==='hidden')continue;
+            if(el.tagName==='IMG'&&el.currentSrc)urls.add(el.currentSrc);
+            for(const match of css.backgroundImage.matchAll(/url\(["']?([^"')]+)["']?\)/g))urls.add(new URL(match[1],document.baseURI).href);
+        }
+        await Promise.all([...urls].map(url=>new Promise((resolve,reject)=>{
+            const img=new Image();let timer;
+            const clean=()=>{clearTimeout(timer);signal.removeEventListener('abort',abort);img.onload=img.onerror=null;};
+            const fail=()=>{clean();reject(new Error('首屏圖片未能載入'));};
+            const abort=()=>{clean();reject(new DOMException('已取消','AbortError'));};
+            img.onload=()=>{clean();resolve();};img.onerror=fail;
+            signal.addEventListener('abort',abort,{once:true});timer=setTimeout(fail,15000);
+            if(signal.aborted){abort();return;}img.src=url;
+        })));
     }
 
     document.addEventListener("click", event => {
@@ -151,13 +190,13 @@
         if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute("download") || (link.target && link.target !== "_self")) return;
         if (!host.contains(link) || !GameNavigation.route(link.href)) return;
         event.preventDefault();
-        navigate(link.href);
+        if(!pending)navigate(link.href);
     });
-    window.addEventListener("hashchange", () => navigate(location.href, true));
+    window.addEventListener("hashchange", () => {if(travel.active){historyRequest=location.href;return;}navigate(location.href,true);});
     retry.addEventListener("click", () => navigate(requested, requestedReplace));
     cancel.addEventListener("click", () => { pending?.abort(); pending = null; restoreRoute(); hideLoading(); });
-    window.addEventListener("pagehide", () => pending?.abort());
-    window.addEventListener("pageshow", event => { if (event.persisted) { if (active) { restoreRoute(); hideLoading(); } else navigate(requested, true); } });
+    window.addEventListener("pagehide", () => {pending?.abort();travel.stop();});
+    window.addEventListener("pageshow", event => { if (event.persisted) { travel.stop();host.inert=false; if (active) { restoreRoute(); hideLoading(); } else navigate(requested, true); } });
     const initial = GameNavigation.route(location.href);
     navigate(initial?.url || GameProgress.resumeUrl(), true);
 })();

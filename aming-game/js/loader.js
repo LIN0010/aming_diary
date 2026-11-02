@@ -113,6 +113,7 @@
             completed = [...resources.values()].filter(resource => resource.loaded).length;
             onProgress(completed, total);
             await Promise.all([...resources.values()].filter(resource => !resource.loaded).map(async resource => {
+                if (options.firstScreen && resource.kind === "image") return;
                 if (resource.kind === "image") {
                     await imageResource(resource);
                 } else {

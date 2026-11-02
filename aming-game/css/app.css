@@ -19,3 +19,19 @@ html, body { margin: 0; min-height: 100%; background: #f4eddf; }
 }
 /* 換場後將焦點放在主畫面，避免容器出現整圈焦點框；按鈕焦點仍保留。 */
 #scene-host > main:focus { outline: none; }
+/* 全 viewport 的旅行紙景，不依附場景或導覽列。 */
+.travel-transition { position:fixed; inset:0; width:100%; height:100%; min-height:100dvh; z-index:2147483646; display:grid; place-items:center; box-sizing:border-box; padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom); color:#705734; background:radial-gradient(ellipse at 28% 38%,#dfbd7130,transparent 46%),radial-gradient(ellipse at 75% 65%,#e5cd9a2c,transparent 48%),repeating-radial-gradient(circle at 30% 20%,#b8a27808 0 1px,transparent 1px 4px),#f5eedf; animation:travel-cover .3s ease both; }
+.travel-transition[hidden] { display:none; }
+.travel-transition.leaving { animation:travel-uncover .4s ease both; }
+.travel-center { width:min(420px,80vw); text-align:center; }
+.travel-center p { margin:0 0 24px; font:clamp(20px,3vw,28px)/1.8 "Noto Serif TC","Songti TC","PMingLiU",serif; letter-spacing:.12em; animation:travel-words .8s .15s ease both; }
+.travel-track { overflow:hidden; clip-path:inset(0 100% 0 0); animation:travel-rails 1.2s .3s ease-in-out forwards; }
+.travel-track svg { display:block; width:100%; height:auto; fill:none; stroke:#bd984f; stroke-width:1.5; }
+.travel-ties { stroke:#c7a86c; stroke-width:1; }
+.travel-center::after { content:'✦'; display:block; margin-top:15px; color:#c2a15c; font-size:12px; animation:travel-glow 2.4s ease-in-out infinite; }
+@keyframes travel-cover { from { opacity:0; } to { opacity:1; } }
+@keyframes travel-uncover { from { opacity:1; } to { opacity:0; } }
+@keyframes travel-words { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+@keyframes travel-rails { to { clip-path:inset(0); } }
+@keyframes travel-glow { 0%,100% { opacity:.25; } 50% { opacity:.75; } }
+@media(prefers-reduced-motion:reduce) { .travel-transition,.travel-transition.leaving { animation-duration:.01s; } .travel-center p,.travel-track { animation-duration:.01s; animation-delay:0s; } .travel-center::after { animation:none; opacity:.5; } }
