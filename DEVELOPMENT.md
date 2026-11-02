@@ -305,3 +305,13 @@ SPA 的不同主場景切換共用 `travel-transition.js` 與 `app.css`，首次
 封面目錄不再 clone 完整 diaryIndex。六個原始站點節點依序分給左、右單頁容器：前三個移至封面內側，後三個留在底層右頁；各自100%單頁寬，標題只位於左頁。db-pages只承載固定雙頁舞台，不負責目錄裁切；封面開合不調整舞台尺寸。書本CSS已整合為一個區段，移除歷次尾端覆寫與cover-stage裁切。
 
 既有站點內頁快照仍使用跨頁切片，與封面目錄容器分離。本次未重寫站點翻頁動畫。封面測試新增開、闔各0/25/50/75/100%截圖，檢查單頁寬度、文字水平溢出、六站節點唯一性與互動鎖定；完整書本操作回歸通過。
+
+### StPageFlip HTML引擎（取代自製3D翻頁）
+
+採npm `page-flip@2.0.7` 官方瀏覽器發布檔，本機vendor固定版本，無框架或建置依賴；`THIRD_PARTY_LICENSES.md`與vendor/LICENSE保留完整MIT原文與版本來源，作品自身授權不變。發布包SHA-512及實際bundle／package.json／LICENSE已核對。
+
+`stpageflip-debug.html`先驗證HTML、hard封面、showCover、按鈕及輸入，再整合至日記。正式書頁順序：封面0、目錄1/2、六站各兩頁3～14、封底15。封面／封底data-density=hard，套件showCover=true；useMouseEvents=false讓頁內按鈕與表單直接操作，翻頁經由既有導覽與API逐跨頁執行（350ms），鎖定重複導航。保留直達瑞穗網址與存檔，離場destroy套件實例。
+
+瑞穗左右journal-page是原始DOM移入HTML書頁，照片、心得與碎片元件不重建；兩側同步頁籤與memory-locked狀態。尚未開放站點只建立鎖定佔位頁。原db-cover-hinge/db-leaf及自製動畫已移除，舊測試入口改為套件測試。
+
+驗證：`python tests/pageflip-prototype.browser.py`、`python tests/pageflip-diary.browser.py`、`python tests/travel.browser.py`。前兩者涵蓋桌機手機HTML頁內按鈕、輸入、照片、碎片、保存／直達恢復與開合連翻；最後者確認共用SPA過場不受影響。
