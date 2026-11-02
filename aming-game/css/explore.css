@@ -1782,3 +1782,19 @@ body {
 #explore-screen::after {
     background: rgba(245, 238, 223, var(--explore-map-veil-opacity));
 }
+
+/* 復古調查地圖：前景仍沿用原SVG座標與站點百分比。 */
+#explore-screen { --explore-map-saturation:100%; --explore-map-veil-opacity:0; }
+#explore-screen::before { background-image:url('../images/explore-map-bg1.png'); background-position:50% 50%; }
+.rail-route .route-line { stroke:#80664F; stroke-width:2; stroke-dasharray:5 6; }
+.rail-route .station { width:36px; height:40px; opacity:1; }
+.rail-route .station .dot { width:24px; height:30px; top:50%; border:0; border-radius:0; background:none; box-shadow:none; animation:none; color:#A94D42; transform:translate(-50%,-100%); transform-origin:50% 100%; transition:transform .2s ease; }
+.rail-route .dot svg { display:block; width:100%; height:100%; overflow:visible; }
+.rail-route .station.too-far .dot,.rail-route .station.locked .dot { color:#958477; opacity:.6; }
+.rail-route .station.current .dot { color:#A94D42; opacity:1; transform:translate(-50%,-100%) scale(1.15); filter:drop-shadow(0 0 5px #dfbd74aa); }
+.rail-route .station:hover { background:transparent; }
+.rail-route .station:hover .dot { transform:translate(-50%,-100%) scale(1.08); }
+.rail-route .station.current:hover .dot { transform:translate(-50%,-100%) scale(1.2); }
+.rail-route .station .name { color:#503b2c; text-shadow:0 1px 3px #fff7df; }
+.rail-route .station.current .name::after { content:'阿明目前的位置'; display:block; position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%); white-space:nowrap; padding:3px 6px; border:1px solid #9d805c; border-radius:3px; background:#f4e6cbdc; color:#65482e; font:11px/1.4 'KaiTi','DFKai-SB',serif; letter-spacing:.03em; text-shadow:none; }
+@media(max-width:700px) { #explore-screen::before { background-position:52% center; } .rail-route .station.current .name::after { font-size:10px; } }

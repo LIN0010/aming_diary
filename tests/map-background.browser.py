@@ -13,12 +13,18 @@ try:
   browser=p.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
   for width in [1280,390]:
    page=browser.new_page(viewport={'width':width,'height':844});page.goto(f'http://127.0.0.1:{server.server_port}/explore.html')
-   assert page.evaluate('getComputedStyle(document.querySelector("#explore-screen"),"::before").filter')=='saturate(0.75)'
-   assert page.evaluate('getComputedStyle(document.querySelector("#explore-screen"),"::after").backgroundColor')=='rgba(245, 238, 223, 0.38)'
+   assert page.evaluate('getComputedStyle(document.querySelector("#explore-screen"),"::before").filter')=='saturate(1)'
+   assert page.evaluate('getComputedStyle(document.querySelector("#explore-screen"),"::after").backgroundColor')=='rgba(245, 238, 223, 0)'
    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
    assert page.evaluate('getComputedStyle(document.querySelector(".rail-route")).filter')=='none'
    assert page.evaluate('getComputedStyle(document.querySelector(".bottom-nav")).filter')=='none'
-   assert page.evaluate('new Promise((ok)=>{const i=new Image();i.onload=()=>ok(true);i.onerror=()=>ok(false);i.src="images/explore-map-bg.png"})')
+   assert page.evaluate('new Promise((ok)=>{const i=new Image();i.onload=()=>ok(true);i.onerror=()=>ok(false);i.src="images/explore-map-bg1.png"})')
+   expect(page.locator('.station .dot svg')).to_have_count(7)
+   assert page.locator('.route-line').evaluate('(e)=>getComputedStyle(e).strokeDasharray')=='5px, 6px'
+   assert page.locator('.station.current .name').evaluate('(e)=>getComputedStyle(e,"::after").content')=='"阿明目前的位置"'
+   page.evaluate('document.querySelector(".station.current").classList.remove("current");document.querySelector(".station-1").classList.add("current")')
+   assert page.locator('.station-1 .name').evaluate('(e)=>getComputedStyle(e,"::after").content')=='"阿明目前的位置"'
+   page.evaluate('document.querySelector(".station-1").classList.remove("current");document.querySelector(".station-5").classList.add("current")')
    page.screenshot(path=f'/workspace/work/map-{width}.png');page.locator('#ruisui-station').click();assert page.locator('#location-check').evaluate('(e)=>e.classList.contains("show")');page.close();print('PASS map',width)
   browser.close()
 finally:server.shutdown()
