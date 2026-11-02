@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>書本翻頁最小除錯頁</title>
+<style>
+* { box-sizing:border-box; }
+body { margin:0; min-height:100dvh; background:#d5c4aa; color:#342318; font-family:system-ui,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; padding:24px 12px; }
+/* 舞台不旋轉、不縮放、不裁切；透視中心就是中央書脊。 */
+.stage { position:relative; width:min(900px,92vw); aspect-ratio:1.6; perspective:1800px; perspective-origin:50% 50%; }
+.right-page,.hinge { position:absolute; left:50%; top:0; width:50%; height:100%; }
+.right-page { background:#2459bb; display:grid; place-items:center; color:white; }
+.hinge { transform-origin:0 50%; transform-style:preserve-3d; transform:rotateY(0deg); }
+.face { position:absolute; inset:0; width:100%; height:100%; display:grid; place-items:center; backface-visibility:hidden; -webkit-backface-visibility:hidden; color:white; font-size:clamp(16px,3vw,36px); }
+.front { background:#4a2f22; transform:rotateY(0deg); }
+.back { background:#c53038; transform:rotateY(180deg); }
+.right-page { font-size:clamp(16px,3vw,36px); }
+.controls { width:min(620px,92vw); display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; }
+.controls label { display:flex; align-items:center; gap:10px; width:100%; }
+input { flex:1; min-width:0; }
+output { min-width:48px; font-variant-numeric:tabular-nums; }
+button { padding:10px 18px; color:inherit; border:1px solid #80664f; background:#f5ecdb; border-radius:4px; font:inherit; cursor:pointer; }
+button:focus-visible,input:focus-visible { outline:2px solid #342318; outline-offset:4px; }
+</style>
+</head>
+<body>
+<main class="stage" aria-label="固定雙頁測試舞台">
+ <div class="right-page">右頁</div>
+ <div class="hinge">
+  <div class="face front">封面正面</div>
+  <div class="face back">左頁</div>
+ </div>
+</main>
+<div class="controls">
+ <label for="angle">旋轉角度 <input id="angle" type="range" min="0" max="180" step="1" value="0"><output for="angle">0°</output></label>
+ <button type="button" id="open">開書</button><button type="button" id="close">闔書</button>
+</div>
+<script>
+(() => {
+ const hinge=document.querySelector('.hinge'),slider=document.querySelector('#angle'),output=document.querySelector('output');
+ let angle=0,frame;
+ function setAngle(value){angle=Math.max(0,Math.min(180,value));hinge.style.transform=`rotateY(${angle}deg)`;slider.value=String(Math.round(angle));output.value=`${Math.round(angle)}°`;}
+ function stop(){cancelAnimationFrame(frame);frame=null;}
+ function animateTo(target){stop();const from=angle,start=performance.now(),duration=matchMedia('(prefers-reduced-motion:reduce)').matches?1:900;
+  function tick(now){const t=Math.min(1,(now-start)/duration),ease=t*t*(3-2*t);setAngle(from+(target-from)*ease);if(t<1)frame=requestAnimationFrame(tick);else frame=null;}
+  frame=requestAnimationFrame(tick);
+ }
+ slider.addEventListener('input',()=>{stop();setAngle(Number(slider.value));});
+ document.querySelector('#open').addEventListener('click',()=>animateTo(180));document.querySelector('#close').addEventListener('click',()=>animateTo(0));
+})();
+</script>
+</body>
+</html>
