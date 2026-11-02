@@ -65,14 +65,17 @@ backToIndex.textContent='← 返回目錄';
 const book=document.createElement('section');book.className='diary-book closed';book.setAttribute('aria-label','互動日記書本');
 const pages=document.createElement('div');pages.className='db-pages';
 const cover=document.createElement('button');cover.type='button';cover.className='db-cover';cover.textContent='阿明的日記';
+const coverHinge=document.createElement('div');coverHinge.className='db-cover-hinge';
+const coverBack=document.createElement('div');coverBack.className='db-cover-back';coverBack.setAttribute('aria-hidden','true');
+coverHinge.append(cover,coverBack);
 const locked=document.createElement('section');locked.className='db-locked';locked.hidden=true;
 const controls=document.createElement('nav');controls.className='db-controls';controls.setAttribute('aria-label','書頁導覽');
 controls.innerHTML='<button type="button" data-book="previous">← 上一站</button><button type="button" data-book="index">返回目錄</button><span role="status"></span><button type="button" data-book="next">下一站 →</button><button type="button" data-book="close">闔上</button>';
-diaryIndex.before(book);pages.append(diaryIndex,stationDiary,locked);book.append(pages,cover,controls);
+diaryIndex.before(book);pages.append(diaryIndex,stationDiary,locked);book.append(pages,coverHinge,controls);
 let pageNumber=-1, flipping=false;
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
 function renderBook(n){
-    pageNumber=n;book.classList.toggle('closed',n===-1);cover.hidden=n!==-1;
+    pageNumber=n;book.classList.toggle('closed',n===-1);coverHinge.hidden=n!==-1;cover.hidden=false;
     diaryIndex.classList.toggle('hidden',n!==0);stationDiary.classList.toggle('show',n===4);
     locked.hidden=n<1||n===4;
     if(!locked.hidden){locked.replaceChildren();const heading=document.createElement('h2');heading.textContent=entries[n-1].querySelector('strong').textContent;const message=document.createElement('p');message.textContent='這段旅程尚未開放。';locked.append(heading,message);}
@@ -83,7 +86,7 @@ function renderBook(n){
 }
 function snapshot(){
     const copy=pages.cloneNode(true);
-    if(pageNumber===-1){copy.replaceChildren();const face=document.createElement('div');face.className='db-cover-face';face.textContent='阿明的日記';copy.append(face);}copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
     copy.querySelectorAll('.memory-locked > .journal-page,script').forEach(e=>e.remove());
     copy.querySelectorAll('button,input,textarea,a').forEach(e=>{e.tabIndex=-1;e.setAttribute('aria-hidden','true');});
     copy.classList.add('db-snapshot');copy.inert=true;return copy;
@@ -94,6 +97,22 @@ async function turnTo(target){
     flipping=true;book.setAttribute('aria-busy','true');pages.inert=true;controls.inert=true;cover.disabled=true;
     try{
         while(pageNumber!==target){
+            if(pageNumber===-1 || (pageNumber===0 && target===-1)){
+                const opening=pageNumber===-1;
+                if(opening)renderBook(0);
+                else book.classList.add('closed');
+                coverHinge.hidden=false;
+                coverHinge.style.transform=opening?'rotateY(0deg)':'rotateY(-180deg)';
+                book.classList.add('cover-moving');
+                const animation=coverHinge.animate([
+                    {transform:opening?'rotateY(0deg)':'rotateY(-180deg)'},
+                    {transform:opening?'rotateY(-180deg)':'rotateY(0deg)'}
+                ],{duration:reduced.matches?1:700,easing:'ease-in-out',fill:'forwards'});
+                await animation.finished.catch(()=>{});
+                renderBook(opening?0:-1);
+                animation.cancel();coverHinge.style.transform='';book.classList.remove('cover-moving');
+                continue;
+            }
             const old=pageNumber,forward=target>old,next=old+(forward?1:-1),before=snapshot();
             renderBook(next);const after=snapshot();
             const leaf=document.createElement('div');leaf.className='db-leaf '+(forward?'forward':'backward');leaf.setAttribute('aria-hidden','true');

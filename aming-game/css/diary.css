@@ -1732,8 +1732,8 @@ body {
 
 /* 純色翻頁書本原型：內容與儲存仍由原日記元件負責。 */
 #diary-screen { background:#bba58b; }
-.diary-book { position:absolute; left:6%; top:12%; width:88%; height:76%; perspective:1800px; filter:drop-shadow(0 12px 14px #39261955); transition:width .45s ease,left .45s ease; }
-.diary-book.closed { width:44%; left:28%; }
+.diary-book { position:absolute; left:6%; top:12%; width:88%; height:76%; perspective:1800px; filter:drop-shadow(0 12px 14px #39261955); transition:transform .7s ease-in-out; }
+.diary-book.closed { transform:translateX(-25%); }
 .db-pages { position:absolute; inset:0; background:#f5ecdb; border-radius:3px; overflow:hidden; }
 .db-pages::after { content:''; position:absolute; left:49%; width:2%; top:0; bottom:0; background:linear-gradient(90deg,transparent,#69513a24,transparent); pointer-events:none; z-index:8; }
 .db-cover { position:absolute; inset:0; width:100%; height:100%; border:1px solid #322014; border-radius:4px; background:#4a2f22; color:#ead9b7; font:clamp(24px,4vw,48px)/1.5 'PMingLiU',serif; cursor:pointer; box-shadow:inset 7px 0 10px #1e100b66; }
@@ -1764,7 +1764,7 @@ body {
 .hold-left { left:0; }.hold-right { left:50%; }.hold-right .db-snapshot { left:-100%; }
 @media(max-width:700px) {
  .diary-book { top:15%; height:68%; left:4%; width:92%; }
- .diary-book.closed { left:14%; width:72%; }
+ .diary-book.closed { transform:translateX(-25%); }
  .diary-book .diary-index { padding:16px 10px; }
  .diary-book .station-journal { padding:8px 3px; }
  .db-controls { gap:4px; flex-wrap:wrap; }.db-controls button { font-size:11px; padding:5px; }
@@ -1790,3 +1790,13 @@ body {
  .diary-book .station-journal { grid-template-columns:24px minmax(0,1fr) auto; gap:5px; }
  .diary-book .station-journal strong { font-size:16px; }
 }
+
+/* 獨立的單張硬封面：固定半幅尺寸，標題與封面一起繞左側書脊旋轉。 */
+.db-cover-hinge { position:absolute; left:50%; top:0; width:50%; height:100%; transform-origin:0 50%; transform-style:preserve-3d; z-index:18; }
+.db-cover-hinge[hidden] { display:none; }
+.db-cover-hinge .db-cover,.db-cover-back { position:absolute; inset:0; width:100%; height:100%; box-sizing:border-box; backface-visibility:hidden; }
+.db-cover-hinge .db-cover { transform:rotateY(0deg); margin:0; }
+.db-cover-back { transform:rotateY(180deg); background:#ede0c8; border:1px solid #74543b; box-shadow:inset -7px 0 12px #4a2f222a; }
+.diary-book.closed .db-pages { visibility:visible; clip-path:inset(0 0 0 50%); }
+.diary-book.closed .db-pages::after { display:none; }
+.diary-book.cover-moving .db-controls { visibility:hidden; }
