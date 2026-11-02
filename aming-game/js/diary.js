@@ -56,12 +56,60 @@ const station =
    從探索頁直接開啟指定車站
 ========================== */
 
-function openStationDiary() {
-    diaryIndex.classList.add("hidden");
-    stationDiary.classList.add("show");
-    rememberDiaryView();
-    markVisibleMemoryRead();
+function openStationDiary() { return turnTo(4); }
+
+/* 純HTML書本：沿用六站順序與既有內容元件。 */
+const entries=[...diaryIndex.querySelectorAll('.station-journal')];
+diaryIndex.querySelector('h2').textContent='目錄';
+backToIndex.textContent='← 返回目錄';
+const book=document.createElement('section');book.className='diary-book closed';book.setAttribute('aria-label','互動日記書本');
+const pages=document.createElement('div');pages.className='db-pages';
+const cover=document.createElement('button');cover.type='button';cover.className='db-cover';cover.textContent='阿明的日記';
+const locked=document.createElement('section');locked.className='db-locked';locked.hidden=true;
+const controls=document.createElement('nav');controls.className='db-controls';controls.setAttribute('aria-label','書頁導覽');
+controls.innerHTML='<button type="button" data-book="previous">← 上一站</button><button type="button" data-book="index">返回目錄</button><span role="status"></span><button type="button" data-book="next">下一站 →</button><button type="button" data-book="close">闔上</button>';
+diaryIndex.before(book);pages.append(diaryIndex,stationDiary,locked);book.append(pages,cover,controls);
+let pageNumber=-1, flipping=false;
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+function renderBook(n){
+    pageNumber=n;book.classList.toggle('closed',n===-1);cover.hidden=n!==-1;
+    diaryIndex.classList.toggle('hidden',n!==0);stationDiary.classList.toggle('show',n===4);
+    locked.hidden=n<1||n===4;
+    if(!locked.hidden){locked.replaceChildren();const heading=document.createElement('h2');heading.textContent=entries[n-1].querySelector('strong').textContent;const message=document.createElement('p');message.textContent='這段旅程尚未開放。';locked.append(heading,message);}
+    controls.hidden=n===-1;
+    controls.querySelector('[data-book="previous"]').disabled=n<=0;
+    controls.querySelector('[data-book="next"]').disabled=n>=entries.length;
+    controls.querySelector('span').textContent=n===0?'目錄':`${n} / ${entries.length}`;
 }
+function snapshot(){
+    const copy=pages.cloneNode(true);
+    if(pageNumber===-1){copy.replaceChildren();const face=document.createElement('div');face.className='db-cover-face';face.textContent='阿明的日記';copy.append(face);}copy.removeAttribute('id');copy.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+    copy.querySelectorAll('.memory-locked > .journal-page,script').forEach(e=>e.remove());
+    copy.querySelectorAll('button,input,textarea,a').forEach(e=>{e.tabIndex=-1;e.setAttribute('aria-hidden','true');});
+    copy.classList.add('db-snapshot');copy.inert=true;return copy;
+}
+async function turnTo(target){
+    if(flipping||target===pageNumber)return;
+    if(noteDirty&&!saveTravelNote())return;
+    flipping=true;book.setAttribute('aria-busy','true');pages.inert=true;controls.inert=true;cover.disabled=true;
+    try{
+        while(pageNumber!==target){
+            const old=pageNumber,forward=target>old,next=old+(forward?1:-1),before=snapshot();
+            renderBook(next);const after=snapshot();
+            const leaf=document.createElement('div');leaf.className='db-leaf '+(forward?'forward':'backward');leaf.setAttribute('aria-hidden','true');
+            const front=document.createElement('div'),back=document.createElement('div');front.className='db-face db-front';back.className='db-face db-back';front.append(before);back.append(after);leaf.append(front,back);
+            const hold=document.createElement('div');hold.className='db-hold '+(forward?'hold-left':'hold-right');hold.append(before.cloneNode(true));book.append(hold,leaf);
+            const duration=reduced.matches?1:(Math.abs(target-old)>1?220:650);
+            const animation=leaf.animate([{transform:'rotateY(0deg)'},{transform:`rotateY(${forward?-180:180}deg)`}],{duration,easing:'ease-in-out',fill:'forwards'});
+            await animation.finished.catch(()=>{});leaf.remove();hold.remove();
+        }
+        rememberDiaryView();markVisibleMemoryRead();
+    }finally{flipping=false;book.removeAttribute('aria-busy');pages.inert=false;controls.inert=false;cover.disabled=false;}
+}
+ctx.on(cover,'click',()=>turnTo(0));
+ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber+(action==='next'?1:-1));});
+ctx.beforeLeave(()=>!flipping);
+renderBook(-1);
 
 /* 打開回憶碎片 */
 
@@ -220,14 +268,7 @@ ctx.on(ruisuiJournal, "click", () => {
 
 /* 回到日記目錄 */
 
-ctx.on(backToIndex, "click", () => {
-
-    stationDiary.classList.remove("show");
-
-    diaryIndex.classList.remove("hidden");
-    rememberDiaryView();
-
-});
+ctx.on(backToIndex,'click',()=>turnTo(0));
 
 function markVisibleMemoryRead() {
     if (stationDiary.classList.contains("show") && amingJournal.classList.contains("active")) {
@@ -268,7 +309,7 @@ ctx.subscribe((state, status) => {
     markVisibleMemoryRead();
 });
 
-if (station === "ruisui") openStationDiary();
+if (station === "ruisui") {renderBook(4);rememberDiaryView();markVisibleMemoryRead();}
 if (params.get("memories") === "1") memoryCount.click();
 
 // 切換場景前先存心得；失敗時保留原畫面與文字。

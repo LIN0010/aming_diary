@@ -281,3 +281,11 @@ SPA 的不同主場景切換共用 `travel-transition.js` 與 `app.css`，首次
 `entry-cache.js` 在原淡出前用 sessionStorage 短期交接已完成的原始模板與樣式，SPA script 執行前先顯示同一畫面；app 初次掛載沿用交接資源，不重跑整批預載。只存頁面資源、不存玩家狀態，單筆快取、30分鐘有效，缺少或失效則沿用原載入流程。CSS 圖片網址轉為絕對路徑，避免內嵌後失效；首次進場明確不呼叫列車 begin/finish。原載入進度與淡出動畫保留。
 
 回歸測試 `tests/entry-handoff.browser.py` 刻意攔住 SPA 啟動 script，確認此時主頁與背景已可見，再解除攔截驗證初始化、重新整理與底部換場；搭配原入口及全畫面轉場測試。
+
+### 純色翻頁日記原型
+
+日記沿用六個目錄按鈕的站點順序及 disabled 狀態，封面為 -1、目錄為 0、六站為 1～6。瑞穗內容直接移入書本容器，不重建日記、照片、心得或碎片元件；其餘未開放站點只顯示鎖定頁。目錄跳至瑞穗會連續翻四頁；上一／下一站可翻閱鎖定佔位頁，但不提供未解鎖內容。
+
+使用 CSS perspective、雙面 backface-visibility、Web Animations rotateY，快速跳頁每頁220ms、單頁650ms；左右底頁加紙張陰影，無新增套件或圖片。翻動時 inert 鎖定操作並阻止離場。動畫快照移除未尋回記憶的內頁；封面與紙張純色，可替換CSS。直達瑞穗網址仍直接開啟內容；照片、心得與解鎖沿用原邏輯。
+
+測試 `python tests/diary-book.browser.py`：封面、目錄、連翻、鎖定內容、心得保存、上一／下一站、返回目錄、闔上與兩種尺寸；`python tests/travel.browser.py` 回歸五頁共用過場。
