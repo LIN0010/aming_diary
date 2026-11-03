@@ -1829,7 +1829,17 @@ body {
 .pf-column-label { display:none; }
 .pf-reading .pf-column-label { display:block; margin:0 0 10px; font:18px/1.5 serif; }
 .pf-reading .pf-page { padding:18px; }
-.pf-reading .pf-page #aming-journal,.pf-reading .pf-page #player-journal { display:block; height:100%; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+.pf-reading .pf-rui-column { height:100%; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scroll-padding-block:12px; }
+.pf-reading .pf-rui-column .journal-content { display:block; height:auto; min-height:0; overflow:visible; }
+.pf-reading .pf-rui-column .journal-page { border:0; background:transparent; }
+.pf-reading .pf-photo-column .photo-card { width:min(330px,94%); }
+.pf-reading .pf-photo-column #player-journal { margin-top:20px; }
+.pf-reading .pf-photo-column .player-photo { width:min(260px,82%); height:auto; aspect-ratio:4 / 3; min-height:100px; }
+.pf-reading .pf-photo-column .player-photo.has-photo { aspect-ratio:auto; min-height:0; }
+.pf-reading .pf-photo-column #player-photo-preview { display:none; height:auto; object-fit:contain; }
+.pf-reading .pf-photo-column .has-photo #player-photo-preview { display:block; }
+.pf-reading .pf-text-column .pf-player-writing { border-top:1px solid rgba(117,94,67,.2); margin-top:18px; padding-top:18px; }
+.pf-reading .pf-text-column .travel-entry h2 { font-size:22px; letter-spacing:.08em; }
 .pf-reading .pf-page .journal-page { height:auto; min-height:0; overflow:visible; padding:8px; }
 .pf-reading .pf-page .photo-card img { height:auto; object-fit:contain; }
 .pf-reading .pf-page .memory-fragment { position:relative; right:auto; bottom:auto; margin:16px auto; }

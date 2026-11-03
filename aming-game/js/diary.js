@@ -123,13 +123,13 @@ for(let n=1;n<=entries.length;n++){
 const backCover=makePage('阿明的日記',true);stage.append(backCover);
 let readingActive=false,layoutPhase=false;
 const readingUI=[ctx.query('.diary-header'),ctx.query('.bottom-nav')];
-const ruisuiLeft=amingJournal.parentElement,ruisuiRight=rightAming.parentElement;
-const amingRightPage=rightAming.querySelector('.journal-page'),playerRightPage=rightPlayer.querySelector('.journal-page');
-const columnLabels=[amingJournal,playerJournal].map((journal,i)=>{const label=document.createElement('h3');label.className='pf-column-label';label.textContent=i?'我的旅程':'阿明的記憶';journal.prepend(label);return label;});
-function arrangeReading(active){
- if(active){rightAming.remove();rightPlayer.remove();amingJournal.append(amingRightPage);playerJournal.append(playerRightPage);ruisuiRight.append(playerJournal);}
- else{ruisuiRight.append(rightAming,rightPlayer);rightAming.append(amingRightPage);rightPlayer.append(playerRightPage);ruisuiLeft.append(playerJournal);}
-}
+// 只搬移既有節點：左欄照片、右欄故事與心得，各自捲動。
+const photoColumn=document.createElement('div'),textColumn=document.createElement('div');
+photoColumn.className='pf-rui-column pf-photo-column';textColumn.className='pf-rui-column pf-text-column';
+amingJournal.parentElement.prepend(photoColumn);rightAming.parentElement.prepend(textColumn);
+photoColumn.append(amingJournal,playerJournal);textColumn.append(rightAming,rightPlayer);
+rightPlayer.classList.add('pf-player-writing');
+rightPlayer.querySelector('.travel-entry h2').textContent='我的旅行心得';
 function syncBookSize(){
  if(!engine||engine.getState()!=='read')return;
  const size=measureBook();if(size.width<2||size.height<2)return;
@@ -171,7 +171,6 @@ function syncIndexBookmark(){
  indexBookmark.hidden=!(readingActive&&current>=3&&current<=14);
 }
 function renderBook(n){pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;syncIndexBookmark();}
-arrangeReading(true);
 let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);
 let sizeObserver,layoutFrame=0,stableSize='',appliedSize='';
 function measureBook(){return {width:Math.round(frame.clientWidth),height:Math.round(frame.clientHeight)};}
@@ -243,7 +242,7 @@ for(const type of ['mousedown','touchstart'])ctx.on(stage,type,event=>{
  if(!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}
  const point=event.touches?.[0]||event, page=event.target.closest('.pf-page'), rect=page?.getBoundingClientRect();
  const edge=rect&&(point.clientX-rect.left<22||rect.right-point.clientX<22);
- if(event.target.closest('input,textarea,label,a,button:not(.station-journal)')||!edge&&event.target.closest('.journal-content,.station-journal'))event.stopPropagation();
+ if(event.target.closest('input,textarea,label,a,button:not(.station-journal)')||!edge&&event.target.closest('.journal-content,.station-journal,.pf-rui-column'))event.stopPropagation();
 },{capture:true});
 for(const type of ['mousedown','touchstart'])ctx.on(cover,type,event=>{
  if(!readingActive)event.stopPropagation();
