@@ -1840,3 +1840,22 @@ body {
 .pf-border-panel label,.pf-border-panel output { white-space:nowrap; }
 .pf-border-panel input { flex:1; min-width:0; accent-color:#876a48; }
 .pf-border-panel output { font-variant-numeric:tabular-nums; min-width:4ch; }
+
+/* 未發現的記憶：左右兩張實際書頁各承載一半，沒有書本級固定遮罩。 */
+.pf-undiscovered-mask {
+ position:absolute; inset:0; overflow:hidden; pointer-events:none;
+ background:rgba(45,37,30,.45); z-index:2;
+}
+.pf-undiscovered-mask[hidden] { display:none; }
+.pf-undiscovered-copy {
+ position:absolute; top:0; left:0; width:200%; height:100%;
+ box-sizing:border-box; padding:16px;
+ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+ color:#fff4e2; text-align:center; pointer-events:none;
+ font-family:'Noto Serif TC','PMingLiU',serif;
+ text-shadow:0 1px 2px rgba(25,20,15,.4);
+}
+.pf-undiscovered-right .pf-undiscovered-copy { left:-100%; }
+.pf-undiscovered-copy p { margin:0; max-width:94%; overflow-wrap:anywhere; }
+.pf-undiscovered-title { font-size:clamp(16px,1.7vw,24px); font-weight:500; line-height:1.8; letter-spacing:.08em; text-wrap:balance; }
+.pf-undiscovered-hint { color:#f5e8d3; font-size:clamp(11px,1.1vw,14px); line-height:1.9; letter-spacing:.04em; }

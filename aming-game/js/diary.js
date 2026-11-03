@@ -94,10 +94,29 @@ const rightAming=document.createElement('section'),rightPlayer=document.createEl
 rightAming.className=amingJournal.className+' pf-aming-right';rightPlayer.className=playerJournal.className;
 rightAming.append(amingJournal.querySelector('.right-page'));rightPlayer.append(playerJournal.querySelector('.right-page'));
 const lockedMessage=document.createElement('div');lockedMessage.className='locked-memory-message';lockedMessage.textContent='這段記憶尚未尋回。';rightAming.prepend(lockedMessage);
+// 共用未發現跨頁：每半頁各自附在 HTML 書頁內，交由套件旋轉與裁切。
+function mountUndiscoveredSpread(left, right, entry) {
+ const name=entry.querySelector('strong').textContent.trim();
+ const unknown=entry.querySelector('small')?.textContent.trim()==='UNKNOWN'||!name||/[?？]/.test(name);
+ const title=unknown?'未知的下一站，正等待你的發現。':name+'，正等待你的發現。';
+ const masks=[left,right].map((page,side)=>{
+  const mask=document.createElement('div');mask.className='pf-undiscovered-mask'+(side?' pf-undiscovered-right':'');
+  if(side)mask.setAttribute('aria-hidden','true');
+  const copy=document.createElement('div');copy.className='pf-undiscovered-copy';
+  const heading=document.createElement('p');heading.className='pf-undiscovered-title';heading.textContent=title;
+  const hint=document.createElement('p');hint.className='pf-undiscovered-hint';hint.textContent='沿著鐵道前行，尋找尚未拾起的記憶。';
+  copy.append(heading,hint);mask.append(copy);page.append(mask);return mask;
+ });
+ // 只遮住尚未開放的站點，不刪除或取代頁內內容；解鎖狀態仍以原目錄為準。
+ const sync=()=>{const locked=entry.disabled||entry.classList.contains('locked');masks.forEach(mask=>mask.hidden=!locked);};
+ sync();
+ const observer=new MutationObserver(sync);observer.observe(entry,{attributes:true,attributeFilter:['class','disabled']});
+ ctx.cleanup(()=>observer.disconnect());
+}
 for(let n=1;n<=entries.length;n++){
  const left=makePage(),right=makePage();
  if(n===4){left.append(amingJournal,playerJournal);right.append(rightAming,rightPlayer);}
- else{for(const page of [left,right]){const h=document.createElement('h2');h.textContent=entries[n-1].querySelector('strong').textContent;const text=document.createElement('p');text.textContent='這段旅程尚未開放。';page.append(h,text);}}
+ else{mountUndiscoveredSpread(left,right,entries[n-1]);}
  stage.append(left,right);
 }
 const backCover=makePage('阿明的日記',true);stage.append(backCover);
