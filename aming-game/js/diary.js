@@ -94,21 +94,22 @@ const rightAming=document.createElement('section'),rightPlayer=document.createEl
 rightAming.className=amingJournal.className+' pf-aming-right';rightPlayer.className=playerJournal.className;
 rightAming.append(amingJournal.querySelector('.right-page'));rightPlayer.append(playerJournal.querySelector('.right-page'));
 const lockedMessage=document.createElement('div');lockedMessage.className='locked-memory-message';lockedMessage.textContent='這段記憶尚未尋回。';rightAming.prepend(lockedMessage);
-// 共用未發現跨頁：每半頁各自附在 HTML 書頁內，交由套件旋轉與裁切。
+// 共用未發現跨頁：保持原紙色，兩張紙頁各自承載小鎖頭與提示。
 function mountUndiscoveredSpread(left, right, entry) {
  const name=entry.querySelector('strong').textContent.trim();
  const unknown=entry.querySelector('small')?.textContent.trim()==='UNKNOWN'||!name||/[?？]/.test(name);
  const title=unknown?'未知的下一站，正等待你的發現。':name+'，正等待你的發現。';
- const masks=[left,right].map((page,side)=>{
-  const mask=document.createElement('div');mask.className='pf-undiscovered-mask'+(side?' pf-undiscovered-right':'');
-  if(side)mask.setAttribute('aria-hidden','true');
+ const placeholders=[left,right].map((page,side)=>{
+  const placeholder=document.createElement('div');placeholder.className='pf-undiscovered-page';
   const copy=document.createElement('div');copy.className='pf-undiscovered-copy';
-  const heading=document.createElement('p');heading.className='pf-undiscovered-title';heading.textContent=title;
-  const hint=document.createElement('p');hint.className='pf-undiscovered-hint';hint.textContent='沿著鐵道前行，尋找尚未拾起的記憶。';
-  copy.append(heading,hint);mask.append(copy);page.append(mask);return mask;
+  const lock=document.createElement('span');lock.className='pf-undiscovered-lock';lock.setAttribute('aria-hidden','true');
+  lock.innerHTML='<svg viewBox="0 0 24 28" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12V8a5 5 0 0 1 10 0v4"/><rect x="4" y="12" width="16" height="13" rx="2"/><path d="M12 17v3"/></svg>';
+  const text=document.createElement('p');text.className=side?'pf-undiscovered-hint':'pf-undiscovered-title';
+  text.textContent=side?'沿著鐵道前行，尋找尚未拾起的記憶。':title;
+  copy.append(lock,text);placeholder.append(copy);page.append(placeholder);return placeholder;
  });
- // 只遮住尚未開放的站點，不刪除或取代頁內內容；解鎖狀態仍以原目錄為準。
- const sync=()=>{const locked=entry.disabled||entry.classList.contains('locked');masks.forEach(mask=>mask.hidden=!locked);};
+ // 沿用原目錄的鎖定條件，不刪除頁內內容，也不新增解鎖途徑。
+ const sync=()=>{const locked=entry.disabled||entry.classList.contains('locked');placeholders.forEach(placeholder=>placeholder.hidden=!locked);};
  sync();
  const observer=new MutationObserver(sync);observer.observe(entry,{attributes:true,attributeFilter:['class','disabled']});
  ctx.cleanup(()=>observer.disconnect());
