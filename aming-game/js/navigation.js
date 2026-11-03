@@ -113,7 +113,7 @@
         if (url.origin !== base.origin || new URL(".", url).pathname !== base.pathname) return null;
         let name;
         let params;
-        if (url.pathname === new URL("game.html", base).pathname && url.hash.startsWith("#/")) {
+        if ([new URL("game.html", base).pathname, new URL("game", base).pathname].includes(url.pathname) && url.hash.startsWith("#/")) {
             const [path, query = ""] = url.hash.slice(2).split("?");
             name = path;
             params = new URLSearchParams(query);
@@ -128,6 +128,7 @@
         if (name === "diary") {
             if (["aming", "player"].includes(params.get("tab"))) query.set("tab", params.get("tab"));
             if (params.get("memories") === "1") query.set("memories", "1");
+            if (params.get("debug") === "1") query.set("debug", "1");
         }
         if (name === "event") {
             if (["photo", "race"].includes(params.get("activity"))) query.set("activity", params.get("activity"));

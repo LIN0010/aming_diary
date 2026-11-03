@@ -46,6 +46,21 @@ const backToIndex =
 	
 const params =
     ctx.params;
+const borderDebug = params.get('debug') === '1';
+if (borderDebug) {
+ const settings=document.createElement('button');settings.type='button';settings.className='pf-debug-toggle';settings.setAttribute('aria-label','書頁外框設定');settings.setAttribute('aria-expanded','false');settings.setAttribute('aria-controls','pf-border-panel');
+ settings.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="8" cy="7" r="3" fill="#f5ecdb"/><circle cx="16" cy="17" r="3" fill="#f5ecdb"/></svg>';
+ const panel=document.createElement('section');panel.id='pf-border-panel';panel.className='pf-border-panel';panel.hidden=true;panel.setAttribute('aria-label','書頁外框調整');
+ panel.innerHTML='<label for="pf-border-range">外框透明度</label><input id="pf-border-range" type="range" min="0.10" max="0.70" step="0.01" value="0.35"><output for="pf-border-range">0.35</output>';
+ const slider=panel.querySelector('input'),value=panel.querySelector('output');
+ const update=()=>{const next=Number(slider.value).toFixed(2);ctx.root.style.setProperty('--page-border-opacity',next);value.value=next;};update();
+ ctx.root.append(settings,panel);ctx.on(slider,'input',update);
+ const close=()=>{panel.hidden=true;settings.setAttribute('aria-expanded','false');};
+ ctx.on(settings,'click',()=>{panel.hidden=!panel.hidden;settings.setAttribute('aria-expanded',String(!panel.hidden));});
+ ctx.on(panel,'keydown',e=>{if(e.key==='Escape'){close();settings.focus();}});
+ ctx.on(document,'pointerdown',e=>{if(!panel.contains(e.target)&&!settings.contains(e.target))close();});
+}
+
 
 const station =
     params.get("station");
@@ -235,7 +250,8 @@ function rememberDiaryView() {
     const player = playerJournal.classList.contains("active");
     const view = open ? (player ? "ruisui-player" : "ruisui-memory") : "index";
     GameProgress.enterScene("diary", view);
-    ctx.replaceRoute(open ? "diary.html?station=ruisui&tab=" + (player ? "player" : "aming") : "diary.html");
+    const nextRoute=open ? "diary.html?station=ruisui&tab=" + (player ? "player" : "aming") : "diary.html";
+    ctx.replaceRoute(nextRoute + (borderDebug ? (open ? "&" : "?") + "debug=1" : ""));
 }
 
 ctx.on(amingTab, "click", () => selectJournalTab("aming"));

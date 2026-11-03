@@ -1811,6 +1811,14 @@ body {
 .pf-reading .pf-toc .station-journal strong { font-size:18px; }
 
 /* 紙張本身的細邊跟隨原生旋轉與裁切；不描繪裁切新產生的斜邊。 */
-.pf-stage .pf-page { border:1px solid rgba(55,42,30,.55); box-sizing:border-box; }
+.pf-stage .pf-page { border:1px solid rgba(55,42,30,var(--page-border-opacity,.55)); box-sizing:border-box; }
 /* 靜止跨頁的書脊只留一條線；翻動頁仍保留四邊。 */
 .pf-stage .pf-page.--simple.--left { border-right-color:transparent; }
+
+/* 開發面板只由 debug=1 建立，位於書本上方空白帶。 */
+.pf-debug-toggle { position:fixed; top:max(2px,env(safe-area-inset-top,0px)); right:max(12px,env(safe-area-inset-right,0px)); z-index:120; display:grid; place-items:center; width:32px; height:32px; padding:0; border:1px solid #b5a180; border-radius:6px; background:#f5ecdb; color:#503b2c; cursor:pointer; }
+.pf-border-panel { position:fixed; top:max(2px,env(safe-area-inset-top,0px)); left:max(12px,env(safe-area-inset-left,0px)); z-index:120; display:flex; align-items:center; gap:8px; width:min(360px,calc(100vw - 80px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px))); height:32px; padding:3px 8px; border:1px solid #b5a180; border-radius:6px; background:#f5ecdb; color:#503b2c; font:12px/1.5 sans-serif; }
+.pf-border-panel[hidden] { display:none; }
+.pf-border-panel label,.pf-border-panel output { white-space:nowrap; }
+.pf-border-panel input { flex:1; min-width:0; accent-color:#876a48; }
+.pf-border-panel output { font-variant-numeric:tabular-nums; min-width:4ch; }

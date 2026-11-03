@@ -13,3 +13,13 @@
 執行 `python tests/diary-reading.browser.py`：桌面 Chromium 1280×844、iPhone UA／觸控模擬 844×390、812×300，測試封面開合、原生正反向拖曳、目錄跳頁、鎖定內容、照片上傳、心得保存與 viewport 高度減少。截圖供執行環境檢查，不作為遊戲素材或下載附件。
 
 沒有實機 iPhone Safari／WebKit 或真正安裝 PWA 的驗證環境。上述為 Chromium 模擬；Safari 工具列、安全區與系統鍵盤仍需實機檢查。
+
+## 外框開發調整面板
+
+僅 dev 日記路由含 `debug=1` 時建立右上設定鈕與浮動調整列，例如 SPA 路由 `#/diary?debug=1`。調整列位於書本上方空白帶，避開書內操作；可用設定鈕、外部點擊或面板內 Escape 收起。一般網址不建立開發元件，main 未改動。
+
+滑桿範圍 0.10–0.70、步距 0.01、開發預設 0.35，顯示兩位小數。透過場景上的單一 `--page-border-opacity` 即時更新所有書頁，沒有重新初始化翻頁引擎或寫入存檔。未加 debug 的原有外框維持 0.55。跳站與闔書時保留 debug 參數。
+
+`python tests/diary-border-debug.browser.py` 檢查一般網址／debug=0 不建立面板、debug=1 顯示、數值與書頁樣式更新、單一引擎、面板不與書本相交、Escape、SPA 開書與跳站保留參數。桌面 1280×844 與橫向 844×390 於 Chromium 驗證。
+
+SPA 參數白名單僅為日記新增 `debug=1`，並辨認 Cloudflare 的 `/game` 與原本 `/game.html` 入口；其餘場景不接受 debug。使用者提供的線上 dev 網域目前遭執行環境代理 CONNECT 403 拒絕，無法確認線上部署，因此不將線上入口標示為已驗證。
