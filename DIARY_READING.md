@@ -13,3 +13,9 @@
 執行 `python tests/diary-reading.browser.py`：桌面 Chromium 1280×844、iPhone UA／觸控模擬 844×390、812×300，測試封面開合、原生正反向拖曳、目錄跳頁、鎖定內容、照片上傳、心得保存與 viewport 高度減少。截圖供執行環境檢查，不作為遊戲素材或下載附件。
 
 沒有實機 iPhone Safari／WebKit 或真正安裝 PWA 的驗證環境。上述為 Chromium 模擬；Safari 工具列、安全區與系統鍵盤仍需實機檢查。
+
+## 紙角視覺微調
+
+使用官方 `drawShadow:true`、`maxShadowOpacity:0.35` 減輕預設濃度 1 的陰影。StPageFlip 2.0.7 的 HTML 渲染中，靜止頁有 `--simple`，底層裁切頁維持零旋轉；非零旋轉的 `--soft` 頁為翻起紙背。CSS 只讀取這些 DOM 標記，套用暖米色 `#eadcc3`、8% 暖色薄層與 1px 低對比細邊；不寫入 transform、clip-path 或套件幾何。覆層 `pointer-events:none`，硬封面不受影響。此選擇器依目前鎖定的 2.0.7 DOM；升級套件時需重新檢查。
+
+`python tests/diary-paper.browser.py`：桌面 1280×844、觸控橫向 844×390，截取接近 30°／60°／90°／120° 的紙角旋轉並人工檢查；實際取樣分別約 30.7／58.0／91.1／120.7 及 29.9／57.8／90.8／120.4 度。這是套件 DOM 的平面旋轉讀值，並非紙面法線的 3D 角度。另驗證靜止頁維持 `#f5ecdb`、原生觸控可翻頁、無 JavaScript 錯誤。未實機驗證 iPhone Safari。

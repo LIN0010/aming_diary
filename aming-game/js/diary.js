@@ -137,7 +137,7 @@ function scheduleBookLayout(){
 }
 function initBook(size){
  if(disposed||engine)return;
- engine=new St.PageFlip(stage,{width:size.width/2,height:size.height,size:'stretch',minWidth:1,maxWidth:1200,minHeight:1,maxHeight:1200,autoSize:false,usePortrait:false,showCover:true,useMouseEvents:true,showPageCorners:false,disableFlipByClick:true,mobileScrollSupport:false,clickEventForward:false,flippingTime:reduced.matches?1:350,startPage:pageFor(pageNumber)});
+ engine=new St.PageFlip(stage,{width:size.width/2,height:size.height,size:'stretch',minWidth:1,maxWidth:1200,minHeight:1,maxHeight:1200,autoSize:false,usePortrait:false,showCover:true,drawShadow:true,maxShadowOpacity:0.35,useMouseEvents:true,showPageCorners:false,disableFlipByClick:true,mobileScrollSupport:false,clickEventForward:false,flippingTime:reduced.matches?1:350,startPage:pageFor(pageNumber)});
  engine.on('init',()=>{appliedSize=`${size.width}x${size.height}`;resolveReady();scheduleBookLayout();});
  const settleNative=()=>{
   if(disposed||flipping||layoutPhase)return;

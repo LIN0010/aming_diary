@@ -1809,3 +1809,14 @@ body {
 .pf-reading .pf-toc .station-journals { gap:6px; }
 .pf-reading .pf-toc .station-journal { min-height:48px; padding:6px; }
 .pf-reading .pf-toc .station-journal strong { font-size:18px; }
+
+/* StPageFlip 2.0.7：旋轉中的軟頁是紙背；底層仍為零角度。
+   僅讀取套件產生的樣式作選取，不更動 transform / clip-path。 */
+.pf-stage .pf-page.--soft:not(.--simple)[style*="rotate("]:not([style*="rotate(0rad)"]) {
+    background:#eadcc3;
+}
+.pf-stage .pf-page.--soft:not(.--simple)[style*="rotate("]:not([style*="rotate(0rad)"])::after {
+    content:""; position:absolute; inset:0; box-sizing:border-box; pointer-events:none;
+    background:rgba(166,119,56,.08); border:1px solid rgba(112,80,44,.24);
+    box-shadow:inset 0 0 6px rgba(112,80,44,.07); z-index:10;
+}
