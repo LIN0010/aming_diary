@@ -40,11 +40,17 @@ body {
 
     color: #51473e;
 
-    background-color: #bba58b;
-    background-image: url('../images/diary-desk-bg.webp');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(255,255,255,.45),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #d8cbb7,
+            #b9aa94
+        );
 }
 
 
@@ -1725,6 +1731,7 @@ body {
 }
 
 /* StPageFlip HTML書頁：套件處理封面、書脊、正反面與陰影。 */
+#diary-screen { background:#bba58b; }
 .pf-book { position:absolute; left:6%; top:16%; width:88%; height:68%; }
 .pf-frame { position:absolute; inset:44px 0 42px; }
 .pf-stage { width:100%; height:100%; min-width:0; min-height:0; }
@@ -1774,7 +1781,7 @@ body {
 #diary-screen { transition:background .35s ease; }
 .diary-header,.bottom-nav { transition:opacity .25s ease; }
 .pf-ui-hidden .diary-header,.pf-ui-hidden .bottom-nav { opacity:0; pointer-events:none; }
-#diary-screen.pf-reading { overflow:clip; }
+#diary-screen.pf-reading { background:#8e765e; overflow:clip; }
 #diary-screen.pf-reading .pf-book { --read-height:min(calc(92vw / 1.44),calc(var(--game-height) - 72px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); width:calc(var(--read-height) * 1.44); height:var(--read-height); left:calc((100% - var(--read-height) * 1.44) / 2); top:calc((var(--game-height) - var(--read-height)) / 2); }
 .pf-reading .pf-frame { inset:0; touch-action:pan-y; }
 .pf-actions[hidden] { display:none; }
