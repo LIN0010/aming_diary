@@ -44,7 +44,7 @@ try:
    page.route('**/page-flip.browser.js',lambda r:r.fulfill(body=bundle+';const Orig=St.PageFlip;St.PageFlip=class extends Orig{constructor(...a){super(...a);window.testBook=this;window.engineCount=(window.engineCount||0)+1;}};',content_type='application/javascript'))
    page.goto(BASE+'game.html#/diary',wait_until='domcontentloaded');page.wait_for_function('window.testBook&&document.querySelectorAll(".stf__item").length===16')
    bookmark(page,False)
-   page.evaluate('''()=>{window.bookmarkChanges=[];new MutationObserver(()=>bookmarkChanges.push({state:testBook.getState(),page:testBook.getCurrentPageIndex(),hidden:document.querySelector('.pf-index-tab').hidden})).observe(document.querySelector('.pf-index-tab'),{attributes:true,attributeFilter:['hidden']});}''')
+   page.evaluate('''()=>{window.bookmarkChanges=[];new MutationObserver(()=>bookmarkChanges.push({state:testBook.getState(),page:testBook.getCurrentPageIndex(),hidden:document.querySelector('.pf-index-tab').hidden,closing:document.querySelector('.pf-index-tab').classList.contains('pf-index-fading'),disabled:document.querySelector('.pf-index-tab').disabled})).observe(document.querySelector('.pf-index-tab'),{attributes:true,attributeFilter:['hidden']});}''')
    page.locator('.pf-hard').first.click();ready(page);bookmark(page,False);close_hit(page)
    drag(page,True,mobile);bookmark(page,True)
    drag(page,False,mobile);bookmark(page,False)
@@ -59,7 +59,7 @@ try:
    page.screenshot(path=f'/workspace/work/diary-controls-{width}.png')
    page.locator('[data-book="close"]').click();ready(page);bookmark(page,False);assert not page.locator('.bottom-nav').evaluate('(e)=>e.inert')
    assert page.evaluate('engineCount')==1
-   assert page.evaluate('bookmarkChanges.every(c=>c.state==="read"&&c.hidden===(c.page<3||c.page>14))'),page.evaluate('bookmarkChanges')
+   assert page.evaluate('bookmarkChanges.every(c=>c.closing&&c.disabled&&c.hidden||c.state==="read"&&c.hidden===(c.page<3||c.page>14))'),page.evaluate('bookmarkChanges')
    assert not errors,errors
    context.close();print('PASS diary controls',width,height,flush=True)
   browser.close()

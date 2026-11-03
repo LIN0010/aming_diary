@@ -1818,7 +1818,10 @@ body {
  font:16px/1.4 'Noto Serif TC','PMingLiU',serif; letter-spacing:.14em;
  writing-mode:vertical-rl; cursor:pointer; touch-action:manipulation;
 }
+.pf-index-tab { opacity:1; transition:opacity .12s ease; }
+.pf-index-tab.pf-index-fading { opacity:0; pointer-events:none; }
 .pf-reading .pf-index-tab[hidden] { display:none; }
+@media(prefers-reduced-motion:reduce) { .pf-index-tab { transition:none; } }
 .pf-reading .pf-index-tab:hover { background:linear-gradient(100deg,#cfab96,#e5c5ad 65%,#bea087); }
 .pf-reading .pf-index-tab:focus-visible { outline:2px solid #79583d; outline-offset:-6px; }
 .pf-actions span:empty { display:none; }

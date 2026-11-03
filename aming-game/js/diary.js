@@ -146,13 +146,28 @@ async function setReading(active){
  if(!active){ctx.root.classList.remove('pf-ui-hidden');readingUI.forEach(el=>el.inert=false);}
 }
 let pageNumber=-1,flipping=false,engine,disposed=false;
+let bookmarkClosing=false,bookmarkFadeToken=0,bookmarkFadePromise=null;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const pageFor=n=>n===-1?0:n===0?1:3+(n-1)*2;
-// 只以翻頁完成後的套件實際頁碼決定書籤；拖曳期間保留原狀。
+// 闔書先淡出索引；token 避免取消拖曳後的舊動畫回呼再次隱藏它。
+function fadeIndexForClose(){
+ if(bookmarkClosing)return bookmarkFadePromise||Promise.resolve();
+ bookmarkClosing=true;const token=++bookmarkFadeToken;
+ indexBookmark.disabled=true;
+ indexBookmark.getBoundingClientRect();indexBookmark.classList.add('pf-index-fading');
+ bookmarkFadePromise=Promise.all(indexBookmark.getAnimations().map(a=>a.finished.catch(()=>{}))).then(()=>{
+  if(!disposed&&token===bookmarkFadeToken)indexBookmark.hidden=true;
+ });
+ return bookmarkFadePromise;
+}
+// 一般翻頁仍在穩定頁碼才同步；取消闔書拖曳時可恢復車站索引。
 function syncIndexBookmark(){
+ if(disposed)return;
  if(!engine){indexBookmark.hidden=true;return;}
  if(layoutPhase||engine.getState()!=='read')return;
  const current=engine.getCurrentPageIndex();
+ ++bookmarkFadeToken;bookmarkClosing=false;bookmarkFadePromise=null;
+ indexBookmark.classList.remove('pf-index-fading');indexBookmark.disabled=false;
  indexBookmark.hidden=!(readingActive&&current>=3&&current<=14);
 }
 function renderBook(n){pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;syncIndexBookmark();}
@@ -190,7 +205,18 @@ function initBook(size){
   rememberDiaryView();markVisibleMemoryRead();scheduleBookLayout();
  };
  engine.on('flip',()=>ctx.delay(settleNative,32));
- engine.on('changeState',e=>{if(e.data==='read'){scheduleBookLayout();ctx.delay(settleNative,32);}});
+ engine.on('changeState',e=>{
+  if(!flipping&&(e.data==='user_fold'||e.data==='flipping')){
+   const checkNativeClose=()=>{
+    if(disposed||flipping||engine.getState()==='read')return;
+    const i=engine.getCurrentPageIndex(),direction=engine.getFlipController().getCalculation()?.getDirection();
+    if((i===13&&direction===0)||(i===1&&direction===1))fadeIndexForClose();
+   };
+   // user_fold 事件早於套件建立計算物件，下一個事件週期再讀取方向。
+   ctx.delay(checkNativeClose,0);
+  }
+  if(e.data==='read'){scheduleBookLayout();ctx.delay(settleNative,32);}
+ });
  engine.loadFromHTML(stage.querySelectorAll(':scope > .pf-page'));
 }
 if(typeof ResizeObserver!=='undefined'){sizeObserver=new ResizeObserver(scheduleBookLayout);sizeObserver.observe(frame);}
@@ -205,9 +231,10 @@ async function oneFlip(forward){
 async function turnTo(target){
  if(flipping||layoutPhase||engine&&engine.getState()!=='read'||target===pageNumber&&engine?.getCurrentPageIndex()===pageFor(target))return;if(noteDirty&&!saveTravelNote())return;
  flipping=true;book.setAttribute('aria-busy','true');frame.inert=true;controls.inert=true;stationDiary.inert=true;
- try{await ready;if(disposed)return;if(!readingActive&&target>=0)await setReading(true);const targetPage=pageFor(target);while(engine.getCurrentPageIndex()!==targetPage&&!disposed){await oneFlip(engine.getCurrentPageIndex()<targetPage);}if(!disposed){renderBook(target);if(target===-1&&readingActive){await setReading(false);controls.hidden=true;}rememberDiaryView();markVisibleMemoryRead();}}
+ const closeFade=target===-1?fadeIndexForClose():null;
+ try{await ready;if(closeFade)await closeFade;if(disposed)return;if(!readingActive&&target>=0)await setReading(true);const targetPage=pageFor(target);while(engine.getCurrentPageIndex()!==targetPage&&!disposed){await oneFlip(engine.getCurrentPageIndex()<targetPage);}if(!disposed){renderBook(target);if(target===-1&&readingActive){await setReading(false);controls.hidden=true;}rememberDiaryView();markVisibleMemoryRead();}}
  catch(error){controls.querySelector('span').textContent=error.message;if(readingActive){ctx.root.classList.remove('pf-ui-hidden');readingUI.forEach(el=>el.inert=false);}}
- finally{flipping=false;book.removeAttribute('aria-busy');frame.inert=false;controls.inert=false;stationDiary.inert=false;scheduleBookLayout();}
+ finally{flipping=false;book.removeAttribute('aria-busy');frame.inert=false;controls.inert=false;stationDiary.inert=false;syncIndexBookmark();scheduleBookLayout();}
 }
 ctx.on(cover,'click',()=>{if(!readingActive)turnTo(0);});
 ctx.on(backCover,'click',()=>{if(!readingActive)turnTo(6);});
