@@ -14,8 +14,12 @@
 
 沒有實機 iPhone Safari／WebKit 或真正安裝 PWA 的驗證環境。上述為 Chromium 模擬；Safari 工具列、安全區與系統鍵盤仍需實機檢查。
 
-## 紙角視覺微調
+## 下層書頁落影
 
-使用官方 `drawShadow:true`、`maxShadowOpacity:0.35` 減輕預設濃度 1 的陰影。StPageFlip 2.0.7 的 HTML 渲染中，靜止頁有 `--simple`，底層裁切頁維持零旋轉；非零旋轉的 `--soft` 頁為翻起紙背。CSS 只讀取這些 DOM 標記，套用暖米色 `#eadcc3`、8% 暖色薄層與 1px 低對比細邊；不寫入 transform、clip-path 或套件幾何。覆層 `pointer-events:none`，硬封面不受影響。此選擇器依目前鎖定的 2.0.7 DOM；升級套件時需重新檢查。
+已撤回上一筆紙背染色、暖色覆層、細邊及其測試，恢復 `99c1cafe` 的紙張外觀。沉浸模式、頁面大小、手勢與資料邏輯不變。
 
-`python tests/diary-paper.browser.py`：桌面 1280×844、觸控橫向 844×390，截取接近 30°／60°／90°／120° 的紙角旋轉並人工檢查；實際取樣分別約 30.7／58.0／91.1／120.7 及 29.9／57.8／90.8／120.4 度。這是套件 DOM 的平面旋轉讀值，並非紙面法線的 3D 角度。另驗證靜止頁維持 `#f5ecdb`、原生觸控可翻頁、無 JavaScript 錯誤。未實機驗證 iPhone Safari。
+研究 2.0.7 的 HTML renderer 後確認：`outerShadow` 為下層落影，`innerShadow` 為捲曲面的明暗；兩者的範圍、旋轉與裁切由套件計算，完成翻頁時由 `clearShadow()` 清除。官方僅提供 `drawShadow` 和共用 `maxShadowOpacity`，沒有分離內外陰影的設定。
+
+使用 `drawShadow:true,maxShadowOpacity:0.25`。CSS 僅把原生 outerShadow 從預設 z=10 調為 z=4（底頁 z=1/3、翻動頁 z=5），使投影無法蓋到翻動紙張；innerShadow 與 hardInnerShadow 設透明，避免紙面本身的捲曲明暗。硬封面的 outerShadow 原本就在 z=4。依目前套件預設 `startZIndex=0`，升級或改變起始層級時須重新檢查。
+
+沒有覆寫 transform、clip-path、紙色、形狀或新增幾何模擬。`python tests/diary-shadow.browser.py` 驗證桌面 1280×844 滑鼠、844×390 觸控，均比較正反向翻頁前、三個中途位置、翻頁後；確認原紙色、落影層級、範圍隨拖曳改變、完成後清除，以及沒有頁面錯誤。已檢查對應截圖。手機測試使用 Chromium 觸控事件，並非 iPhone Safari 實機。
