@@ -13,13 +13,3 @@
 執行 `python tests/diary-reading.browser.py`：桌面 Chromium 1280×844、iPhone UA／觸控模擬 844×390、812×300，測試封面開合、原生正反向拖曳、目錄跳頁、鎖定內容、照片上傳、心得保存與 viewport 高度減少。截圖供執行環境檢查，不作為遊戲素材或下載附件。
 
 沒有實機 iPhone Safari／WebKit 或真正安裝 PWA 的驗證環境。上述為 Chromium 模擬；Safari 工具列、安全區與系統鍵盤仍需實機檢查。
-
-## 下層書頁落影
-
-已撤回上一筆紙背染色、暖色覆層、細邊及其測試，恢復 `99c1cafe` 的紙張外觀。沉浸模式、頁面大小、手勢與資料邏輯不變。
-
-研究 2.0.7 的 HTML renderer 後確認：`outerShadow` 為下層落影，`innerShadow` 為捲曲面的明暗；兩者的範圍、旋轉與裁切由套件計算，完成翻頁時由 `clearShadow()` 清除。官方僅提供 `drawShadow` 和共用 `maxShadowOpacity`，沒有分離內外陰影的設定。
-
-使用 `drawShadow:true,maxShadowOpacity:0.25`。CSS 僅把原生 outerShadow 從預設 z=10 調為 z=4（底頁 z=1/3、翻動頁 z=5），使投影無法蓋到翻動紙張；innerShadow 與 hardInnerShadow 設透明，避免紙面本身的捲曲明暗。硬封面的 outerShadow 原本就在 z=4。依目前套件預設 `startZIndex=0`，升級或改變起始層級時須重新檢查。
-
-沒有覆寫 transform、clip-path、紙色、形狀或新增幾何模擬。`python tests/diary-shadow.browser.py` 驗證桌面 1280×844 滑鼠、844×390 觸控，均比較正反向翻頁前、三個中途位置、翻頁後；確認原紙色、落影層級、範圍隨拖曳改變、完成後清除，以及沒有頁面錯誤。已檢查對應截圖。手機測試使用 Chromium 觸控事件，並非 iPhone Safari 實機。
