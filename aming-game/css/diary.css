@@ -1786,7 +1786,21 @@ body {
 .pf-reading .pf-frame { inset:0; touch-action:pan-y; }
 .pf-actions[hidden] { display:none; }
 .pf-actions { position:absolute; top:-34px; right:0; display:flex; align-items:center; gap:12px; z-index:20; }
-.pf-actions button { min-height:32px; padding:4px 8px; border:0; background:#f4e8ce; color:#503b2c; border-radius:4px; cursor:pointer; font:14px/1.5 serif; }
+.pf-actions button[data-book="close"] {
+ min-height:32px; box-sizing:border-box; padding:6px 20px;
+ border:1px solid rgba(255,255,255,.65); border-radius:999px;
+ background:rgba(255,250,240,.82); color:#604a36;
+ backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+ box-shadow:0 3px 12px rgba(55,42,30,.12);
+ cursor:pointer; font:14px/18px 'Noto Serif TC','PMingLiU',serif;
+ transition:background .2s ease;
+}
+.pf-actions button[data-book="close"]:hover { background:rgba(255,250,240,.96); }
+.pf-actions button[data-book="close"]:focus-visible { outline:2px solid #95734d; outline-offset:2px; }
+.pf-reading .pf-actions {
+ top:max(-34px,calc(env(safe-area-inset-top,0px) + 2px - (var(--game-height) - var(--read-height)) / 2));
+ right:max(0px,calc(env(safe-area-inset-right,0px) + 8px - (100vw - var(--read-height) * 1.44) / 2));
+}
 /* 獨立紙質索引：位於 stage 外，16px 藏在不透明書頁下方。 */
 .pf-book { isolation:isolate; }
 .pf-frame { z-index:1; }
@@ -1804,6 +1818,7 @@ body {
  font:16px/1.4 'Noto Serif TC','PMingLiU',serif; letter-spacing:.14em;
  writing-mode:vertical-rl; cursor:pointer; touch-action:manipulation;
 }
+.pf-reading .pf-index-tab[hidden] { display:none; }
 .pf-reading .pf-index-tab:hover { background:linear-gradient(100deg,#cfab96,#e5c5ad 65%,#bea087); }
 .pf-reading .pf-index-tab:focus-visible { outline:2px solid #79583d; outline-offset:-6px; }
 .pf-actions span:empty { display:none; }

@@ -79,7 +79,7 @@ const book=document.createElement('section');book.className='pf-book';
 const frame=document.createElement('div');frame.className='pf-frame';
 const stage=document.createElement('div');stage.className='pf-stage';frame.append(stage);
 const controls=document.createElement('nav');controls.className='pf-actions';controls.setAttribute('aria-label','日記操作');
-controls.innerHTML='<button type="button" class="pf-index-tab" data-book="index" aria-label="返回目錄" title="返回目錄">目錄</button><button type="button" data-book="close">闔書／退出</button><span role="status" aria-live="polite"></span>';
+controls.innerHTML='<button type="button" class="pf-index-tab" data-book="index" hidden aria-label="返回目錄" title="返回目錄">目錄</button><button type="button" data-book="close">闔上日記</button><span role="status" aria-live="polite"></span>';
 const indexBookmark=controls.querySelector('[data-book="index"]');
 diaryIndex.before(book);book.append(indexBookmark,frame,controls);stationDiary.remove();
 backToIndex.textContent='← 返回目錄';
@@ -147,7 +147,14 @@ async function setReading(active){
 let pageNumber=-1,flipping=false,engine,disposed=false;
 const reduced=matchMedia('(prefers-reduced-motion:reduce)');
 const pageFor=n=>n===-1?0:n===0?1:3+(n-1)*2;
-function renderBook(n){pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;}
+// 只以翻頁完成後的套件實際頁碼決定書籤；拖曳期間保留原狀。
+function syncIndexBookmark(){
+ if(!engine){indexBookmark.hidden=true;return;}
+ if(layoutPhase||engine.getState()!=='read')return;
+ const current=engine.getCurrentPageIndex();
+ indexBookmark.hidden=!(readingActive&&current>=3&&current<=14);
+}
+function renderBook(n){pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;syncIndexBookmark();}
 arrangeReading(true);
 let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);
 let sizeObserver,layoutFrame=0,stableSize='',appliedSize='';
