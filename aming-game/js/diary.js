@@ -79,8 +79,9 @@ const book=document.createElement('section');book.className='pf-book';
 const frame=document.createElement('div');frame.className='pf-frame';
 const stage=document.createElement('div');stage.className='pf-stage';frame.append(stage);
 const controls=document.createElement('nav');controls.className='pf-actions';controls.setAttribute('aria-label','日記操作');
-controls.innerHTML='<button type="button" data-book="index" aria-label="返回目錄" title="返回目錄"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button><button type="button" data-book="close">闔書／退出</button><span role="status" aria-live="polite"></span>';
-diaryIndex.before(book);book.append(frame,controls);stationDiary.remove();
+controls.innerHTML='<button type="button" class="pf-index-tab" data-book="index" aria-label="返回目錄" title="返回目錄">目錄</button><button type="button" data-book="close">闔書／退出</button><span role="status" aria-live="polite"></span>';
+const indexBookmark=controls.querySelector('[data-book="index"]');
+diaryIndex.before(book);book.append(indexBookmark,frame,controls);stationDiary.remove();
 backToIndex.textContent='← 返回目錄';
 function makePage(title,hard=false){const page=document.createElement('section');page.className='pf-page'+(hard?' pf-hard':'');if(hard)page.dataset.density='hard';if(title){const h=document.createElement('h2');h.textContent=title;page.append(h);}return page;}
 const cover=makePage('阿明的日記',true);stage.append(cover);
@@ -193,6 +194,7 @@ for(const type of ['mousedown','touchstart'])ctx.on(stage,type,event=>{
 for(const type of ['mousedown','touchstart'])ctx.on(cover,type,event=>{
  if(!readingActive)event.stopPropagation();
 });
+ctx.on(indexBookmark,'click',()=>turnTo(0));
 ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber===-1?0:pageNumber+(action==='next'?1:-1));});
 ctx.beforeLeave(()=>!flipping&&!layoutPhase&&(!engine||engine.getState()==='read'));
 ctx.on(ctx.root,'scroll',()=>{if(readingActive){ctx.root.scrollLeft=0;ctx.root.scrollTop=0;}},{passive:true});

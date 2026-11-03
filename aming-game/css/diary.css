@@ -1787,7 +1787,25 @@ body {
 .pf-actions[hidden] { display:none; }
 .pf-actions { position:absolute; top:-34px; right:0; display:flex; align-items:center; gap:12px; z-index:20; }
 .pf-actions button { min-height:32px; padding:4px 8px; border:0; background:#f4e8ce; color:#503b2c; border-radius:4px; cursor:pointer; font:14px/1.5 serif; }
-.pf-actions button:first-child { position:absolute; top:34px; right:8px; background:#bca16ed9; }
+/* 獨立紙質索引：位於 stage 外，16px 藏在不透明書頁下方。 */
+.pf-book { isolation:isolate; }
+.pf-frame { z-index:1; }
+.pf-index-tab { display:none; }
+.pf-reading .pf-index-tab {
+ position:absolute; top:24%;
+ --index-exposure:max(20px,min(44px,calc((100vw - var(--read-height) * 1.44) / 2 - env(safe-area-inset-left,0px) - 4px)));
+ left:calc(-1 * var(--index-exposure));
+ z-index:0; display:flex; align-items:center; justify-content:center;
+ box-sizing:border-box; width:calc(var(--index-exposure) + 16px); height:80px; padding:8px 16px 8px 0;
+ border:0; border-radius:0; color:#5c4233;
+ background:linear-gradient(100deg,#d9b9a6 0%,#e8cdb9 65%,#c5a68c 100%);
+ clip-path:polygon(2% 2%,100% 0,100% 99%,0 100%,12% 51%);
+ filter:drop-shadow(-1px 2px 2px rgba(55,42,30,.15));
+ font:16px/1.4 'Noto Serif TC','PMingLiU',serif; letter-spacing:.14em;
+ writing-mode:vertical-rl; cursor:pointer; touch-action:manipulation;
+}
+.pf-reading .pf-index-tab:hover { background:linear-gradient(100deg,#cfab96,#e5c5ad 65%,#bea087); }
+.pf-reading .pf-index-tab:focus-visible { outline:2px solid #79583d; outline-offset:-6px; }
 .pf-actions span:empty { display:none; }
 .pf-actions span { max-width:220px; background:#fff3dc; color:#503b2c; }
 .pf-column-label { display:none; }
