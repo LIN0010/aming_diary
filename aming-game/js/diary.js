@@ -128,6 +128,9 @@ const photoColumn=document.createElement('div'),textColumn=document.createElemen
 photoColumn.className='pf-rui-column pf-photo-column';textColumn.className='pf-rui-column pf-text-column';
 amingJournal.parentElement.prepend(photoColumn);rightAming.parentElement.prepend(textColumn);
 photoColumn.append(amingJournal,playerJournal);textColumn.append(rightAming,rightPlayer);
+// 收藏物件仍使用原節點，作為故事旁的小貼紙。
+const storyEntry=rightAming.querySelector('.diary-entry');
+storyEntry.insertBefore(rightAming.querySelector('.memory-fragment'),storyEntry.querySelector('p'));
 rightPlayer.classList.add('pf-player-writing');
 rightPlayer.querySelector('.travel-entry h2').textContent='我的旅行心得';
 function syncBookSize(){

@@ -1832,13 +1832,24 @@ body {
 .pf-reading .pf-rui-column { height:100%; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scroll-padding-block:12px; }
 .pf-reading .pf-rui-column .journal-content { display:block; height:auto; min-height:0; overflow:visible; }
 .pf-reading .pf-rui-column .journal-page { border:0; background:transparent; }
-.pf-reading .pf-photo-column .photo-card { width:min(330px,94%); }
-.pf-reading .pf-photo-column #player-journal { margin-top:20px; }
-.pf-reading .pf-photo-column .player-photo { width:min(260px,82%); height:auto; aspect-ratio:4 / 3; min-height:100px; }
-.pf-reading .pf-photo-column .player-photo.has-photo { aspect-ratio:auto; min-height:0; }
-.pf-reading .pf-photo-column #player-photo-preview { display:none; height:auto; object-fit:contain; }
+/* 左頁用兩個不同尺寸、不同對齊的拍立得，短畫面仍可內頁捲動。 */
+.pf-reading .pf-photo-column { display:grid; grid-template-rows:minmax(108px,1.6fr) minmax(72px,1fr); gap:10px; padding:4px 10px; box-sizing:border-box; }
+.pf-reading .pf-photo-column .journal-content { height:100%; }
+.pf-reading .pf-photo-column #aming-journal.memory-locked { overflow-y:auto; }
+.pf-reading .pf-photo-column .journal-content:not(.memory-locked) > .journal-page { height:100%; min-height:0; display:flex; flex-direction:column; padding:0; }
+.pf-reading .pf-photo-column .page-date { flex-shrink:0; margin-bottom:8px; }
+.pf-reading .pf-photo-column .photo-card { width:min(330px,82%); flex:1; min-height:0; max-height:360px; display:flex; flex-direction:column; margin:8px auto 6px 3%; padding:10px 10px 28px; }
+.pf-reading .pf-photo-column #aming-journal .photo-card img { flex:1; min-height:0; height:0; object-fit:contain; }
+.pf-reading .pf-photo-column .memory-found { flex-shrink:0; margin:0 6% 0 auto; font-size:9px; }
+.pf-reading .pf-photo-column #player-journal { margin-top:0; }
+.pf-reading .pf-photo-column #player-journal .page-date { text-align:right; padding-right:4%; }
+.pf-reading .pf-photo-column .player-photo { width:min(220px,55%); flex:1; min-height:0; max-height:165px; height:0; margin:8px 4% 8px auto; padding:8px 8px 18px; transform:rotate(3deg); overflow:visible; }
+.pf-reading .pf-photo-column #player-photo-preview { display:none; width:100%; height:100%; min-height:0; object-fit:contain; }
 .pf-reading .pf-photo-column .has-photo #player-photo-preview { display:block; }
-.pf-reading .pf-text-column .pf-player-writing { border-top:1px solid rgba(117,94,67,.2); margin-top:18px; padding-top:18px; }
+.pf-reading .pf-text-column .journal-page { border:0; box-shadow:none; background:transparent; }
+.pf-reading .pf-text-column .diary-entry { height:auto; display:flow-root; }
+.pf-reading .pf-text-column .diary-entry .memory-fragment { float:right; width:96px; max-width:30%; margin:0 0 8px 14px; }
+.pf-reading .pf-text-column .pf-player-writing { border-top:1px solid rgba(117,94,67,.2); margin-top:12px; padding-top:12px; }
 .pf-reading .pf-text-column .travel-entry h2 { font-size:22px; letter-spacing:.08em; }
 .pf-reading .pf-page .journal-page { height:auto; min-height:0; overflow:visible; padding:8px; }
 .pf-reading .pf-page .photo-card img { height:auto; object-fit:contain; }
@@ -1882,3 +1893,24 @@ body {
 .pf-undiscovered-copy p { margin:0; max-width:100%; overflow-wrap:anywhere; }
 .pf-undiscovered-title { color:#79634d; font-size:clamp(16px,1.7vw,24px); font-weight:500; line-height:1.8; letter-spacing:.08em; text-wrap:balance; }
 .pf-undiscovered-hint { color:#8a7560; font-size:clamp(12px,1.1vw,15px); line-height:1.9; letter-spacing:.04em; }
+
+@media(orientation:landscape) and (max-height:500px) {
+ .pf-reading .pf-photo-column .page-date { font-size:9px; line-height:12px; margin-bottom:3px; letter-spacing:.06em; }
+ .pf-reading .pf-photo-column .photo-card { margin-top:4px; margin-bottom:2px; padding:6px 6px 20px; }
+ .pf-reading .pf-photo-column .photo-card::before { width:55%; height:16px; top:-7px; }
+ .pf-reading .pf-photo-column .photo-card span { left:7px; bottom:5px; font-size:9px; letter-spacing:0; }
+ .pf-reading .pf-photo-column #player-journal .page-date { display:none; }
+ .pf-reading .pf-photo-column .player-photo { margin-top:5px; margin-bottom:8px; padding:6px 6px 12px; }
+ .pf-reading .pf-photo-column .player-photo::before { width:60%; height:16px; top:-5px; }
+ .pf-reading .pf-photo-column #photo-placeholder { gap:3px; }
+ .pf-reading .pf-photo-column #photo-placeholder > span { font-size:14px; line-height:16px; }
+ .pf-reading .pf-photo-column #photo-placeholder strong { font-size:11px; line-height:1.3; }
+ .pf-reading .pf-photo-column #photo-placeholder small { display:none; }
+ .pf-reading .pf-text-column .diary-entry { display:flex; flex-direction:column; }
+ .pf-reading .pf-text-column .diary-entry .memory-fragment { order:1; flex-shrink:0; float:none; width:76px; max-width:100%; margin:4px 0 8px auto; }
+}
+
+@media(orientation:landscape) and (max-height:320px) {
+ .pf-reading .pf-photo-column { grid-template-rows:minmax(96px,1.6fr) minmax(64px,1fr); gap:8px; }
+ .pf-reading .pf-photo-column #photo-placeholder > span { display:none; }
+}
