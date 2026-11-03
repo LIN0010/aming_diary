@@ -1755,16 +1755,11 @@ body {
 .pf-page .journal::after { display:none; }
 .pf-page .journal-page { box-sizing:border-box; width:100%; height:100%; min-height:0; padding:12px; transform:none; border-radius:0; background:#f5ecdb; overflow:auto; }
 .pf-page .journal-content.memory-locked > .journal-page { display:none; }
-.pf-controls { position:absolute; bottom:0; left:0; right:0; display:flex; gap:8px; align-items:center; justify-content:center; z-index:6; }
-.pf-controls button { padding:5px 10px; border:1px solid #78604a; border-radius:3px; background:#ecdfc8; color:#503a28; cursor:pointer; }
-.pf-controls span { color:#483221; font-size:12px; }
-.pf-controls button:disabled { opacity:.4; }
 @media(max-width:700px) {
  .pf-book { top:18%; height:63%; left:4%; width:92%; }
  .pf-page { padding:10px; }
  .pf-toc .station-journal { padding:8px 3px; grid-template-columns:24px minmax(0,1fr) auto; gap:5px; }
  .pf-toc .station-journal strong { font-size:16px; }
- .pf-controls { gap:4px; flex-wrap:wrap; }.pf-controls button { font-size:11px; padding:5px; }
  .pf-page .journal-page { padding:8px 2px; }
  .pf-book .station-diary { top:0; }
  .pf-book .station-diary-toolbar { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; }
@@ -1780,45 +1775,37 @@ body {
  .pf-book .back-to-index { position:static; }
 }
 
-/* 開發試作：只在封面開啟前、闔上後改變尺寸。 */
-.pf-book { transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease; }
+/* 正式實體書模式：書頁比例固定；只在翻動前後調整舞台。 */
+.pf-book { --closed-height:min(calc(76vw / 1.44),calc(var(--game-height) - var(--game-nav-space,108px) - 100px)); width:calc(var(--closed-height) * 1.44); height:var(--closed-height); left:calc((100% - var(--closed-height) * 1.44) / 2); top:70px; transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease; }
+.pf-frame { inset:0; touch-action:pan-y; }
 #diary-screen { transition:background .35s ease; }
-.pf-mode-switch { position:absolute; right:7%; top:max(8px,env(safe-area-inset-top)); z-index:7; font-size:12px; color:#503b2c; display:flex; gap:6px; align-items:center; }
-.diary-header,.bottom-nav,.pf-mode-switch { transition:opacity .25s ease; }
-.pf-ui-hidden .diary-header,.pf-ui-hidden .bottom-nav,.pf-ui-hidden .pf-mode-switch { opacity:0; pointer-events:none; }
+.diary-header,.bottom-nav { transition:opacity .25s ease; }
+.pf-ui-hidden .diary-header,.pf-ui-hidden .bottom-nav { opacity:0; pointer-events:none; }
 #diary-screen.pf-reading { background:#8e765e; overflow:clip; }
-#diary-screen.pf-reading .pf-book { left:5%; top:5%; width:90%; height:90%; }
-.pf-reading .pf-frame { top:0; }
-.pf-reading .pf-book .station-diary.show { display:none; }
+#diary-screen.pf-reading .pf-book { --read-height:min(calc(92vw / 1.44),calc(var(--game-height) - 72px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); width:calc(var(--read-height) * 1.44); height:var(--read-height); left:calc((100% - var(--read-height) * 1.44) / 2); top:calc((var(--game-height) - var(--read-height)) / 2); }
+.pf-reading .pf-frame { inset:0; touch-action:pan-y; }
+.pf-actions[hidden] { display:none; }
+.pf-actions { position:absolute; top:-34px; right:0; display:flex; align-items:center; gap:12px; z-index:20; }
+.pf-actions button { min-height:32px; padding:4px 8px; border:0; background:#f4e8ce; color:#503b2c; border-radius:4px; cursor:pointer; font:14px/1.5 serif; }
+.pf-actions button:first-child { position:absolute; top:34px; right:8px; background:#bca16ed9; }
+.pf-actions span:empty { display:none; }
+.pf-actions span { max-width:220px; background:#fff3dc; color:#503b2c; }
 .pf-column-label { display:none; }
-.pf-reading .pf-column-label { display:block; margin:0 0 14px; font:18px/1.5 serif; }
-.pf-reading .pf-page #aming-journal,.pf-reading .pf-page #player-journal { display:block; overflow-y:auto; overflow-x:hidden; }
-.pf-reading .pf-page .journal-page { height:auto; min-height:0; overflow:visible; }
+.pf-reading .pf-column-label { display:block; margin:0 0 10px; font:18px/1.5 serif; }
+.pf-reading .pf-page { padding:18px; }
+.pf-reading .pf-page #aming-journal,.pf-reading .pf-page #player-journal { display:block; height:100%; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+.pf-reading .pf-page .journal-page { height:auto; min-height:0; overflow:visible; padding:8px; }
+.pf-reading .pf-page .photo-card img { height:auto; object-fit:contain; }
 .pf-reading .pf-page .memory-fragment { position:relative; right:auto; bottom:auto; margin:16px auto; }
-@media(prefers-reduced-motion:reduce) { .pf-book,.diary-header,.bottom-nav,.pf-mode-switch,#diary-screen { transition:none; } }
+.pf-reading .pf-page .travel-entry { height:auto; }
+.pf-reading .pf-page #travel-note { flex:none; }
+.pf-reading .pf-page #player-photo-preview { object-fit:contain; }
+.pf-reading .pf-page .player-photo { max-width:100%; }
+@media(orientation:landscape) and (max-height:500px) { .pf-reading .pf-page { padding:12px; } .pf-reading .pf-page .journal-page { padding:4px; } }
+@media(prefers-reduced-motion:reduce) { .pf-book,.diary-header,.bottom-nav,#diary-screen { transition:none; } }
 
-/* 手機橫向：整個內容欄可捲動，照片及碎片不再被短書頁裁切。 */
-.mobile-nav #diary-screen { padding:var(--mobile-top) var(--mobile-left) var(--mobile-bottom); }
-.mobile-nav .diary-header { align-items:center; margin:0; padding-right:135px; }
-.mobile-nav .diary-header > div > small { display:none; }
-.mobile-nav .diary-header h1 { font-size:25px; margin:0; }
-.mobile-nav .memory-count { padding:3px 8px; gap:5px; }
-.mobile-nav .pf-mode-switch { right:var(--mobile-right); top:var(--mobile-top); min-height:40px; }
-.mobile-nav .pf-book { left:var(--mobile-left); top:58px; width:calc(100% - var(--mobile-left) - var(--mobile-right)); height:calc(var(--game-height) - 58px - 12px - env(safe-area-inset-bottom,0px)); }
-.mobile-nav .pf-page { padding:10px; }
-.mobile-nav .pf-page .journal-content { height:100%; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
-.mobile-nav .pf-page .journal-page { height:auto; min-height:100%; padding:8px 4px; overflow:visible; }
-.mobile-nav .pf-page .photo-card img { height:auto; object-fit:contain; }
-.mobile-nav .pf-page .memory-fragment { position:relative; right:auto; bottom:auto; margin:16px auto; }
-.mobile-nav .pf-page .player-photo { height:220px; max-width:100%; }
-.mobile-nav .pf-page #player-photo-preview { object-fit:contain; }
-.mobile-nav .pf-page .travel-entry { height:auto; }
-.mobile-nav .pf-page #travel-note { flex:none; }
-.mobile-nav .pf-frame { top:40px; bottom:40px; }
-.mobile-nav #diary-screen .bottom-nav { left:auto; right:var(--mobile-right); transform:none; }
-.mobile-nav .pf-controls { right:196px; }
-.mobile-nav .pf-controls button { min-height:36px; }
-.mobile-nav .pf-book .station-diary-toolbar { gap:4px; flex-wrap:nowrap; }
-.mobile-nav .pf-book .diary-tab,.mobile-nav .pf-book .back-to-index { padding:5px 8px; }
-.mobile-nav #diary-screen.pf-reading .pf-frame { top:0; }
-.mobile-nav .pf-reading .pf-controls { right:0; }
+.pf-reading .diary-entry h2 { font-size:26px; }
+.pf-reading .pf-toc h2 { height:36px; font-size:24px; }
+.pf-reading .pf-toc .station-journals { gap:6px; }
+.pf-reading .pf-toc .station-journal { min-height:48px; padding:6px; }
+.pf-reading .pf-toc .station-journal strong { font-size:18px; }
