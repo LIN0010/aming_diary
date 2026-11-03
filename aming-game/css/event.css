@@ -343,3 +343,24 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-album-toolbar .ev-button, .ev-album-toolbar .ev-button:not(:disabled):is(:hover, :focus-visible) { transform: none; transition: background .2s, color .2s; }
 .ev-photo-mode .ev-footer { padding-inline-start: 8px; }
 @media (max-width: 700px) { .ev-photo-mode .ev-footer { padding-inline-start: 6px; } }
+
+/* 橫向手機保留進度及選單，只讓工作區內容捲動。 */
+.mobile-nav .ev-scroll { padding:var(--mobile-top) var(--mobile-right) var(--mobile-bottom) var(--mobile-left); scroll-padding-bottom:var(--mobile-bottom); }
+.mobile-nav .ev-photo-mode .ev-scroll { padding-bottom:12px; }
+.mobile-nav .ev-photo-workspace { gap:6px; }
+.mobile-nav .ev-photo-display { padding-bottom:calc(var(--mobile-bottom) - 12px); }
+.mobile-nav .ev-photo-heading { gap:2px 12px; }
+.mobile-nav .ev-photo-heading .ev-meta { font-size:11px; }
+.mobile-nav .ev-photo-progress-area { padding:6px 12px; }
+.mobile-nav .ev-photo-progress-area .ev-section-heading { margin-bottom:2px; gap:4px; }
+.mobile-nav .ev-photo-progress-area .ev-count { font-size:20px; }
+.mobile-nav .ev-photo-progress-area .ev-progress { height:10px; margin-bottom:2px; }
+.mobile-nav .ev-photo-progress-area .ev-milestones { height:20px; margin:0; }
+.mobile-nav .ev-photo-progress-area .ev-muted { line-height:1.3; }
+.mobile-nav .ev-photo-body { grid-template-columns:minmax(0,1fr) 145px; grid-template-rows:minmax(0,1fr); gap:8px; }
+.mobile-nav .ev-photo-menu { grid-row:auto; display:flex; flex-direction:column; gap:4px; padding:0; overflow-y:auto; min-height:0; }
+.mobile-nav .ev-photo-menu button { min-height:40px; flex-shrink:0; padding:8px 10px; }
+.mobile-nav .ev-photo-panel { padding:0 6px 12px 0; }
+.mobile-nav .ev-photo-panel > .ev-paper { padding:12px; }
+.mobile-nav .ev-photo-panel .ev-upload-grid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+.mobile-nav .ev-start-modal { max-height:calc(var(--game-height) - var(--mobile-top) - 16px); overflow-y:auto; }

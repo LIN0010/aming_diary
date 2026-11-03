@@ -195,3 +195,12 @@
 .mobile-nav .nav-options .nav-item { min-height:0; }
 .mobile-nav .nav-toggle:focus-visible { outline:2px solid #987744; outline-offset:0; }
 @media(prefers-reduced-motion:reduce) { .mobile-nav .bottom-nav,.mobile-nav .nav-options,.mobile-nav .nav-toggle-arrow { transition:none; } }
+
+/* 手機橫向共用安全邊距：與 visualViewport 高度、導覽膠囊一起使用。 */
+.mobile-nav {
+ --mobile-gap:8px;
+ --mobile-left:max(12px,env(safe-area-inset-left,0px));
+ --mobile-right:max(12px,env(safe-area-inset-right,0px));
+ --mobile-top:max(8px,env(safe-area-inset-top,0px));
+ --mobile-bottom:calc(var(--game-nav-space) + env(safe-area-inset-bottom,0px));
+}

@@ -1796,3 +1796,29 @@ body {
 .pf-reading .pf-page .journal-page { height:auto; min-height:0; overflow:visible; }
 .pf-reading .pf-page .memory-fragment { position:relative; right:auto; bottom:auto; margin:16px auto; }
 @media(prefers-reduced-motion:reduce) { .pf-book,.diary-header,.bottom-nav,.pf-mode-switch,#diary-screen { transition:none; } }
+
+/* 手機橫向：整個內容欄可捲動，照片及碎片不再被短書頁裁切。 */
+.mobile-nav #diary-screen { padding:var(--mobile-top) var(--mobile-left) var(--mobile-bottom); }
+.mobile-nav .diary-header { align-items:center; margin:0; padding-right:135px; }
+.mobile-nav .diary-header > div > small { display:none; }
+.mobile-nav .diary-header h1 { font-size:25px; margin:0; }
+.mobile-nav .memory-count { padding:3px 8px; gap:5px; }
+.mobile-nav .pf-mode-switch { right:var(--mobile-right); top:var(--mobile-top); min-height:40px; }
+.mobile-nav .pf-book { left:var(--mobile-left); top:58px; width:calc(100% - var(--mobile-left) - var(--mobile-right)); height:calc(var(--game-height) - 58px - 12px - env(safe-area-inset-bottom,0px)); }
+.mobile-nav .pf-page { padding:10px; }
+.mobile-nav .pf-page .journal-content { height:100%; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+.mobile-nav .pf-page .journal-page { height:auto; min-height:100%; padding:8px 4px; overflow:visible; }
+.mobile-nav .pf-page .photo-card img { height:auto; object-fit:contain; }
+.mobile-nav .pf-page .memory-fragment { position:relative; right:auto; bottom:auto; margin:16px auto; }
+.mobile-nav .pf-page .player-photo { height:220px; max-width:100%; }
+.mobile-nav .pf-page #player-photo-preview { object-fit:contain; }
+.mobile-nav .pf-page .travel-entry { height:auto; }
+.mobile-nav .pf-page #travel-note { flex:none; }
+.mobile-nav .pf-frame { top:40px; bottom:40px; }
+.mobile-nav #diary-screen .bottom-nav { left:auto; right:var(--mobile-right); transform:none; }
+.mobile-nav .pf-controls { right:196px; }
+.mobile-nav .pf-controls button { min-height:36px; }
+.mobile-nav .pf-book .station-diary-toolbar { gap:4px; flex-wrap:nowrap; }
+.mobile-nav .pf-book .diary-tab,.mobile-nav .pf-book .back-to-index { padding:5px 8px; }
+.mobile-nav #diary-screen.pf-reading .pf-frame { top:0; }
+.mobile-nav .pf-reading .pf-controls { right:0; }

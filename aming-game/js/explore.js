@@ -53,6 +53,20 @@ const viewMemory =
 const missionProgress =
     ctx.query(".mission-progress");
 
+// HUD 共用容器讓手機使用正常欄位排版；桌面保留原有定位。
+const hud = document.createElement('div');hud.className='station-hud';
+const mission = ctx.query('.explore-mission'), header = ctx.query('.station-header');
+header.before(hud);hud.append(header,mission);
+const missionDetails = mission.children[1];missionDetails.id='scene-mission-details';
+const missionToggle = document.createElement('button');missionToggle.type='button';
+missionToggle.className='mission-toggle';missionToggle.textContent='收合任務';
+missionToggle.setAttribute('aria-controls',missionDetails.id);missionToggle.setAttribute('aria-expanded','true');
+mission.append(missionToggle);
+ctx.on(missionToggle,'click',()=>{
+ const collapsed=mission.classList.toggle('is-collapsed');
+ missionToggle.setAttribute('aria-expanded',String(!collapsed));
+ missionToggle.textContent=collapsed?'展開任務':'收合任務';
+});
 let locating = false;
 
 let isDragging = false;

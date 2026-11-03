@@ -1798,3 +1798,21 @@ body {
 .rail-route .station .name { color:#503b2c; text-shadow:0 1px 3px #fff7df; }
 .rail-route .station.current .name::after { content:'阿明目前的位置'; display:block; position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%); white-space:nowrap; padding:3px 6px; border:1px solid #9d805c; border-radius:3px; background:#f4e6cbdc; color:#65482e; font:11px/1.4 'KaiTi','DFKai-SB',serif; letter-spacing:.03em; text-shadow:none; }
 @media(max-width:700px) { #explore-screen::before { background-position:52% center; } .rail-route .station.current .name::after { font-size:10px; } }
+
+/* 兩組 HUD 同列分區，避免原 top:14vh 疊到站名。 */
+.station-hud { display:contents; }
+.mission-toggle { display:none; }
+.mobile-nav .station-hud { position:absolute; top:var(--mobile-top); left:var(--mobile-left); right:var(--mobile-right); z-index:10; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; gap:var(--mobile-gap); pointer-events:none; }
+.mobile-nav .station-header { position:static; width:auto; min-width:0; gap:8px; }
+.mobile-nav .leave-station { flex-shrink:0; min-height:40px; padding:8px 10px; }
+.mobile-nav .station-title { min-width:0; padding:6px 10px; }
+.mobile-nav .station-title strong { font-size:18px; }
+.mobile-nav .explore-mission { position:static; width:100%; max-width:none; min-width:0; gap:6px; padding:8px 10px; }
+.mobile-nav .explore-mission div:nth-child(2) { min-width:0; flex:1; }
+.mobile-nav .explore-mission strong { white-space:normal; overflow-wrap:anywhere; }
+.mobile-nav .mission-progress { margin-left:0; white-space:nowrap; }
+.mobile-nav .mission-toggle { display:block; min-height:40px; border:0; border-bottom:1px solid #bca779; background:transparent; color:#51473e; font:inherit; font-size:12px; pointer-events:auto; cursor:pointer; }
+.mobile-nav .explore-mission.is-collapsed div:nth-child(2),.mobile-nav .explore-mission.is-collapsed .mission-icon { display:none; }
+.mobile-nav .explore-mission.is-collapsed { justify-self:end; width:auto; }
+.mobile-nav .mission-card,.mobile-nav .photo-success { top:var(--mobile-top); bottom:auto; max-height:calc(var(--game-height) - var(--mobile-top) - 16px - env(safe-area-inset-bottom,0px)); overflow-y:auto; overscroll-behavior:contain; transform:translateX(-50%); }
+.mobile-nav .mission-card.show,.mobile-nav .photo-success.show { transform:translateX(-50%); }
