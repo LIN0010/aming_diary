@@ -1809,3 +1809,8 @@ body {
 .pf-reading .pf-toc .station-journals { gap:6px; }
 .pf-reading .pf-toc .station-journal { min-height:48px; padding:6px; }
 .pf-reading .pf-toc .station-journal strong { font-size:18px; }
+
+/* 紙張本身的細邊跟隨原生旋轉與裁切；不描繪裁切新產生的斜邊。 */
+.pf-stage .pf-page { border:1px solid rgba(55,42,30,.55); box-sizing:border-box; }
+/* 靜止跨頁的書脊只留一條線；翻動頁仍保留四邊。 */
+.pf-stage .pf-page.--simple.--left { border-right-color:transparent; }
