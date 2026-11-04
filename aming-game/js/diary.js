@@ -94,30 +94,23 @@ const rightAming=document.createElement('section'),rightPlayer=document.createEl
 rightAming.className=amingJournal.className+' pf-aming-right';rightPlayer.className=playerJournal.className;
 rightAming.append(amingJournal.querySelector('.right-page'));rightPlayer.append(playerJournal.querySelector('.right-page'));
 const lockedMessage=document.createElement('div');lockedMessage.className='locked-memory-message';lockedMessage.textContent='這段記憶尚未尋回。';rightAming.prepend(lockedMessage);
-// 共用未發現跨頁：保持原紙色，兩張紙頁各自承載小鎖頭與提示。
-function mountUndiscoveredSpread(left, right, entry) {
- const name=entry.querySelector('strong').textContent.trim();
- const unknown=entry.querySelector('small')?.textContent.trim()==='UNKNOWN'||!name||/[?？]/.test(name);
- const title=unknown?'未知的下一站，正等待你的發現。':name+'，正等待你的發現。';
- const placeholders=[left,right].map((page,side)=>{
-  const placeholder=document.createElement('div');placeholder.className='pf-undiscovered-page';
-  const copy=document.createElement('div');copy.className='pf-undiscovered-copy';
+// 目錄與書頁共用實際記憶資料；探索是否開放仍由原按鈕的 disabled 決定。
+const stationMemoryIds=['banqiao-01','fulong-01','tainan-01','ruisui-01',null,null];
+const memoryUnlocked=(state,index)=>Boolean(stationMemoryIds[index]&&state.collectedMemories.includes(stationMemoryIds[index]));
+const memorySpreads=[];
+function mountUndiscoveredSpread(left,right,entry){
+ const locks=[left,right].map(page=>{
+  const placeholder=document.createElement('div');placeholder.className='pf-undiscovered-page';placeholder.setAttribute('role','img');placeholder.setAttribute('aria-label','未解鎖');
   const lock=document.createElement('span');lock.className='pf-undiscovered-lock';lock.setAttribute('aria-hidden','true');
   lock.innerHTML='<svg viewBox="0 0 24 28" width="24" height="28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12V8a5 5 0 0 1 10 0v4"/><rect x="4" y="12" width="16" height="13" rx="2"/><path d="M12 17v3"/></svg>';
-  const text=document.createElement('p');text.className=side?'pf-undiscovered-hint':'pf-undiscovered-title';
-  text.textContent=side?'沿著鐵道前行，尋找尚未拾起的記憶。':title;
-  copy.append(lock,text);placeholder.append(copy);page.append(placeholder);return placeholder;
+  placeholder.append(lock);page.append(placeholder);return placeholder;
  });
- // 沿用原目錄的鎖定條件，不刪除頁內內容，也不新增解鎖途徑。
- const sync=()=>{const locked=entry.disabled||entry.classList.contains('locked');placeholders.forEach(placeholder=>placeholder.hidden=!locked);};
- sync();
- const observer=new MutationObserver(sync);observer.observe(entry,{attributes:true,attributeFilter:['class','disabled']});
- ctx.cleanup(()=>observer.disconnect());
+ memorySpreads.push({entry,locks});
 }
 for(let n=1;n<=entries.length;n++){
  const left=makePage(),right=makePage();
  if(n===4){left.append(amingJournal,playerJournal);right.append(rightAming,rightPlayer);}
- else{mountUndiscoveredSpread(left,right,entries[n-1]);}
+ mountUndiscoveredSpread(left,right,entries[n-1]);
  stage.append(left,right);
 }
 const backCover=makePage('阿明的日記',true);stage.append(backCover);
@@ -427,7 +420,7 @@ function markVisibleMemoryRead() {
 if (params.get("tab") === "player") selectJournalTab("player", false);
 GameProgress.enterScene("diary", "index");
 ctx.subscribe((state, status) => {
-    const found = state.collectedMemories.includes("ruisui-01");
+    const found = memoryUnlocked(state,3);
     const fresh = found && !state.readMemories.includes("ruisui-01");
     ctx.queryAll("[data-memory-total]").forEach(total => {
         total.textContent = `${state.collectedMemories.length} / 30`;
@@ -441,6 +434,15 @@ ctx.subscribe((state, status) => {
         item.classList.toggle("new", unread);
         item.querySelector(".fragment-status").textContent = collected ? (unread ? "NEW" : "✓") : "?";
     });
+    memorySpreads.forEach(({entry,locks},index)=>{
+        const unlocked=memoryUnlocked(state,index);
+        entry.classList.toggle('locked',!unlocked);entry.classList.toggle('unlocked',unlocked);
+        entry.classList.toggle('memory-pending',!unlocked);
+        const marker=entry.querySelector('.journal-new,.journal-check')||entry.lastElementChild;
+        marker.hidden=!unlocked;
+        locks.forEach(lock=>lock.hidden=unlocked);
+    });
+    photoColumn.hidden=!found;textColumn.hidden=!found;
     ruisuiJournal.classList.toggle("new", fresh);
     ruisuiJournal.querySelector("[data-ruisui-summary]").textContent = found ? (fresh ? "1 段新回憶" : "1 段回憶") : "尚未尋回";
     ruisuiJournal.querySelector(".journal-new").textContent = fresh ? "NEW" : (found ? "✓" : "◇");

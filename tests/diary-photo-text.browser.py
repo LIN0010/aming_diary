@@ -33,7 +33,7 @@ try:
    page.route('**/page-flip.browser.js',lambda r:r.fulfill(body=bundle+';const Orig=St.PageFlip;St.PageFlip=class extends Orig{constructor(...a){super(...a);window.testBook=this;window.engineCount=(window.engineCount||0)+1;}};',content_type='application/javascript'))
    page.goto(BASE+'game.html#/diary?station=ruisui',wait_until='domcontentloaded');page.wait_for_function('window.testBook&&testBook.getCurrentPageIndex()===9');ready(page)
    expect(page.locator('.pf-photo-column #aming-journal .journal-page')).to_be_hidden();expect(page.locator('.pf-text-column .pf-aming-right .journal-page')).to_be_hidden()
-   assert page.locator('.pf-photo-column .player-photo,.pf-text-column #travel-note').count()==2
+   expect(page.locator('.pf-photo-column')).to_be_hidden();expect(page.locator('.pf-text-column')).to_be_hidden()
    page.evaluate('GameProgress.completeRuisui()')
    expect(page.locator('.pf-photo-column #aming-journal .journal-page')).to_be_visible();expect(page.locator('.pf-text-column .pf-aming-right .journal-page')).to_be_visible()
    assert page.locator('.pf-photo-column .diary-entry,.pf-photo-column #travel-note,.pf-text-column .photo-card,.pf-text-column .player-photo').count()==0
@@ -75,7 +75,7 @@ try:
     else:page.mouse.move(x,y);page.mouse.down();page.mouse.move(x+dx,y,steps=18);page.mouse.up()
     page.wait_for_function('(i)=>testBook.getState()==="read"&&testBook.getCurrentPageIndex()===i',arg=destination)
    page.locator('.pf-index-tab').click();ready(page);page.locator('#ruisui-journal').click();ready(page);picture(page,'#player-photo-preview');expect(page.locator('#travel-note')).to_have_value('照片左頁、故事右頁的心得');assert page.evaluate('engineCount')==1
-   assert page.locator('.pf-undiscovered-lock svg').count()==10
+   assert page.locator('.pf-undiscovered-lock svg').count()==12
    page.reload(wait_until='domcontentloaded');page.wait_for_function('window.testBook&&testBook.getCurrentPageIndex()===9');ready(page);expect(page.locator('#travel-note')).to_have_value('照片左頁、故事右頁的心得');assert not errors,errors
    context.close();print('PASS photo/text spread',width,height,flush=True)
   browser.close()
