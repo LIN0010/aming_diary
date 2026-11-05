@@ -23,7 +23,9 @@ try:
    assert page.evaluate("GuildStore.join('RAIL2027').ok")
    page.reload();expect(page.locator('.gl-room-heading h1')).to_have_text('沿線慢慢走')
    saved=page.evaluate('localStorage.getItem(GuildConfig.storageKey)')
-   expect(page.locator('#gl-menu,.gl-room-menu')).to_have_count(0)
+   expect(page.locator('#gl-menu,.gl-room-menu,#gl-wall-progress,.gl-wall-progress')).to_have_count(0)
+   expect(page.locator('.gl-hotspot .gl-pointer-icon')).to_have_count(3)
+   assert '↗' not in page.locator('#gl-hotspots').inner_text()
    expect(page.locator('.gl-hotspot[data-gl="puzzle"]')).to_have_count(1)
    image=page.locator('.gl-room-bg').bounding_box()
    boxes=[]
@@ -43,6 +45,7 @@ try:
     if mobile:page.touchscreen.tap(**point)
     else:page.mouse.click(**point)
     expect(page.locator('#gl-dialog')).to_be_visible();expect(page.locator('#gl-dialog-title')).to_have_text(title)
+    if action=='puzzle':expect(page.locator('#gl-puzzle-progress')).to_have_text('7/12 片回憶')
     page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
    page.locator('.gl-avatars button').first.focus();page.keyboard.press('Enter');expect(page.locator('.gl-member')).to_have_count(4);page.locator('.gl-close').click()
    page.locator('.gl-hotspot[data-gl="wall"]').focus();page.keyboard.press('Enter');expect(page.locator('#gl-dialog-title')).to_have_text('旅團旅行牆');page.locator('.gl-close').click()

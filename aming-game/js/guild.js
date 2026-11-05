@@ -16,6 +16,8 @@ GameScenes.register('group', ctx => {
         noticeTimer=ctx.delay(()=>ctx.id('gl-notice').hidden=true,4500);
     }
     function result(r, text) { if (!r.ok) {notify(r.message);return false;} ctx.cancelTimer(noticeTimer); noticeElement.hidden=true; if(text)notify(text);return true; }
+    // 輕量內嵌手指提示；不載入額外圖示套件。
+    const pointerIcon='<svg class="gl-pointer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 13V4a2 2 0 0 1 4 0v7-2a2 2 0 0 1 4 0v3-1a2 2 0 0 1 4 0v5c0 4-2 6-6 6h-2c-2 0-3-1-4-2l-5-6a2 2 0 0 1 3-2l2 1Z"/></svg>';
     function background(mode) {
         const setting=mode==='entry'?C.entrance:C.room;
         sceneMode=mode; ctx.root.classList.toggle('gl-entry-mode',mode==='entry');
@@ -23,10 +25,7 @@ GameScenes.register('group', ctx => {
         ctx.root.style.setProperty('--gl-entry-image',`url('${new URL(C.entrance.image,document.baseURI).href}')`);
         ctx.query('.gl-room-bg').src=setting.image;
         ctx.query('.gl-room-bg').alt=mode==='entry'?'水彩車站：左側售票窗口，右側剪票口':'旅團小屋：窗邊鐵道、沙發、旅行手帳與拼圖牆';
-        ctx.id('gl-hotspots').innerHTML=setting.hotspots.map(t=>`<button type="button" class="gl-hotspot ${mode==='entry'?'gl-entry-hotspot':''}" data-gl="${t.id}" aria-label="${h(t.label)}" style="left:${t.x*100}%;top:${t.y*100}%;width:${t.w*100}%;height:${t.h*100}%"><span>${h(t.label)}${mode==='entry'?'':' ↗'}</span></button>`).join('')+(mode==='room'?'<span class="gl-wall-progress" id="gl-wall-progress"></span>':'');
-        if(mode==='room'){
-            const marker=ctx.id('gl-wall-progress');marker.style.left=C.room.progress.x*100+'%';marker.style.top=C.room.progress.y*100+'%';
-        }
+        ctx.id('gl-hotspots').innerHTML=setting.hotspots.map(t=>`<button type="button" class="gl-hotspot ${mode==='entry'?'gl-entry-hotspot':''}" data-gl="${t.id}" aria-label="${h(t.label)}" style="left:${t.x*100}%;top:${t.y*100}%;width:${t.w*100}%;height:${t.h*100}%"><span>${h(t.label)}${mode==='entry'?'':pointerIcon}</span></button>`).join('');
         ctx.delay(()=>{const room=ctx.query('.gl-room');room.scrollLeft=(room.scrollWidth-room.clientWidth)/2;},0);
     }
     function renderRoom() {
@@ -36,7 +35,6 @@ GameScenes.register('group', ctx => {
             ctx.id('gl-hud').innerHTML=`<header class="gl-entry-heading"><h1>下一段旅程，你想與誰同行？</h1></header>`;
         }else{
             ctx.id('gl-hud').innerHTML=`<div class="gl-room-heading">${guildPortrait(g)}<h1>${h(g.name)}</h1><button type="button" class="gl-member-count" data-gl="members" aria-label="查看旅團成員，${g.members.length}/${C.maxMembers} 位旅人">${g.members.length}/${C.maxMembers} 位旅人</button><div class="gl-avatars">${g.members.map(m=>`<button type="button" data-member="${m.id}" aria-label="查看${h(memberInfo(m.id).name)}">${avatar(m.id)}</button>`).join('')}</div></div>`;
-            ctx.id('gl-wall-progress').textContent=`共同拼圖 ${g.puzzles.spring.owned.length}/12`;
         }
     }
     function applicationList(g, simulate=false) {
