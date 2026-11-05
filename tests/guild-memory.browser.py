@@ -15,6 +15,8 @@ def open_panel(page,action):
  assert point,selector
  page.mouse.click(**point);expect(page.locator('#gl-dialog')).to_be_visible()
 def close(page):page.wait_for_function('document.querySelector("#gl-dialog").getAttribute("aria-busy")!=="true"');page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
+def finish(page):
+ while page.locator('.gl-memory-bubble').count()<6:page.locator('[data-gl="next-memory"]').click()
 try:
  with sync_playwright() as p:
   browser=p.chromium.launch(executable_path=shutil.which('chromium'),args=['--no-sandbox'])
@@ -27,13 +29,15 @@ try:
     assert not page.evaluate('(id)=>Boolean(GuildStore.current().puzzles[id].storyUnlocked)',pid)
     missing=page.evaluate('(id)=>{const p=GuildConfig.puzzles.find(p=>p.id===id);return Array.from({length:p.rows*p.cols},(_,i)=>i).filter(i=>!GuildStore.current().puzzles[id].owned.includes(i));}',pid)
     for n in missing:page.locator(f'[data-piece="{n}"]').click()
-    expect(page.locator('[data-gl="watch-memory"]')).to_be_visible();expect(page.locator('.gl-memory-bubble')).to_have_count(0)
+    expect(page.locator('.gl-memory-continue')).to_be_visible();expect(page.locator('.gl-memory-bubble')).to_have_count(1)
     assert page.evaluate('(id)=>GuildStore.current().puzzles[id].storyUnlocked',pid)
-    page.locator('[data-gl="watch-memory"]').click();expect(page.locator('.gl-memory-bubble')).to_have_count(1)
+    page.locator('.gl-memory-cg').click();page.locator('.gl-memory-bubble').click();expect(page.locator('.gl-memory-bubble')).to_have_count(1)
     page.evaluate("window.firstBubble=document.querySelector('.gl-memory-bubble')")
     before=page.locator('.gl-memory-cg').bounding_box()
     for n in range(2,7):
-     page.locator('[data-gl="next-memory"]').click();expect(page.locator('.gl-memory-bubble')).to_have_count(n)
+     if n%2:page.locator('.gl-memory-messages').focus();page.keyboard.press('Space' if n==3 else 'Enter')
+     else:page.locator('[data-gl="next-memory"]').click()
+     expect(page.locator('.gl-memory-bubble')).to_have_count(n)
      assert page.evaluate("window.firstBubble===document.querySelector('.gl-memory-bubble')")
     expected=page.evaluate('(id)=>GuildConfig.puzzles.find(p=>p.id===id).dialogue.map(l=>l.text)',pid)
     assert page.locator('.gl-memory-bubble p').all_text_contents()==expected
@@ -42,17 +46,20 @@ try:
     expect(page.locator('.gl-memory-controls [role="status"]')).to_have_text('回憶已找回')
     assert page.locator('.gl-memory-cg').bounding_box()==before
     assert page.locator('.gl-memory-messages').evaluate('(e)=>Math.abs(e.scrollHeight-e.clientHeight-e.scrollTop)<2')
-    assert page.locator('#gl-dialog').evaluate('(e)=>{const r=e.getBoundingClientRect();return r.y>=0&&r.bottom<=innerHeight&&e.scrollHeight<=e.clientHeight+1}')
+    assert page.locator('#gl-dialog').evaluate('(e)=>{const r=e.getBoundingClientRect();return r.y>=0&&r.bottom<=innerHeight&&e.scrollHeight<=e.clientHeight+1&&e.scrollWidth<=e.clientWidth+1}')
+    assert page.locator('.gl-memory-bubble').evaluate_all('es=>es.every(e=>getComputedStyle(e).backgroundColor!=="rgba(0, 0, 0, 0)"&&e.getBoundingClientRect().width<=e.parentElement.clientWidth*.85)')
     page.screenshot(path=f'/workspace/work/guild-story-{pid}-{w}.png')
     page.locator('[data-gl="replay-memory"]').click();expect(page.locator('.gl-memory-bubble')).to_have_count(1)
-    page.locator('[data-gl="skip-memory"]').click();page.locator('[data-gl="next-memory"]').click();assert page.locator('.gl-memory-bubble').last.evaluate('(e)=>getComputedStyle(e).animationName')=='none'
-    page.locator('[data-gl="all-memory"]').click();expect(page.locator('.gl-memory-bubble')).to_have_count(6)
+    expect(page.locator('.gl-memory-controls button')).to_have_count(1)
+    page.locator('.gl-memory-messages').dispatch_event('click');expect(page.locator('.gl-memory-bubble')).to_have_count(2)
+    for _ in range(4):page.locator('[data-gl="next-memory"]').click()
+    expect(page.locator('.gl-memory-controls button')).to_have_count(2)
     page.locator('#gl-dialog [data-gl="puzzle"]').click();expect(page.locator('.gl-piece.is-owned')).to_have_count(total)
-    page.locator('[data-gl="reward"]').click();expect(page.locator('[data-gl="watch-memory"]')).to_be_visible();page.locator('#gl-dialog [data-gl="puzzle"]').click()
+    page.locator('[data-gl="reward"]').click();expect(page.locator('.gl-memory-continue')).to_be_visible();finish(page);page.locator('#gl-dialog [data-gl="puzzle"]').click()
    snapshot=page.evaluate('GuildStore.current()');page.reload();page.wait_for_function('GuildStore.current()');assert page.evaluate('GuildStore.current()')==snapshot
    open_panel(page,'puzzle')
    for pid in ['spring','limited']:
-    page.locator(f'[data-puzzle="{pid}"]').click();page.locator('[data-gl="reward"]').click();expect(page.locator('[data-gl="watch-memory"]')).to_be_visible();page.locator('#gl-dialog [data-gl="puzzle"]').click()
+    page.locator(f'[data-puzzle="{pid}"]').click();page.locator('[data-gl="reward"]').click();expect(page.locator('.gl-memory-continue')).to_be_visible();finish(page);page.locator('#gl-dialog [data-gl="puzzle"]').click()
    assert not errors,errors
    print('PASS chapter dialogue, CG bounds, scrolling, replay/skip, gated unlock persistence',w,h,flush=True);context.close()
   browser.close()

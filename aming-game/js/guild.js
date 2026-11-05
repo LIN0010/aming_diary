@@ -3,7 +3,7 @@ GameScenes.register('group', ctx => {
     const C = GuildConfig, S = GuildStore, dialog = ctx.id('gl-dialog'), body = ctx.id('gl-dialog-content');
     const noticeElement=ctx.id('gl-notice');
     let panel = '', puzzleId = C.puzzles[0].id, drawing = false, reveal = null, noticeTimer, draft = '', selectedStation = '', disposed = false;
-    let storyCount=0, storyPlaying=false, skipStoryAnimation=false;
+    let storyCount=0;
     let sceneMode='', joinMethod='apply', search='', boarding=false, stampLabel='', selectedGuildId=null;
     const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const btn = (action,label,off=false,extra='') => `<button type="button" class="gl-button ${extra}" data-gl="${action}"${off?' disabled':''}>${h(label)}</button>`;
@@ -128,7 +128,7 @@ GameScenes.register('group', ctx => {
     function reward(g) {
         const p=C.puzzles.find(p=>p.id===puzzleId);
         if(!storyAllowed(g)) return puzzle(g);
-        return title(p.title)+`<div class="gl-memory-layout"><img class="gl-memory-cg" src="${p.image}" alt="${h(p.title)}完整 CG"><section class="gl-memory-reader" aria-label="童年回憶"><div class="gl-memory-messages" role="log" aria-label="回憶對話" aria-live="polite"></div><div class="gl-memory-controls"></div></section></div>`;
+        return title(p.title)+`<div class="gl-memory-layout"><img class="gl-memory-cg" src="${p.image}" alt="${h(p.title)}完整 CG"><section class="gl-memory-reader" aria-label="童年回憶"><div class="gl-memory-messages" role="log" aria-label="回憶對話" aria-live="polite" tabindex="0"></div><div class="gl-memory-controls"></div></section></div>`;
     }
     function updateStory() {
         if(panel!=='reward'||!storyAllowed(S.current()))return;
@@ -137,22 +137,31 @@ GameScenes.register('group', ctx => {
         if(log.children.length>storyCount)log.replaceChildren();
         for(let n=log.children.length;n<storyCount;n++){
             const line=lines[n],bubble=document.createElement('article');
-            bubble.className='gl-memory-bubble '+(line.speaker==='阿明'?'is-aming':'is-mother')+(skipStoryAnimation?' no-animation':'');
+            bubble.className='gl-memory-bubble '+(line.speaker==='阿明'?'is-aming':'is-mother');
             const speaker=document.createElement('strong'),text=document.createElement('p');speaker.textContent=line.speaker;text.textContent=line.text;
             bubble.append(speaker,text);log.append(bubble);
         }
-        if(skipStoryAnimation)log.querySelectorAll('.gl-memory-bubble').forEach(b=>b.classList.add('no-animation'));
-        const ended=storyPlaying&&storyCount===lines.length;
-        controls.innerHTML=!storyPlaying?btn('watch-memory','觀看回憶'):
-            `${ended?'<p role="status">回憶已找回</p>':btn('next-memory','下一句')+btn('all-memory','全部顯示',false,'gl-plain')+btn('skip-memory',skipStoryAnimation?'已跳過動畫':'跳過動畫',skipStoryAnimation,'gl-plain')}${btn('replay-memory','重新觀看',false,'gl-plain')}`;
-        controls.innerHTML+=btn('puzzle','← 回到拼圖',false,'gl-plain');
+        const ended=storyCount===lines.length;
+        controls.innerHTML=ended?'<p role="status">回憶已找回</p>'+btn('replay-memory','重新觀看',false,'gl-plain')+btn('puzzle','返回拼圖',false,'gl-plain'):
+            '<button type="button" class="gl-memory-continue" data-gl="next-memory">點擊繼續 ▾</button>';
         log.scrollTop=log.scrollHeight;
     }
+    function advanceMemory() {
+        if(panel!=='reward'||!storyAllowed(S.current()))return;
+        storyCount=Math.min(C.puzzles.find(p=>p.id===puzzleId).dialogue.length,storyCount+1);updateStory();
+    }
+    // 僅訊息區本身的空白可推進；氣泡、CG 與操作按鈕不會重複觸發。
+    ctx.on(body,'click',e=>{if(e.target.matches('.gl-memory-messages'))advanceMemory();});
+    ctx.on(body,'keydown',e=>{
+        if(e.target.matches('.gl-memory-messages')&&['Enter',' '].includes(e.key)){
+            e.preventDefault();if(!e.repeat)advanceMemory();
+        }
+    });
     function show(next) {
         const g=S.current(); panel=g?next:['create','join'].includes(next)?next:'welcome';
         if(!g&&panel==='join')result(S.prepareDirectory());
         if(panel==='puzzle') reveal=null;
-        if(panel==='reward'){storyPlaying=false;storyCount=0;skipStoryAnimation=false;ctx.cancelTimer(noticeTimer);noticeElement.hidden=true;}
+        if(panel==='reward'){storyCount=1;ctx.cancelTimer(noticeTimer);noticeElement.hidden=true;}
         renderPanel();
         // SPA 掛載時先隱藏 root，待掛載完成再進入原生對話框頂層。
         ctx.delay(()=>{if(!disposed&&panel&&!dialog.open)dialog.showModal();},0);
@@ -190,14 +199,10 @@ GameScenes.register('group', ctx => {
         if(button.dataset.member){show('members');ctx.delay(()=>ctx.id('gl-member-'+button.dataset.member)?.scrollIntoView({block:'nearest'}),0);return;}
         if(button.dataset.puzzle){if(drawing)return;puzzleId=button.dataset.puzzle;show('puzzle');return;}
         if(button.dataset.piece!==undefined){if(drawing)return;const r=S.exchange(puzzleId,Number(button.dataset.piece));if(result(r,'這片回憶已加入共同拼圖。')){reveal=null;if(storyAllowed(S.current()))show('reward');else renderPanel();}return;}
-        if(['watch-memory','next-memory','all-memory','skip-memory','replay-memory'].includes(action)){
+        if(action==='next-memory'){advanceMemory();return;}
+        if(action==='replay-memory'){
             if(panel!=='reward'||!storyAllowed(S.current()))return;
-            const total=C.puzzles.find(p=>p.id===puzzleId).dialogue.length;
-            if(action==='watch-memory'||action==='replay-memory'){storyPlaying=true;storyCount=1;skipStoryAnimation=false;body.querySelector('.gl-memory-messages').replaceChildren();}
-            if(action==='next-memory')storyCount=Math.min(total,storyCount+1);
-            if(action==='all-memory'){skipStoryAnimation=true;storyCount=total;}
-            if(action==='skip-memory')skipStoryAnimation=true;
-            updateStory();return;
+            storyCount=1;body.querySelector('.gl-memory-messages').replaceChildren();updateStory();return;
         }
         if(action==='close'){close();return;}
         if(['welcome','create','join','wall','puzzle','members','manage','reward'].includes(action)){if(!drawing)show(action);return;}

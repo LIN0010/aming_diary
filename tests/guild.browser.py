@@ -89,7 +89,7 @@ try:
   page.evaluate('Math.random=oldRandom')
   for n in (7,8,9,10):page.locator(f'[data-piece="{n}"]').click()
   assert page.evaluate('GuildStore.current().puzzles.spring.owned.length')==12
-  expect(page.locator('.gl-memory-cg')).to_be_visible();expect(page.locator('[data-gl="watch-memory"]')).to_be_visible()
+  expect(page.locator('.gl-memory-cg')).to_be_visible();expect(page.locator('.gl-memory-continue')).to_be_visible()
   page.locator('#gl-dialog [data-gl="puzzle"]').click();page.locator('[data-puzzle="limited"]').click()
   expect(page.locator('.gl-piece')).to_have_count(20)
   for n in range(10,20):page.locator(f'[data-piece="{n}"]').click()
