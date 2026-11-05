@@ -72,7 +72,7 @@ try:
   expect(page.locator('.gl-piece')).to_have_count(12)
   expect(page.locator('#gl-dialog')).to_be_visible()
   page.screenshot(path='/workspace/work/guild-puzzle-desktop.png')
-  assert page.locator('.gl-piece.is-owned').first.evaluate('(e)=>getComputedStyle(e).backgroundImage').find('ruisui-memory')>=0
+  assert page.locator('.gl-piece.is-owned').first.evaluate('(e)=>getComputedStyle(e).backgroundImage').find('puzzle-spring-railway.png')>=0
   page.evaluate('window.oldRandom=Math.random;Math.random=()=>.999')
   page.locator('[data-gl="draw"]').click()
   expect(page.locator('[data-gl="draw"]')).to_be_disabled()
