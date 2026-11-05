@@ -68,12 +68,11 @@ try:
   page.reload();expect(page.locator('.gl-room-heading h1')).to_have_text('山線同行',timeout=20000)
   expect(page.locator('.gl-entry-hotspot')).to_have_count(0)
   page.locator('.gl-hotspot[data-gl="manage"]').click()
-  page.locator('[data-gl="test-application"]').click()
-  expect(page.locator('[data-review]')).to_have_count(2)
-  page.locator('[data-approve="false"]').click()
+  expect(page.locator('[data-review]')).to_have_count(4)
+  page.locator('[data-approve="false"]').first.click()
+  assert page.evaluate('GuildStore.current().members.length')==1
+  page.locator('[data-gl="test-application"]').click();page.locator('[data-approve="true"]').first.click()
   assert page.evaluate('GuildStore.current().members.length')==2
-  page.locator('[data-gl="test-application"]').click();page.locator('[data-approve="true"]').click()
-  assert page.evaluate('GuildStore.current().members.length')==3
   page.locator('[data-gl="toggle-applications"]').click()
   expect(page.locator('[data-gl="toggle-applications"]')).to_have_text('開放申請')
   page.once('dialog',lambda d:d.accept());page.locator('[data-gl="leave"]').click();entry(page)

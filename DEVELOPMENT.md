@@ -347,3 +347,11 @@ wrapper/block明確填滿stage；矮橫向視窗只調整書本周圍留白，�
 披露按鈕提供aria-expanded/controls，收合選項設inert/aria-hidden/tabindex；Enter/Space沿用按鈕、ArrowDown待選項動畫完成後聚焦目前頁、左右鍵/Home/End移動、Escape關閉並還原焦點。事件只在首次建立導覽時註冊。沉浸閱讀沿用同一nav的inert與隱藏，退出恢復。
 
 CSS保留米白外框與safe-area底部／左右邊距，手機收合高度52px、展開126px。--game-nav-space桌面108px、手機橫向76px，日記矮橫向容器使用同一預留值增加書頁空間。tests/compact-nav.browser.py、nav.browser.py、mobile-viewport.browser.py與pageflip-size.browser.py涵蓋SPA五頁、鍵盤、閱讀模式、桌面不變、直橫與standalone旗標模擬。無實體iPhone Safari/PWA驗證。
+
+
+### 旅團初始化情境
+
+- 玩家新建旅團：只有本人（團長）、空旅行牆、兩組零碎片、零點數／抽取次數；預設加入申請不計入成員。首次分享已解鎖日記可獲得抽取次數。
+- 邀請碼 `20060119`：首次在本機建立獨立的「沿線同行旅團」，由拾光帶隊、小森同行，玩家加入後共三人；帶有兩組未完成拼圖、照片貼文及可用點數／抽取次數。
+- 兩種新情境以旅團 ID 保存收藏、貢獻、貼文及首次分享領取紀錄；重入只讀取既有進度。舊 v1 旅團與 `RAIL2027` 原資料不會重建或覆寫。
+- 此為 localStorage 本機多人資料示範，邀請碼、申請及審核沒有跨裝置或即時伺服器同步。

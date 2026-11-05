@@ -19,6 +19,7 @@
                 !Array.isArray(g.members) || g.members.length < C.minMembers || g.members.length > C.maxMembers || !Array.isArray(g.posts) || !int(g.draws) || !int(g.points) || !g.puzzles ||
                 new Set(g.members.map(m => m.id)).size !== g.members.length || !g.members.some(m => m.id === g.leader)) throw Error('invalid');
             if (typeof g.introduction !== 'string' || g.introduction.length > 120 || typeof g.openApplications !== 'boolean') throw Error('invalid');
+            if(g.earnedStations!==undefined&&(!Array.isArray(g.earnedStations)||new Set(g.earnedStations).size!==g.earnedStations.length||!g.earnedStations.every(x=>C.stations.some(t=>t.id===x)))) throw Error('invalid');
             for (const m of g.members) if (!C.members.some(d => d.id === m.id) && m.id !== C.player.id) throw Error('invalid');
             for (const p of g.posts) if (!p || typeof p.id !== 'string' || typeof p.memberId !== 'string' || typeof p.station !== 'string' || typeof p.summary !== 'string' || p.summary.length > 500 || !Number.isFinite(Date.parse(p.at))) throw Error('invalid');
             for (const p of C.puzzles) {
@@ -64,6 +65,30 @@
             draws: C.initialDraws, points: C.initialPoints,
             puzzles: Object.fromEntries(C.puzzles.map(p => [p.id, { owned: [...p.initial], contributions: {} }])) };
     }
+    function makePlayerGuild(name, code) {
+        const at=new Date().toISOString();
+        return { id:id(), name, code, leader:C.player.id, createdAt:at, members:[member(C.player,at)],
+            origin:'player', earnedStations:[], introduction:'', openApplications:true, posts:[],
+            draws:C.newGuild.draws, points:C.newGuild.points,
+            puzzles:Object.fromEntries(C.puzzles.map(p=>[p.id,{owned:[],contributions:{}}])) };
+    }
+    function ensureInvitedGuild(s) {
+        const preset=C.invitedGuild;
+        const existing=s.guilds.find(g=>g.id===preset.id||g.code===preset.code);
+        if(existing) return existing;
+        const g=makeGuild(preset.name,preset.code,preset.leader,0,false);
+        g.id=preset.id; g.origin='invited'; g.earnedStations=[]; g.createdAt=preset.at;
+        g.introduction=preset.introduction; g.avatarId=preset.avatarId;
+        g.members=preset.members.map(id=>member({id},preset.at));
+        g.posts=C.demoPosts.filter(p=>preset.members.includes(p.memberId)).map(p=>({...p,id:id(),at:preset.at,photo:preset.photos[p.memberId]}));
+        // 既有碎片逐片分配給正式成員，與成員頁貢獻總數保持一致。
+        for(const record of Object.values(g.puzzles)) record.owned.forEach((_,n)=>{
+            const contributor=preset.members[n%preset.members.length];
+            record.contributions[contributor]=(record.contributions[contributor]||0)+1;
+        });
+        s.guilds.push(g); return g;
+    }
+
     function ensureDirectory(s) {
         for (const demo of C.directoryGuilds) {
             // 只補缺少的展示旅團；既有 ID、成員、收藏與玩家旅團完全保留。
@@ -110,15 +135,19 @@
         create(name, introduction = '', avatarId = C.defaultAvatar) { return change(s => {
             if (s.activeId) throw Error('一次只能加入一個旅團。');
             name = String(name).trim(); if (!name || name.length > 24) throw Error('旅團名稱請填寫 1～24 個字。');
-            let code; do { code = id().replaceAll('-', '').slice(0,8).toUpperCase(); } while (code === C.invite || s.guilds.some(g => g.code === code));
+            let code; do { code = id().replaceAll('-', '').slice(0,8).toUpperCase(); } while (code === C.invite || code === C.invitedGuild.code || s.guilds.some(g => g.code === code));
             introduction=String(introduction).trim(); if (introduction.length>120) throw Error('旅團介紹最多 120 個字。');
             if(!C.avatars.some(a=>a.id===avatarId)) throw Error('請選擇有效的旅團大頭貼。');
-            const g = makeGuild(name, code, C.player.id, C.minMembers-1); g.introduction=introduction; g.avatarId=avatarId; s.guilds.push(g); s.activeId = g.id; cancelPending(s);
+            const g = makePlayerGuild(name, code); g.introduction=introduction; g.avatarId=avatarId; s.guilds.push(g); s.activeId = g.id; cancelPending(s);
+            for(const applicantId of C.newGuild.applicants) {
+                if(s.guilds.some(group=>group.members.some(m=>m.id===applicantId))) continue;
+                s.applications.push({id:id(),guildId:g.id,applicantId,status:'pending',at:g.createdAt});
+            }
         }); },
         join(code) { return change(s => {
             if (s.activeId) throw Error('請先退出目前的旅團。');
             code = String(code).trim().toUpperCase();
-            const g = s.guilds.find(g => g.code === code) || (code === C.invite ? ensureDirectory(s) : null);
+            const g = s.guilds.find(g => g.code === code) || (code === C.invitedGuild.code ? ensureInvitedGuild(s) : code === C.invite ? ensureDirectory(s) : null);
             if (!g) throw Error('邀請碼不正確，請重新確認。');
             admit(s,g,C.player.id);
         }); },
@@ -159,7 +188,8 @@
             summary = String(summary).trim(); if (!summary || summary.length > 500) throw Error('旅程摘要請填寫 1～500 個字。');
             if (g.posts.some(p => p.memberId === C.player.id && p.stationId === stationId)) throw Error('這本車站日記已分享到旅行牆。');
             g.posts.push({ id: id(), memberId: C.player.id, stationId, station: t.name, summary, at: new Date().toISOString() });
-            const earned = !s.earned.includes(stationId); if (earned) { s.earned.push(stationId); g.draws++; }
+            const earnedStations=g.earnedStations||s.earned;
+            const earned = !earnedStations.includes(stationId); if (earned) { earnedStations.push(stationId); g.draws++; }
             return { earned };
         }); },
         draw(puzzleId) { return change(s => {

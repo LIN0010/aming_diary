@@ -46,7 +46,7 @@ try:
   page.locator('#gl-create-form .gl-button').click()
   expect(page.locator('#gl-dialog')).not_to_be_visible()
   expect(page.locator('.gl-room-heading h1')).to_have_text('沿線朋友')
-  expect(page.locator('.gl-avatars button')).to_have_count(2)
+  expect(page.locator('.gl-avatars button')).to_have_count(1)
   aligned(page)
   page.screenshot(path='/workspace/work/guild-room-desktop.png')
   # 點圖片中的手帳，只允許已解鎖日記。
@@ -61,12 +61,14 @@ try:
   before=page.evaluate('GuildStore.current().draws')
   page.locator('#gl-share-form textarea').fill('<img src=x onerror=alert(1)> 一起旅行')
   page.locator('#gl-share-form .gl-button').click()
-  expect(page.locator('.gl-post')).to_have_count(2)
+  expect(page.locator('.gl-post')).to_have_count(1)
   assert page.evaluate('GuildStore.current().draws')==before+1
   assert page.locator('.gl-post').first.inner_text().find('<img src=x')>=0
   assert page.locator('.gl-post').first.locator('img').count()==1
   expect(page.locator('#gl-share-form')).to_have_count(0)
   closed(page)
+  # 拼圖交易測試專用 fixture；新團零進度另由 guild-init.browser.py 驗證。
+  page.evaluate("""()=>{const s=JSON.parse(localStorage.getItem(GuildConfig.storageKey)),g=s.guilds.find(g=>g.id===s.activeId);g.draws=3;g.points=160;for(const p of GuildConfig.puzzles)g.puzzles[p.id].owned=[...p.initial];localStorage.setItem(GuildConfig.storageKey,JSON.stringify(s));GuildStore.refresh();}""")
   # 新片與重複片都由真實資料交易產生。
   page.locator('.gl-hotspot[data-gl="puzzle"]').click()
   expect(page.locator('.gl-piece')).to_have_count(12)
@@ -95,9 +97,9 @@ try:
   page.locator('[data-gl="reward"]').click();expect(page.locator('.gl-story')).to_be_visible();closed(page)
   print('PASS: 建立旅團、鎖定日記不分享、首次分享抽取、新片、重複轉點、兩種尺寸兌換完成與 CG 故事。',flush=True)
   # 成員頭像與管理操作。
-  page.locator('.gl-avatars button').first.click();expect(page.locator('.gl-member')).to_have_count(2);closed(page)
+  page.locator('.gl-avatars button').first.click();expect(page.locator('.gl-member')).to_have_count(1);closed(page)
   opened(page,'manage');code=page.locator('#gl-invite-code').inner_text()
-  for _ in range(4):page.locator('[data-gl="invite"]').click()
+  for _ in range(5):page.locator('[data-gl="invite"]').click()
   expect(page.locator('[data-gl="invite"]')).to_be_disabled()
   expect(page.locator('.gl-avatars button')).to_have_count(6)
   page.once('dialog',lambda d:d.accept());page.locator('[data-gl="leave"]').click()

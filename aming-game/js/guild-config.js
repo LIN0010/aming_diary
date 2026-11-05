@@ -3,7 +3,7 @@
     const memberAvatars = ['guild-avatar-01.webp','guild-avatar-melancholy-boy.webp','guild-avatar-cheerful-girl.webp','guild-avatar-cat.webp'].map(name=>`images/${name}`);
     const config = {
         memberAvatars,
-        storageKey: 'aming-diary-guild-v1', maxMembers: 6, minMembers: 2,
+        storageKey: 'aming-diary-guild-v1', maxMembers: 6, minMembers: 1,
         avatars: ['compass','ocean','journal','moon','station'].map(id=>({id, image:`images/guild-${id}.png`, name:({compass:'指南針',ocean:'海洋',journal:'手帳',moon:'月夜',station:'車站'})[id]})),
         defaultAvatar: 'station',
         avatarCrops: {
@@ -32,6 +32,11 @@
             { id: 'demo-starlight-last-train', code: 'STAR2027', name: '星光末班車', count: 4, introduction: '錯過末班車也沒關係，我們陪你等天亮。', avatar: 'images/guild-moon.png', legacyAvatar: 'images/home-bg.jpg' },
             { id: 'demo-lost-travelers', code: 'LOST2027', name: '迷途旅人協會', count: 2, introduction: '方向感不好沒關係，反正每條路都有風景。', avatar: 'images/guild-compass.png', legacyAvatar: 'images/ruisui-bg.jpg' }
         ],
+        newGuild: { draws: 0, points: 0, applicants: ['demo-sea','demo-river'] },
+        invitedGuild: { id: 'demo-invited-20060119', code: '20060119', name: '沿線同行旅團', leader: 'demo-light',
+            members: ['demo-light','demo-mori'], at: '2026-03-21T02:00:00.000Z',
+            introduction: '沿著鐵道同行，一起拼回旅途的光。', avatarId: 'station',
+            photos: { 'demo-mori': 'images/ruisui-bg.jpg', 'demo-light': 'images/home-bg.jpg' } },
         duplicatePoints: 4, exchangeCost: 10,
         members: [
             { id: 'demo-mori', name: '小森', avatar: memberAvatars[0], shares: 3, contribution: 8 },
