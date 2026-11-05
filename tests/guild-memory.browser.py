@@ -37,6 +37,8 @@ try:
     page.evaluate("window.firstBubble=document.querySelector('.gl-memory-message')")
     assert page.locator('.gl-memory-message').evaluate('(e)=>getComputedStyle(e).animationDuration')=='0.22s'
     assert page.locator('.gl-memory-chat-list').evaluate('(e)=>getComputedStyle(e).display')=='flex'
+    frame=page.locator('.gl-memory-cg-frame');page.locator('.gl-memory-art').evaluate('(e)=>e.decode()')
+    assert frame.evaluate('(e)=>{const f=e.getBoundingClientRect(),i=e.querySelector("img").getBoundingClientRect(),s=e.parentElement.getBoundingClientRect(),img=e.querySelector("img");return Math.abs(i.x-f.x-7)<1&&Math.abs(i.y-f.y-7)<1&&Math.abs(f.right-i.right-7)<1&&Math.abs(f.bottom-i.bottom-7)<1&&Math.abs(i.width/i.height-img.naturalWidth/img.naturalHeight)<.01&&f.width<=s.width+1&&f.height<=s.height+1;}')
     before=page.locator('.gl-memory-art').bounding_box();chat_before=page.locator('.gl-memory-chat-viewport').bounding_box()
     for n in range(2,7):
      if n%2:page.locator('.gl-memory-interaction').focus();page.keyboard.press('Space' if n==3 else 'Enter')

@@ -8,7 +8,7 @@ GameScenes.register('group', ctx => {
     const memoryStyle=new Promise((resolve,reject)=>{
         let link=document.querySelector('link[data-guild-memory-style]');
         if(link?.sheet){memoryStyleReady=true;resolve();return;}
-        if(!link){link=document.createElement('link');link.rel='stylesheet';link.href='css/guild-memory.css?v=2';link.dataset.guildMemoryStyle='';document.head.append(link);}
+        if(!link){link=document.createElement('link');link.rel='stylesheet';link.href='css/guild-memory.css?v=3';link.dataset.guildMemoryStyle='';document.head.append(link);}
         const timer=setTimeout(()=>reject(new Error('回憶畫面樣式載入逾時，請稍後再試。')),15000);
         link.addEventListener('load',()=>{clearTimeout(timer);memoryStyleReady=true;resolve();},{once:true});
         link.addEventListener('error',()=>{clearTimeout(timer);link.remove();reject(new Error('回憶畫面樣式無法載入，請稍後再試。'));},{once:true});
@@ -138,7 +138,7 @@ GameScenes.register('group', ctx => {
     function reward(g) {
         const p=C.puzzles.find(p=>p.id===puzzleId);
         if(!storyAllowed(g)) return puzzle(g);
-        return title(p.title)+`<div class="gl-memory-player"><figure class="gl-memory-cg-frame"><img class="gl-memory-art" src="${p.image}" alt="${h(p.title)}完整 CG"></figure><section class="gl-memory-interaction" tabindex="0" aria-label="童年回憶，點擊空白處或按 Enter、空白鍵繼續"><div class="gl-memory-chat-viewport" role="log" aria-label="回憶對話" aria-live="polite"><div class="gl-memory-chat-list"></div></div><footer class="gl-memory-actions"></footer></section></div>`;
+        return title(p.title)+`<div class="gl-memory-player"><div class="gl-memory-cg-stage" style="--cg-aspect:${p.aspect}"><figure class="gl-memory-cg-frame"><img class="gl-memory-art" src="${p.image}" alt="${h(p.title)}完整 CG"></figure></div><section class="gl-memory-interaction" tabindex="0" aria-label="童年回憶，點擊空白處或按 Enter、空白鍵繼續"><div class="gl-memory-chat-viewport" role="log" aria-label="回憶對話" aria-live="polite"><div class="gl-memory-chat-list"></div></div><footer class="gl-memory-actions"></footer></section></div>`;
     }
     function updateStory() {
         if(panel!=='reward'||!storyAllowed(S.current()))return;
