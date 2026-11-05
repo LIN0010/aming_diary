@@ -8,7 +8,7 @@ GameScenes.register('group', ctx => {
     const memoryStyle=new Promise((resolve,reject)=>{
         let link=document.querySelector('link[data-guild-memory-style]');
         if(link?.sheet){memoryStyleReady=true;resolve();return;}
-        if(!link){link=document.createElement('link');link.rel='stylesheet';link.href='css/guild-memory.css?v=1';link.dataset.guildMemoryStyle='';document.head.append(link);}
+        if(!link){link=document.createElement('link');link.rel='stylesheet';link.href='css/guild-memory.css?v=2';link.dataset.guildMemoryStyle='';document.head.append(link);}
         const timer=setTimeout(()=>reject(new Error('回憶畫面樣式載入逾時，請稍後再試。')),15000);
         link.addEventListener('load',()=>{clearTimeout(timer);memoryStyleReady=true;resolve();},{once:true});
         link.addEventListener('error',()=>{clearTimeout(timer);link.remove();reject(new Error('回憶畫面樣式無法載入，請稍後再試。'));},{once:true});
