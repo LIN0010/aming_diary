@@ -27,11 +27,11 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-hotspot:hover, .gl-hotspot:focus-visible { border-color:#fff6cfb0; background:#fff9d71c; box-shadow:inset 0 0 25px #fff8d633; }
 .gl-hotspot:hover span, .gl-hotspot:focus-visible span { opacity:1; }
 .gl-hotspot:active { background:#fff9d75c; }
-.gl-pointer-icon { width:12px; height:12px; flex-shrink:0; color:#888372; pointer-events:none; transition:transform .18s; }
+#group-screen .gl-hotspot .gl-pointer-icon { display:block; position:static; width:16px; height:16px; min-width:16px; max-width:16px; min-height:16px; max-height:16px; flex:0 0 16px; color:#806d55; pointer-events:none; transition:transform .18s; }
 .gl-hotspot:hover .gl-pointer-icon,.gl-hotspot:focus-visible .gl-pointer-icon { transform:translateY(-1px); }
 .gl-hotspot:active .gl-pointer-icon { transform:scale(.92); }
 @media(prefers-reduced-motion:reduce) { .gl-pointer-icon { transition:none; } }
-#group-screen:not(.gl-entry-mode) .gl-hotspot span { display:inline-flex; align-items:center; gap:5px; opacity:1; color:#67543e; background:#fff8e6d9; border-radius:4px 9px 5px 8px; box-shadow:0 2px 7px #57412a20; pointer-events:none; }
+#group-screen:not(.gl-entry-mode) .gl-hotspot span { display:inline-flex; align-items:center; gap:6px; opacity:1; color:#67543e; background:#fff8e6d9; border-radius:4px 9px 5px 8px; box-shadow:0 2px 7px #57412a20; pointer-events:none; }
 #group-screen:not(.gl-entry-mode) .gl-hotspot { min-width:44px; min-height:44px; }
 .gl-modal { width:min(1040px,calc(100vw - 28px)); max-height:calc(100dvh - 130px); overflow:auto; padding:32px; border:1px solid #c5c9b4; border-radius:18px; color:#4c5146; background:radial-gradient(ellipse at top left,#e9eada,transparent 65%),#faf6ea; box-shadow:0 20px 70px #30392b55; scrollbar-width:thin; scrollbar-color:#71847055 transparent; }
 .gl-modal::backdrop { background:#263b384d; backdrop-filter:blur(2px); }

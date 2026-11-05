@@ -17,7 +17,7 @@ GameScenes.register('group', ctx => {
     }
     function result(r, text) { if (!r.ok) {notify(r.message);return false;} ctx.cancelTimer(noticeTimer); noticeElement.hidden=true; if(text)notify(text);return true; }
     // 輕量內嵌手指提示；不載入額外圖示套件。
-    const pointerIcon='<svg class="gl-pointer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 13V4a2 2 0 0 1 4 0v7-2a2 2 0 0 1 4 0v3-1a2 2 0 0 1 4 0v5c0 4-2 6-6 6h-2c-2 0-3-1-4-2l-5-6a2 2 0 0 1 3-2l2 1Z"/></svg>';
+    const pointerIcon='<svg class="gl-pointer-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 13V4a2 2 0 0 1 4 0v7-2a2 2 0 0 1 4 0v3-1a2 2 0 0 1 4 0v5c0 4-2 6-6 6h-2c-2 0-3-1-4-2l-5-6a2 2 0 0 1 3-2l2 1Z"/></svg>';
     function background(mode) {
         const setting=mode==='entry'?C.entrance:C.room;
         sceneMode=mode; ctx.root.classList.toggle('gl-entry-mode',mode==='entry');

@@ -25,6 +25,7 @@ try:
    saved=page.evaluate('localStorage.getItem(GuildConfig.storageKey)')
    expect(page.locator('#gl-menu,.gl-room-menu,#gl-wall-progress,.gl-wall-progress')).to_have_count(0)
    expect(page.locator('.gl-hotspot .gl-pointer-icon')).to_have_count(3)
+   assert page.locator('.gl-pointer-icon').evaluate_all('es=>es.every(e=>{const r=e.getBoundingClientRect(),p=e.parentElement.getBoundingClientRect();return e.getAttribute("width")==="16"&&e.getAttribute("height")==="16"&&r.width<=16&&r.height<=16&&r.left>=p.left&&r.right<=p.right&&r.top>=p.top&&r.bottom<=p.bottom&&getComputedStyle(e).position==="static";})')
    assert '↗' not in page.locator('#gl-hotspots').inner_text()
    expect(page.locator('.gl-hotspot[data-gl="puzzle"]')).to_have_count(1)
    image=page.locator('.gl-room-bg').bounding_box()
