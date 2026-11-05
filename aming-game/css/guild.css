@@ -16,19 +16,19 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-room-bg { display:block; width:100%; height:100%; pointer-events:none; }
 .gl-room-heading { position:absolute; top:20px; left:24px; display:flex; flex-wrap:wrap; gap:4px 16px; align-items:center; padding:12px 18px; max-width:calc(100% - 48px); border:1px solid #fff8de70; border-radius:18px; background:#fffae9bc; backdrop-filter:blur(8px); box-shadow:0 4px 20px #4b573620; }
 #group-screen .gl-room-heading h1 { font-size:24px; }
-.gl-room-heading > span { font-size:12px; color:#67725f; }
+.gl-member-count { min-height:40px; padding:4px 6px; border:0; border-radius:6px; background:transparent; font:inherit; font-size:12px; color:#67725f; cursor:pointer; }
+.gl-member-count:hover,.gl-member-count:focus-visible { background:#f4e6bd80; color:#4d4435; }
 .gl-avatars { display:flex; gap:6px; }
 .gl-avatars button { display:block; padding:0; border:1px solid #fdf9e9; border-radius:50%; background:#f4ecdb; transition:transform .15s; }
 .gl-avatars button:hover { transform:translateY(-3px); }
 .gl-avatar { display:block; width:36px; height:36px; object-fit:cover; object-position:center; border-radius:50%; background:#e2e7d7; }
-.gl-room-menu { position:absolute; right:24px; top:25%; width:172px; display:flex; flex-direction:column; gap:14px; }
-#group-screen .gl-room-menu .gl-button { padding:12px 18px; border:1px solid #fff5d273; border-radius:6px 18px 18px 6px; background:#fff8e3c4; color:#4e6051; box-shadow:0 3px 14px #5d583520; backdrop-filter:blur(6px); text-align:left; }
-#group-screen .gl-room-menu .gl-button:hover { background:#f9f3ddeb; color:#304e43; transform:translateX(-3px); }
 .gl-hotspot { position:absolute; border:1px solid transparent; border-radius:12px; background:transparent; transition:background .2s, box-shadow .2s; }
 .gl-hotspot span { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); white-space:nowrap; opacity:0; padding:3px 12px; border-radius:20px; color:#40544b; background:#fffae9df; font-size:13px; transition:opacity .2s; }
 .gl-hotspot:hover, .gl-hotspot:focus-visible { border-color:#fff6cfb0; background:#fff9d71c; box-shadow:inset 0 0 25px #fff8d633; }
 .gl-hotspot:hover span, .gl-hotspot:focus-visible span { opacity:1; }
 .gl-hotspot:active { background:#fff9d75c; }
+#group-screen:not(.gl-entry-mode) .gl-hotspot span { opacity:1; color:#67543e; background:#fff8e6d9; border-radius:4px 9px 5px 8px; box-shadow:0 2px 7px #57412a20; pointer-events:none; }
+#group-screen:not(.gl-entry-mode) .gl-hotspot { min-width:44px; min-height:44px; }
 .gl-wall-progress { position:absolute; transform:translateX(-50%); font-size:13px; letter-spacing:.08em; color:#4e5c4c; background:#fff8dfcc; padding:3px 14px; border-radius:20px; pointer-events:none; }
 .gl-modal { width:min(1040px,calc(100vw - 28px)); max-height:calc(100dvh - 130px); overflow:auto; padding:32px; border:1px solid #c5c9b4; border-radius:18px; color:#4c5146; background:radial-gradient(ellipse at top left,#e9eada,transparent 65%),#faf6ea; box-shadow:0 20px 70px #30392b55; scrollbar-width:thin; scrollbar-color:#71847055 transparent; }
 .gl-modal::backdrop { background:#263b384d; backdrop-filter:blur(2px); }
@@ -82,8 +82,6 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
     #group-screen .gl-room-heading h1 { font-size:20px; }
     .gl-avatars { gap:4px; }
     .gl-avatar { width:30px; height:30px; }
-    .gl-room-menu { right:12px; top:auto; bottom:115px; width:auto; max-width:calc(100% - 24px); display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-    #group-screen .gl-room-menu .gl-button { font-size:12px !important; padding:8px 14px; }
     .gl-modal { padding:24px 18px; max-height:calc(100dvh - 120px); }
     #group-screen h2 { font-size:23px; }
     .gl-wall-layout, .gl-puzzle-layout, .gl-member-list { grid-template-columns:minmax(0,1fr); }
@@ -317,14 +315,15 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-application-status { flex-shrink:0; white-space:nowrap; padding:2px 5px; border-radius:4px; background:#e7d2a269; color:#624b2c; font-size:10px; }
 @media(max-width:700px) { .gl-application-status { font-size:8px; padding:2px 3px; } .gl-roster-row:has(.gl-application-status) .gl-roster-mark { display:none; } }
 
-/* 小屋選單與彈窗都以手機可視高度計算，不縮放互動座標。 */
-.mobile-nav .gl-room-heading { top:var(--mobile-top); left:var(--mobile-left); padding:6px 10px; gap:4px 8px; max-width:calc(100% - 220px - var(--mobile-left) - var(--mobile-right)); }
+/* 橫向小屋略向上取景，讓桌面筆記本避開底部導覽；背景與熱區一起移動。 */
+.mobile-nav #group-screen:not(.gl-entry-mode) .gl-world { transform:translateY(-58%); }
+.mobile-nav #group-screen .gl-hotspot[data-gl="manage"] span { bottom:calc(100% + 4px); pointer-events:auto; }
+/* 小屋資訊與彈窗以手機可視高度計算，不縮放互動座標。 */
+.mobile-nav .gl-room-heading { top:var(--mobile-top); left:var(--mobile-left); padding:6px 10px; gap:4px 8px; max-width:calc(100% - var(--mobile-left) - var(--mobile-right)); }
 .mobile-nav #group-screen .gl-room-heading h1 { font-size:20px; }
 .mobile-nav .gl-room-heading .gl-guild-portrait { width:40px; height:40px; }
 .mobile-nav .gl-avatars { gap:4px; }
 .mobile-nav .gl-avatar { width:30px; height:30px; }
-.mobile-nav .gl-room-menu { right:var(--mobile-right); top:var(--mobile-top); bottom:var(--mobile-bottom); width:190px; max-width:none; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(4,minmax(40px,1fr)); gap:6px; overflow-y:auto; }
-.mobile-nav #group-screen .gl-room-menu .gl-button { min-height:40px; padding:6px 12px; }
 .mobile-nav .gl-modal:not(.gl-clipboard) { max-height:calc(var(--game-height) - var(--mobile-top) - 12px - env(safe-area-inset-bottom,0px)); padding:18px; overscroll-behavior:contain; }
 .mobile-nav .gl-clipboard .gl-clip-fields { min-height:0; overflow-y:auto; overscroll-behavior:contain; }
 .mobile-nav .gl-clipboard .gl-clip-footer { flex-shrink:0; }

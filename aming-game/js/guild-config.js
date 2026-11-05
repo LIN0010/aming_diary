@@ -23,7 +23,8 @@
         room: { image: 'images/guild-room-bg.png', width: 1536, height: 1024,
             hotspots: [
                 { id: 'puzzle', label: '共同回憶拼圖', x: .429, y: .217, w: .341, h: .303 },
-                { id: 'wall', label: '翻開旅行手帳', x: .341, y: .705, w: .224, h: .09 }
+                { id: 'wall', label: '旅行牆', x: .303, y: .24, w: .10, h: .235 },
+                { id: 'manage', label: '旅團資訊', x: .341, y: .705, w: .224, h: .09 }
             ], progress: { x: .60, y: .535 } },
         invite: 'RAIL2027', demoName: '沿線慢慢走', demoIntroduction: '沿著鐵道慢慢旅行，一起收藏日記與拼圖。', initialDraws: 3, initialPoints: 160,
         directoryGuilds: [

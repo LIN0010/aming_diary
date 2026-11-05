@@ -15,7 +15,7 @@ errors=[]
 def closed(page):
  page.locator('.gl-close').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
 def opened(page,action):
- page.locator(f'#gl-menu [data-gl="{action}"]').click();expect(page.locator('#gl-dialog')).to_be_visible()
+ page.locator(f'[data-gl="{action}"]'+('.gl-member-count' if action=='members' else '.gl-hotspot')).click();expect(page.locator('#gl-dialog')).to_be_visible()
 def joined(page):
  expect(page.locator('.gl-entry-hotspot[data-gl="join"]')).to_be_visible()
  page.locator('.gl-entry-hotspot[data-gl="join"]').click()
