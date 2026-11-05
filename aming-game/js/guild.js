@@ -28,6 +28,7 @@ GameScenes.register('group', ctx => {
     }
     function result(r, text) { if (!r.ok) {notify(r.message);return false;} ctx.cancelTimer(noticeTimer); noticeElement.hidden=true; if(text)notify(text);return true; }
     // 輕量內嵌手指提示；不載入額外圖示套件。
+    const closeIcon='<svg class="gl-close-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>';
     const pointerIcon='<svg class="gl-pointer-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 13V4a2 2 0 0 1 4 0v7-2a2 2 0 0 1 4 0v3-1a2 2 0 0 1 4 0v5c0 4-2 6-6 6h-2c-2 0-3-1-4-2l-5-6a2 2 0 0 1 3-2l2 1Z"/></svg>';
     function background(mode) {
         const setting=mode==='entry'?C.entrance:C.room;
@@ -200,7 +201,7 @@ GameScenes.register('group', ctx => {
         dialog.classList.toggle('gl-clipboard',boarding||(!g&&['create','join'].includes(panel)));
         const back=dialog.classList.contains('gl-clipboard');
         ctx.query('.gl-close').classList.toggle('gl-clipboard-back',back);
-        ctx.query('.gl-close').textContent=back?'← 返回':'×';
+        ctx.query('.gl-close').innerHTML=back?'← 返回':closeIcon;
         ctx.query('.gl-close').disabled=boarding;
         ctx.query('.gl-close').setAttribute('aria-label',g?'返回旅團小屋':'返回車站入口');
         body.innerHTML=boarding ? title(stampLabel)+`<div class="gl-boarding-stamp" role="status">${h(stampLabel)}</div>${stampLabel==='旅程啟程'?`<p class="gl-ticket-destination">${h(g?.name)}</p><p class="gl-code">${h(g?.code)}</p>`:''}` : !g ? welcome(panel) : panel==='wall'?wall(g):panel==='puzzle'?puzzle(g):panel==='members'?members(g):panel==='reward'?reward(g):manage(g);
