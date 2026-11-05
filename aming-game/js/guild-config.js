@@ -1,6 +1,8 @@
 /* 本機旅團示範設定；正式素材與熱區只需在這裡調整。 */
 (() => {
+    const memberAvatars = ['guild-avatar-01.webp','guild-avatar-melancholy-boy.webp','guild-avatar-cheerful-girl.webp','guild-avatar-cat.webp'].map(name=>`images/${name}`);
     const config = {
+        memberAvatars,
         storageKey: 'aming-diary-guild-v1', maxMembers: 6, minMembers: 2,
         avatars: ['compass','ocean','journal','moon','station'].map(id=>({id, image:`images/guild-${id}.png`, name:({compass:'指南針',ocean:'海洋',journal:'手帳',moon:'月夜',station:'車站'})[id]})),
         defaultAvatar: 'station',
@@ -12,7 +14,7 @@
             station: { scale: 1, x: 0, y: 0 }
         },
         guildBadges: ['images/guild-station-bg.png','images/ruisui-bg.jpg','images/home-bg.jpg'],
-        player: { id: 'you', name: '旅人・你', avatar: 'images/aming.png' },
+        player: { id: 'you', name: '旅人・你', avatar: 'images/guild-player-avatar.webp' },
         entrance: { image: 'images/guild-station-bg.png', width: 1536, height: 1024,
             hotspots: [
                 { id: 'create', label: '建立旅團', x: .12, y: .19, w: .30, h: .32 },
@@ -31,12 +33,12 @@
         ],
         duplicatePoints: 4, exchangeCost: 10,
         members: [
-            { id: 'demo-mori', name: '小森', avatar: 'images/cow.png', shares: 3, contribution: 8 },
-            { id: 'demo-light', name: '拾光', avatar: 'images/aming.png', shares: 2, contribution: 6 },
-            { id: 'demo-wind', name: '風旅人', avatar: 'images/cow.png', shares: 2, contribution: 3 },
-            { id: 'demo-rain', name: '雨禾', avatar: 'images/aming.png', shares: 0, contribution: 0 },
-            { id: 'demo-sea', name: '海生', avatar: 'images/cow.png', shares: 0, contribution: 0 },
-            { id: 'demo-river', name: '川旅人', avatar: 'images/aming.png', shares: 0, contribution: 0 }
+            { id: 'demo-mori', name: '小森', avatar: memberAvatars[0], shares: 3, contribution: 8 },
+            { id: 'demo-light', name: '拾光', avatar: memberAvatars[1], shares: 2, contribution: 6 },
+            { id: 'demo-wind', name: '風旅人', avatar: memberAvatars[2], shares: 2, contribution: 3 },
+            { id: 'demo-rain', name: '雨禾', avatar: memberAvatars[3], shares: 0, contribution: 0 },
+            { id: 'demo-sea', name: '海生', avatar: memberAvatars[0], shares: 0, contribution: 0 },
+            { id: 'demo-river', name: '川旅人', avatar: memberAvatars[1], shares: 0, contribution: 0 }
         ],
         demoPosts: [
             { memberId: 'demo-mori', station: '花蓮', summary: '把山線的風收進手帳，下一次想和大家一起出發。' },

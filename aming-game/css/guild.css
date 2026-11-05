@@ -20,7 +20,7 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-avatars { display:flex; gap:6px; }
 .gl-avatars button { display:block; padding:0; border:1px solid #fdf9e9; border-radius:50%; background:#f4ecdb; transition:transform .15s; }
 .gl-avatars button:hover { transform:translateY(-3px); }
-.gl-avatar { display:block; width:36px; height:36px; object-fit:cover; border-radius:50%; background:#e2e7d7; }
+.gl-avatar { display:block; width:36px; height:36px; object-fit:cover; object-position:center; border-radius:50%; background:#e2e7d7; }
 .gl-room-menu { position:absolute; right:24px; top:25%; width:172px; display:flex; flex-direction:column; gap:14px; }
 #group-screen .gl-room-menu .gl-button { padding:12px 18px; border:1px solid #fff5d273; border-radius:6px 18px 18px 6px; background:#fff8e3c4; color:#4e6051; box-shadow:0 3px 14px #5d583520; backdrop-filter:blur(6px); text-align:left; }
 #group-screen .gl-room-menu .gl-button:hover { background:#f9f3ddeb; color:#304e43; transform:translateX(-3px); }

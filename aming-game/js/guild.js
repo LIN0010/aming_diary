@@ -7,7 +7,7 @@ GameScenes.register('group', ctx => {
     const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const btn = (action,label,off=false,extra='') => `<button type="button" class="gl-button ${extra}" data-gl="${action}"${off?' disabled':''}>${h(label)}</button>`;
     const date = s => new Date(s).toLocaleString('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const memberInfo = id => id===C.player.id ? C.player : C.members.find(m=>m.id===id) || {name:'旅人',avatar:C.player.avatar};
+    const memberInfo = id => id===C.player.id ? C.player : C.members.find(m=>m.id===id) || {name:'旅人',avatar:C.memberAvatars[Array.from(String(id)).reduce((hash,char)=>(hash*31+char.charCodeAt(0))>>>0,0)%C.memberAvatars.length]};
     const avatar = id => `<img class="gl-avatar" src="${memberInfo(id).avatar}" alt="${h(memberInfo(id).name)}">`;
     const title = text => `<h2 id="gl-dialog-title">${h(text)}</h2>`;
     function notify(text) {
