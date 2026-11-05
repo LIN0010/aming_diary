@@ -54,9 +54,9 @@
         ],
         stations: [{ id: 'ruisui', name: '瑞穗', memory: 'ruisui-01', summary: '在瑞穗，循著乳牛與月台的回憶，找回阿明留下的一頁日記。' }],
         puzzles: [
-            { id: 'spring', title: '沿線的春日', rows: 3, cols: 4, image: 'images/puzzle-spring-railway.png', aspect: 928/928, placeholder: false,
+            { id: 'spring', title: '追著列車的孩子', rows: 3, cols: 4, image: 'images/puzzle-spring-railway.png', aspect: 928/928, placeholder: false,
                 initial: [0,1,2,3,4,5,6], story: '【示範補充故事】阿明把車票夾進手帳。原來，有人陪著一起收藏的風景，會在記憶裡停留得更久。' },
-            { id: 'limited', title: '小站的約定', rows: 4, cols: 5, image: 'images/puzzle-station-promise.png', aspect: 1232/928, placeholder: false,
+            { id: 'limited', title: '記憶裡的同行者', rows: 4, cols: 5, image: 'images/puzzle-station-promise.png', aspect: 1232/928, placeholder: false,
                 initial: [0,1,2,3,4,5,6,7,8,9], story: '【示範補充故事】列車經過窗邊時，阿明在日記最後畫了一個小小的站牌：下次，還要一起旅行。' }
         ]
     };

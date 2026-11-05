@@ -335,15 +335,38 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-post-photo { display:block; width:100%; max-height:180px; object-fit:contain; margin:10px 0; }
 .gl-wall-empty { align-self:center; padding:28px 12px; color:#87775f; line-height:1.9; text-align:center; font-family:"Noto Serif TC",serif; }
 
-/* 拼圖在一般桌面視窗內完整呈現；低矮／觸控視窗仍保留自然捲動。 */
-@media(min-width:1000px) and (min-height:600px) {
- .gl-modal[data-panel="puzzle"] { width:min(960px,calc(100vw - 48px)); max-height:calc(100dvh - 48px); padding:22px 24px; }
- .gl-modal[data-panel="puzzle"] .gl-puzzle-tabs { margin:10px 0 14px; }
- .gl-modal[data-panel="puzzle"] .gl-puzzle-layout { grid-template-columns:minmax(0,1fr) 300px; gap:20px; align-items:start; }
- .gl-modal[data-panel="puzzle"] .gl-puzzle-board { width:min(100%,calc((100dvh - 240px)*var(--puzzle-aspect))); margin:0 auto; }
- .gl-modal[data-panel="puzzle"] .gl-puzzle-notes { padding:0; }
- .gl-modal[data-panel="puzzle"] .gl-puzzle-notes > p { margin-bottom:6px !important; }
- .gl-modal[data-panel="puzzle"] .gl-puzzle-notes h4 { margin-top:10px !important; }
- .gl-modal[data-panel="puzzle"] .gl-puzzle-notes progress { margin:8px 0; }
- .gl-modal[data-panel="puzzle"] .gl-reward-preview { margin-top:10px; }
+/* 拼圖使用可視高度的固定舞台；標題／頁籤先佔位，餘下空間才分配給拼圖。 */
+#group-screen #gl-dialog[data-panel="puzzle"] {
+ box-sizing:border-box; width:min(1000px,calc(100vw - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));
+ height:min(720px,calc(var(--game-height,100dvh) - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)));
+ max-height:calc(var(--game-height,100dvh) - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+ padding:16px 20px; overflow:visible;
+}
+#gl-dialog[data-panel="puzzle"] #gl-dialog-content { height:100%; min-height:0; display:grid; grid-template-rows:auto auto minmax(0,1fr); gap:10px; }
+#group-screen #gl-dialog[data-panel="puzzle"] h2 { margin:0 40px 0 0; font-size:24px; line-height:1.3; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-tabs { margin:0; gap:8px; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-layout { min-height:0; grid-template-columns:minmax(0,1fr) minmax(260px,36%); gap:18px; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-layout > section:first-child { min-width:0; min-height:0; container-type:size; display:grid; place-items:center; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-board { box-sizing:border-box; width:min(100cqw,calc(100cqh * var(--puzzle-aspect))); max-width:100%; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-notes { min-height:0; overflow:auto; overscroll-behavior:contain; padding:0 4px 0 0; scrollbar-width:thin; scrollbar-color:#9b876b55 transparent; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-notes > p { margin-bottom:5px !important; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-notes h4 { margin-top:8px !important; }
+#gl-dialog[data-panel="puzzle"] .gl-puzzle-notes progress { margin:6px 0; }
+#gl-dialog[data-panel="puzzle"] .gl-reward-preview { margin-top:8px; }
+#gl-dialog[data-panel="puzzle"] .gl-draw-result { padding:6px; margin-top:6px !important; }
+@media(max-height:500px) {
+ #group-screen #gl-dialog[data-panel="puzzle"] { padding:10px 14px; }
+ #group-screen #gl-dialog[data-panel="puzzle"] h2 { font-size:20px; }
+ #gl-dialog[data-panel="puzzle"] #gl-dialog-content { gap:6px; }
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-tabs .gl-button { padding:6px 12px; }
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-notes { font-size:14px; line-height:1.35; }
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-notes h3 { font-size:18px; margin-bottom:3px; }
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-notes > p { margin-bottom:3px !important; }
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-notes h4 { margin-top:4px !important; }
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-notes progress { margin:4px 0; }
+ #gl-dialog[data-panel="puzzle"] .gl-reward-preview { margin-top:4px; }
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-notes .gl-button { padding:6px 10px; }
+}
+@media(max-width:560px) {
+ #gl-dialog[data-panel="puzzle"] .gl-puzzle-layout { grid-template-columns:minmax(0,1fr) minmax(180px,48%); gap:8px; }
 }
