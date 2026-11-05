@@ -38,7 +38,7 @@ try:
    preserved=page.evaluate('(id)=>GuildStore.snapshot().guilds.find(g=>g.id===id)',own['id'])
    page.locator('[data-gl="join"]').click();page.locator('[data-join-mode="code"]').click();page.locator('[name="code"]').fill('20060119');page.locator('#gl-join-form button:not([type="button"])').click();expect(page.locator('#gl-dialog')).not_to_be_visible()
    expect(page.locator('.gl-member-count')).to_have_text('3/6 位旅人');open_panel(page,'members');expect(page.locator('.gl-member')).to_have_count(3);expect(page.locator('#gl-member-you .gl-label')).to_have_count(0);expect(page.locator('#gl-member-demo-light .gl-label')).to_have_text('團長');close(page)
-   open_panel(page,'wall');expect(page.locator('.gl-post')).to_have_count(2);expect(page.locator('.gl-post-photo')).to_have_count(2)
+   open_panel(page,'wall');expect(page.locator('.gl-post')).to_have_count(4);expect(page.locator('.gl-post-photo')).to_have_count(4)
    assert page.locator('.gl-post-photo').evaluate_all('async es=>{await Promise.all(es.map(e=>e.decode()));return es.every(e=>e.naturalWidth>0)}');close(page)
    open_panel(page,'manage');expect(page.locator('#gl-invite-code')).to_have_text('20060119');expect(page.locator('[data-gl="test-application"]')).to_have_count(0);expect(page.locator('.gl-applications')).to_have_count(0);close(page)
    open_panel(page,'puzzle')

@@ -130,3 +130,22 @@ test('兩章分別完成才解鎖劇情；舊完整收藏向下相容且不重�
  const old=setup(JSON.stringify(legacy));assert(old.s.current().puzzles.spring.storyUnlocked&&old.s.current().puzzles.limited.storyUnlocked);assert.equal(old.s.current().points,s.current().points);
  assert.equal(c.puzzles[0].dialogue.length,6);assert(c.puzzles[0].dialogue.every(l=>l.speaker==='阿明'));assert.equal(c.puzzles[1].dialogue.length,6);assert.equal(c.puzzles[1].dialogue.filter(l=>l.speaker==='媽媽').length,3);
 });
+
+test('旅行牆固定配對、洗牌不重複、限額抽取與顯示不寫入存檔',()=>{
+ const {s,c,data,rng}=setup();s.join('20060119');assert.equal(c.travelWall.posts.length,4);assert.equal(s.current().posts.length,4);
+ const before=data.get(c.storageKey),g=s.current();rng(0);const a=s.wallPosts(g.id);rng(.99);const b=s.wallPosts(g.id);assert.notEqual(a.map(p=>p.id).join(','),b.map(p=>p.id).join(','));
+ for(const list of [a,b,s.wallPosts(g.id,3),s.wallPosts(g.id,100)]) {
+  assert.equal(new Set(list.map(p=>p.id)).size,list.length);assert.equal(new Set(list.map(p=>p.photo)).size,list.length);
+  for(const post of list){const fixed=c.travelWall.posts.find(p=>p.id===post.id);assert.equal(post.title,fixed.title);assert.equal(post.summary,fixed.content);assert.equal(post.photo,fixed.image);assert.equal(post.memberId,fixed.author);assert.equal(post.at,fixed.time);}
+ }
+ assert.equal(s.wallPosts(g.id,3).length,3);assert.equal(s.wallPosts(g.id,0).length,0);assert.equal(data.get(c.storageKey),before);
+ const raw=JSON.parse(before),group=raw.guilds.find(x=>x.id===g.id);group.posts.push({...group.posts[0],id:'duplicate-photo'});const duplicate=setup(JSON.stringify(raw));assert.equal(duplicate.s.wallPosts(g.id).length,4);
+});
+test('旅行牆舊示範貼文升級只執行一次，保留玩家貼文／拼圖／點數；新建團仍空白',()=>{
+ const {s,c,data}=setup();s.join('20060119');const raw=JSON.parse(data.get(c.storageKey)),g=raw.guilds.find(g=>g.code==='20060119');delete g.travelWallVersion;
+ g.posts=c.demoPosts.filter(p=>['demo-mori','demo-light'].includes(p.memberId)).map((p,n)=>({...p,id:'old-'+n,at:g.createdAt,photo:'images/home-bg.jpg'}));
+ const personal={id:'my-post',memberId:c.player.id,station:'瑞穗',stationId:'ruisui',summary:'玩家原文',at:g.createdAt};g.posts.push(personal);g.points=37;
+ const saved=JSON.stringify(raw),old=setup(saved);assert.equal(old.s.current().posts.length,5);assert.equal(JSON.stringify(old.s.current().posts.find(p=>p.id==='my-post')),JSON.stringify(personal));assert.equal(JSON.stringify(old.s.current().puzzles),JSON.stringify(g.puzzles));assert.equal(old.s.current().points,37);assert.equal(old.data.get(c.storageKey),saved);
+ assert(old.s.cancelApplication().ok);const once=old.data.get(c.storageKey);old.s.refresh();assert.equal(old.s.current().posts.length,5);assert.equal(old.data.get(c.storageKey),once);
+ const fresh=setup();fresh.s.create('自己開始');fresh.s.prepareDirectory();assert.equal(fresh.s.current().posts.length,0);
+});

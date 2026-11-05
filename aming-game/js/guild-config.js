@@ -36,8 +36,44 @@
         invitedGuild: { id: 'demo-invited-20060119', code: '20060119', name: '沿線同行旅團', leader: 'demo-light',
             pieces: { spring: [0,2,4,6,7,9,10], limited: [0,2,4,6,8,11,13,15,17,19] },
             members: ['demo-light','demo-mori'], at: '2026-03-21T02:00:00.000Z',
-            introduction: '沿著鐵道同行，一起拼回旅途的光。', avatarId: 'station',
-            photos: { 'demo-mori': 'images/ruisui-bg.jpg', 'demo-light': 'images/home-bg.jpg' } },
+            introduction: '沿著鐵道同行，一起拼回旅途的光。', avatarId: 'station' },
+        travelWall: {
+            "displayLimit": null,
+            "posts": [
+                {
+                    "id": "travel-wall-morning-station",
+                    "title": "早晨車站",
+                    "image": "images/travel-wall-morning-station.png",
+                    "author": "demo-mori",
+                    "time": "2026-03-21T03:00:00.000Z",
+                    "content": "清晨的月台很安靜，光慢慢落在鐵軌和屋簷上。\n站在這裡等車的時候，會有一種旅程正要開始的感覺。"
+                },
+                {
+                    "id": "travel-wall-sunset-station",
+                    "title": "黃昏車站",
+                    "image": "images/travel-wall-sunset-station.png",
+                    "author": "demo-light",
+                    "time": "2026-03-21T04:00:00.000Z",
+                    "content": "夕陽把整座車站染成暖暖的金色，好像連時間都慢了下來。\n如果旅行有顏色，那大概就是這種快要天黑前的光。"
+                },
+                {
+                    "id": "travel-wall-rainy-mountain-town",
+                    "title": "雨中山城",
+                    "image": "images/travel-wall-rainy-mountain-town.png",
+                    "author": "demo-mori",
+                    "time": "2026-03-21T05:00:00.000Z",
+                    "content": "下雨的山城有點安靜，也有點溫柔。\n撐著傘走過濕濕的街道時，會想把這種氣味和聲音一起記住。"
+                },
+                {
+                    "id": "travel-wall-seaside-view",
+                    "title": "海景",
+                    "image": "images/travel-wall-seaside-view.png",
+                    "author": "demo-light",
+                    "time": "2026-03-21T06:00:00.000Z",
+                    "content": "站在海邊的時候，風吹過來，心情也會變得很輕。\n看著海的顏色一路延伸出去，就會想再往更遠的地方旅行。"
+                }
+            ]
+        },
         duplicatePoints: 4, exchangeCost: 10,
         members: [
             { id: 'demo-mori', name: '小森', avatar: memberAvatars[0], shares: 3, contribution: 8 },

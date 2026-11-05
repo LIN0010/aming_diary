@@ -5,6 +5,15 @@
     let state, issue = '', blocked = false;
     const fresh = () => ({ version: 1, activeId: null, guilds: [], earned: [], applications: [] });
     const id = () => crypto.randomUUID();
+    function seedTravelWall(g) {
+        if(g.origin!=='invited'||g.code!==C.invitedGuild.code||g.travelWallVersion===1)return;
+        // 只替換舊版指定示範貼文；玩家分享與其他既有貼文完整保留。
+        g.posts=g.posts.filter(p=>!C.demoPosts.some(d=>d.memberId===p.memberId&&d.station===p.station&&d.summary===p.summary));
+        for(const post of C.travelWall.posts) if(g.members.some(m=>m.id===post.author)&&!g.posts.some(p=>p.id===post.id)) {
+            g.posts.push({id:post.id,title:post.title,memberId:post.author,station:post.title,at:post.time,summary:post.content,photo:post.image});
+        }
+        g.travelWallVersion=1;
+    }
     function validate(s) {
         if (!s || s.version !== 1 || !Array.isArray(s.guilds) || !Array.isArray(s.earned) ||
             !s.earned.every(x => C.stations.some(t => t.id === x)) || new Set(s.earned).size !== s.earned.length) throw Error('invalid');
@@ -40,6 +49,7 @@
         if (new Set(s.guilds.map(g => g.code)).size !== s.guilds.length || new Set(s.guilds.map(g => g.id)).size !== s.guilds.length ||
             (s.activeId !== null && !s.guilds.some(g => g.id === s.activeId && g.members.some(m => m.id === C.player.id))) ||
             s.guilds.filter(g => g.members.some(m => m.id === C.player.id)).length > 1) throw Error('invalid');
+        s.guilds.forEach(seedTravelWall);
         // 僅更新完全未遊玩的舊示範種子；已抽取、兌換或分享的團保留收藏。
         for(const g of s.guilds) if(g.origin==='invited'&&g.code===C.invitedGuild.code&&!g.puzzleLayoutVersion) {
             const pristine=g.draws===C.initialDraws&&g.points===C.initialPoints&&!g.posts.some(p=>p.memberId===C.player.id)&&C.puzzles.every(p=>JSON.stringify(g.puzzles[p.id].owned)===JSON.stringify(p.initial)&&!g.puzzles[p.id].contributions[C.player.id]);
@@ -88,7 +98,7 @@
         g.id=preset.id; g.origin='invited'; g.earnedStations=[]; g.createdAt=preset.at;
         g.introduction=preset.introduction; g.avatarId=preset.avatarId;
         g.members=preset.members.map(id=>member({id},preset.at));
-        g.posts=C.demoPosts.filter(p=>preset.members.includes(p.memberId)).map(p=>({...p,id:id(),at:preset.at,photo:preset.photos[p.memberId]}));
+        g.posts=[];seedTravelWall(g);
         for(const p of C.puzzles) g.puzzles[p.id].owned=[...preset.pieces[p.id]];
         g.puzzleLayoutVersion=1;
         // 既有碎片逐片分配給正式成員，與成員頁貢獻總數保持一致。
@@ -127,6 +137,17 @@
     }
     read();
     window.GuildStore = Object.freeze({
+        wallPosts(guildId,limit=C.travelWall.displayLimit) {
+            const g=state.guilds.find(g=>g.id===guildId);
+            // 先依穩定 ID／圖片去重，Fisher–Yates 打散副本，再取 N 筆，絕不改寫存檔順序。
+            const seenIds=new Set(),seenImages=new Set(),cards=[];
+            for(const post of g?.posts||[]) {
+                if(seenIds.has(post.id)||(post.photo&&seenImages.has(post.photo)))continue;
+                seenIds.add(post.id);if(post.photo)seenImages.add(post.photo);cards.push(copy(post));
+            }
+            for(let i=cards.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cards[i],cards[j]]=[cards[j],cards[i]];}
+            return cards.slice(0,limit==null?cards.length:Math.max(0,Math.floor(limit)));
+        },
         snapshot: () => copy(state), current: () => copy(active(state) || null), status: () => ({ issue, blocked }),
         subscribe(f) { listeners.add(f); return () => listeners.delete(f); },
         refresh() { read(); notify(); },
