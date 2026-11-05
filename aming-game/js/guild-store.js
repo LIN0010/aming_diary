@@ -25,6 +25,8 @@
             for (const p of C.puzzles) {
                 const owned = g.puzzles[p.id]?.owned, contributions = g.puzzles[p.id]?.contributions;
                 if (!Array.isArray(owned) || new Set(owned).size !== owned.length || !owned.every(n => int(n) && n < p.rows*p.cols) || !contributions || !Object.values(contributions).every(int)) throw Error('invalid');
+                // 舊存檔已完成的拼圖亦直接取得專屬劇情資格。
+                if(owned.length===p.rows*p.cols) g.puzzles[p.id].storyUnlocked=true;
             }
         }
         if (new Set(s.applications.map(r => r.id)).size !== s.applications.length) throw Error('invalid');

@@ -88,13 +88,13 @@ try:
   assert page.evaluate('GuildStore.current().points')==points+4
   page.evaluate('Math.random=oldRandom')
   for n in (7,8,9,10):page.locator(f'[data-piece="{n}"]').click()
-  expect(page.locator('#gl-puzzle-progress')).to_contain_text('12/12')
-  page.locator('[data-gl="reward"]').click();expect(page.locator('.gl-unlocked-cg')).to_be_visible();expect(page.locator('.gl-story')).to_contain_text('示範補充故事')
+  assert page.evaluate('GuildStore.current().puzzles.spring.owned.length')==12
+  expect(page.locator('.gl-memory-cg')).to_be_visible();expect(page.locator('[data-gl="watch-memory"]')).to_be_visible()
   page.locator('#gl-dialog [data-gl="puzzle"]').click();page.locator('[data-puzzle="limited"]').click()
   expect(page.locator('.gl-piece')).to_have_count(20)
   for n in range(10,20):page.locator(f'[data-piece="{n}"]').click()
-  expect(page.locator('#gl-puzzle-progress')).to_contain_text('20/20')
-  page.locator('[data-gl="reward"]').click();expect(page.locator('.gl-story')).to_be_visible();closed(page)
+  assert page.evaluate('GuildStore.current().puzzles.limited.owned.length')==20
+  expect(page.locator('.gl-memory-cg')).to_be_visible();closed(page)
   print('PASS: 建立旅團、鎖定日記不分享、首次分享抽取、新片、重複轉點、兩種尺寸兌換完成與 CG 故事。',flush=True)
   # 成員頭像與管理操作。
   page.locator('.gl-avatars button').first.click();expect(page.locator('.gl-member')).to_have_count(1);closed(page)

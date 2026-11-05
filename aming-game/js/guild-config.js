@@ -55,9 +55,9 @@
         stations: [{ id: 'ruisui', name: '瑞穗', memory: 'ruisui-01', summary: '在瑞穗，循著乳牛與月台的回憶，找回阿明留下的一頁日記。' }],
         puzzles: [
             { id: 'spring', title: '追著列車的孩子', rows: 3, cols: 4, image: 'images/puzzle-spring-railway.png', aspect: 928/928, placeholder: false,
-                initial: [0,1,2,3,4,5,6], story: '【示範補充故事】阿明把車票夾進手帳。原來，有人陪著一起收藏的風景，會在記憶裡停留得更久。' },
+                initial: [0,1,2,3,4,5,6], dialogue: [{'speaker': '阿明', 'text': '火車來了！'}, {'speaker': '阿明', 'text': '一、二、三……今天有好多節車廂喔。'}, {'speaker': '阿明', 'text': '不知道它要開去哪裡……'}, {'speaker': '阿明', 'text': '山的那一邊，會有什麼呢？'}, {'speaker': '阿明', 'text': '……好想坐上去看看。'}, {'speaker': '阿明', 'text': '下次，一定要搭到那班火車！'}] },
             { id: 'limited', title: '記憶裡的同行者', rows: 4, cols: 5, image: 'images/puzzle-station-promise.png', aspect: 1232/928, placeholder: false,
-                initial: [0,1,2,3,4,5,6,7,8,9], story: '【示範補充故事】列車經過窗邊時，阿明在日記最後畫了一個小小的站牌：下次，還要一起旅行。' }
+                initial: [0,1,2,3,4,5,6,7,8,9], dialogue: [{'speaker': '阿明', 'text': '媽媽，我想坐窗邊。'}, {'speaker': '媽媽', 'text': '好啊，窗邊留給你。'}, {'speaker': '阿明', 'text': '外面跑得好快，好像整個世界都在動。'}, {'speaker': '媽媽', 'text': '不是世界在跑，是我們正在往前走。'}, {'speaker': '阿明', 'text': '那下次還可以一起搭火車嗎？'}, {'speaker': '媽媽', 'text': '可以啊，只要你想去，媽媽就陪你。'}] }
         ]
     };
     function freeze(o) { Object.values(o).forEach(v => { if (v && typeof v === 'object') freeze(v); }); return Object.freeze(o); }

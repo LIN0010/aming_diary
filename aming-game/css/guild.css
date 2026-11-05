@@ -76,8 +76,6 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 .gl-member p { font-size:12px; color:#808471; }
 .gl-label { padding:2px 7px; font-size:11px; border-radius:4px; background:#e2e8d2; color:#68805e; }
 .gl-code { display:inline-block; letter-spacing:.2em; padding:15px 22px; margin:18px 0 0 !important; border:1px dashed #bfc8b1; background:#efeedb; font-family:monospace; user-select:all; }
-.gl-unlocked-cg { display:block; width:100%; max-height:55dvh; object-fit:contain; }
-.gl-story { padding:24px; background:#efeedb; margin:20px 0; border-radius:8px; }
 #gl-notice { position:absolute; bottom:115px; left:50%; transform:translateX(-50%); z-index:40; max-width:90%; padding:10px 18px; background:#fff9e8; border:1px solid #bac7ad; border-radius:12px; box-shadow:0 4px 16px #4d593330; pointer-events:none; }
 #group-screen:has(.gl-modal[open]) #gl-notice { position:fixed; z-index:100; }
 @media(max-width:700px) {
@@ -370,3 +368,23 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 @media(max-width:560px) {
  #gl-dialog[data-panel="puzzle"] .gl-puzzle-layout { grid-template-columns:minmax(0,1fr) minmax(180px,48%); gap:8px; }
 }
+
+/* 完成回憶：CG 固定占一欄，只有對話紀錄獨立捲動。 */
+#group-screen #gl-dialog[data-panel="reward"] { box-sizing:border-box; width:min(1080px,calc(100vw - 24px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px))); height:min(740px,calc(var(--game-height,100dvh) - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); max-height:calc(var(--game-height,100dvh) - 24px); padding:16px 20px; overflow:visible; }
+#gl-dialog[data-panel="reward"] #gl-dialog-content { height:100%; min-height:0; display:grid; grid-template-rows:auto minmax(0,1fr); gap:12px; }
+#group-screen #gl-dialog[data-panel="reward"] h2 { margin:0 40px 0 0; font-size:24px; }
+.gl-memory-layout { min-height:0; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:20px; }
+.gl-memory-cg { display:block; width:100%; height:100%; min-height:0; object-fit:contain; }
+.gl-memory-reader { min-height:0; display:flex; flex-direction:column; gap:10px; }
+.gl-memory-messages { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; padding:8px; scrollbar-width:thin; scrollbar-color:#ad967855 transparent; }
+.gl-memory-bubble { width:fit-content; max-width:88%; padding:10px 14px; margin:0 0 12px; border-radius:14px 14px 14px 4px; color:#604a36; background:#f3e6ce; animation:gl-message-in .2s ease both; }
+.gl-memory-bubble.is-aming { margin-left:auto; border-radius:14px 14px 4px 14px; color:#4e5144; background:#e0e7d7; }
+.gl-memory-bubble strong { display:block; font-size:12px; margin-bottom:4px; }
+.gl-memory-bubble p { font-size:15px; line-height:1.7; white-space:pre-wrap; }
+.gl-memory-bubble.no-animation { animation:none; }
+.gl-memory-controls { flex:none; display:flex; flex-wrap:wrap; gap:6px; }
+.gl-memory-controls > p { width:100%; color:#677653; }
+.gl-memory-controls .gl-button { padding:7px 12px; font-size:13px; }
+@keyframes gl-message-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+@media(max-height:500px) { #group-screen #gl-dialog[data-panel="reward"] { padding:10px 14px; } #group-screen #gl-dialog[data-panel="reward"] h2 { font-size:20px; } .gl-memory-layout { gap:12px; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); } .gl-memory-bubble { padding:8px 10px; } .gl-memory-controls .gl-button { padding:5px 9px; } }
+@media(prefers-reduced-motion:reduce) { .gl-memory-bubble { animation:none; } }

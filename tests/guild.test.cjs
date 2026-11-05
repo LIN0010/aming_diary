@@ -121,3 +121,12 @@ test('邀請團散布固定；僅遷移未遊玩種子，不覆寫玩家已產�
  delete g.puzzleLayoutVersion;const legacy=JSON.stringify(raw),migrated=setup(legacy);assert.equal(migrated.s.current().puzzles.spring.owned.join(','),c.invitedGuild.pieces.spring.join(','));assert.equal(migrated.data.get(c.storageKey),legacy);
  g.draws--;g.puzzles.spring.owned.push(11);const played=setup(JSON.stringify(raw));assert.equal(played.s.current().puzzles.spring.owned.join(','),g.puzzles.spring.owned.join(','));
 });
+
+test('兩章分別完成才解鎖劇情；舊完整收藏向下相容且不重設進度',()=>{
+ const {s,c,data}=setup();s.join('20060119');assert(!s.current().puzzles.spring.storyUnlocked);assert(!s.current().puzzles.limited.storyUnlocked);
+ for(const p of c.puzzles){for(let n=0;n<p.rows*p.cols;n++)if(!s.current().puzzles[p.id].owned.includes(n))assert(s.exchange(p.id,n).ok);assert(s.current().puzzles[p.id].storyUnlocked);}
+ const raw=data.get(c.storageKey),loaded=setup(raw);assert.equal(JSON.stringify(loaded.s.current()),JSON.stringify(s.current()));
+ const legacy=JSON.parse(raw);for(const p of c.puzzles)delete legacy.guilds.find(g=>g.code==='20060119').puzzles[p.id].storyUnlocked;
+ const old=setup(JSON.stringify(legacy));assert(old.s.current().puzzles.spring.storyUnlocked&&old.s.current().puzzles.limited.storyUnlocked);assert.equal(old.s.current().points,s.current().points);
+ assert.equal(c.puzzles[0].dialogue.length,6);assert(c.puzzles[0].dialogue.every(l=>l.speaker==='阿明'));assert.equal(c.puzzles[1].dialogue.length,6);assert.equal(c.puzzles[1].dialogue.filter(l=>l.speaker==='媽媽').length,3);
+});
