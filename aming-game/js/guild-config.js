@@ -34,6 +34,7 @@
         ],
         newGuild: { draws: 0, points: 0, applicants: ['demo-sea','demo-river'] },
         invitedGuild: { id: 'demo-invited-20060119', code: '20060119', name: '沿線同行旅團', leader: 'demo-light',
+            pieces: { spring: [0,2,4,6,7,9,10], limited: [0,2,4,6,8,11,13,15,17,19] },
             members: ['demo-light','demo-mori'], at: '2026-03-21T02:00:00.000Z',
             introduction: '沿著鐵道同行，一起拼回旅途的光。', avatarId: 'station',
             photos: { 'demo-mori': 'images/ruisui-bg.jpg', 'demo-light': 'images/home-bg.jpg' } },

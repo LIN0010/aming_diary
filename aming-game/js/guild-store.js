@@ -38,6 +38,12 @@
         if (new Set(s.guilds.map(g => g.code)).size !== s.guilds.length || new Set(s.guilds.map(g => g.id)).size !== s.guilds.length ||
             (s.activeId !== null && !s.guilds.some(g => g.id === s.activeId && g.members.some(m => m.id === C.player.id))) ||
             s.guilds.filter(g => g.members.some(m => m.id === C.player.id)).length > 1) throw Error('invalid');
+        // 僅更新完全未遊玩的舊示範種子；已抽取、兌換或分享的團保留收藏。
+        for(const g of s.guilds) if(g.origin==='invited'&&g.code===C.invitedGuild.code&&!g.puzzleLayoutVersion) {
+            const pristine=g.draws===C.initialDraws&&g.points===C.initialPoints&&!g.posts.some(p=>p.memberId===C.player.id)&&C.puzzles.every(p=>JSON.stringify(g.puzzles[p.id].owned)===JSON.stringify(p.initial)&&!g.puzzles[p.id].contributions[C.player.id]);
+            if(pristine) for(const p of C.puzzles) g.puzzles[p.id].owned=[...C.invitedGuild.pieces[p.id]];
+            g.puzzleLayoutVersion=1;
+        }
         return s;
     }
     function read() {
@@ -81,6 +87,8 @@
         g.introduction=preset.introduction; g.avatarId=preset.avatarId;
         g.members=preset.members.map(id=>member({id},preset.at));
         g.posts=C.demoPosts.filter(p=>preset.members.includes(p.memberId)).map(p=>({...p,id:id(),at:preset.at,photo:preset.photos[p.memberId]}));
+        for(const p of C.puzzles) g.puzzles[p.id].owned=[...preset.pieces[p.id]];
+        g.puzzleLayoutVersion=1;
         // 既有碎片逐片分配給正式成員，與成員頁貢獻總數保持一致。
         for(const record of Object.values(g.puzzles)) record.owned.forEach((_,n)=>{
             const contributor=preset.members[n%preset.members.length];

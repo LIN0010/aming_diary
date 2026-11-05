@@ -334,3 +334,16 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
 
 .gl-post-photo { display:block; width:100%; max-height:180px; object-fit:contain; margin:10px 0; }
 .gl-wall-empty { align-self:center; padding:28px 12px; color:#87775f; line-height:1.9; text-align:center; font-family:"Noto Serif TC",serif; }
+
+/* 拼圖在一般桌面視窗內完整呈現；低矮／觸控視窗仍保留自然捲動。 */
+@media(min-width:1000px) and (min-height:600px) {
+ .gl-modal[data-panel="puzzle"] { width:min(960px,calc(100vw - 48px)); max-height:calc(100dvh - 48px); padding:22px 24px; }
+ .gl-modal[data-panel="puzzle"] .gl-puzzle-tabs { margin:10px 0 14px; }
+ .gl-modal[data-panel="puzzle"] .gl-puzzle-layout { grid-template-columns:minmax(0,1fr) 300px; gap:20px; align-items:start; }
+ .gl-modal[data-panel="puzzle"] .gl-puzzle-board { width:min(100%,calc((100dvh - 240px)*var(--puzzle-aspect))); margin:0 auto; }
+ .gl-modal[data-panel="puzzle"] .gl-puzzle-notes { padding:0; }
+ .gl-modal[data-panel="puzzle"] .gl-puzzle-notes > p { margin-bottom:6px !important; }
+ .gl-modal[data-panel="puzzle"] .gl-puzzle-notes h4 { margin-top:10px !important; }
+ .gl-modal[data-panel="puzzle"] .gl-puzzle-notes progress { margin:8px 0; }
+ .gl-modal[data-panel="puzzle"] .gl-reward-preview { margin-top:10px; }
+}

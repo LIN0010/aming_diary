@@ -114,3 +114,10 @@ test('玩家新團零進度、待審不計人數、20060119 三人進度獨立�
  assert.equal(JSON.stringify(s.snapshot().guilds.find(g=>g.id===ownId)),preserved);
  assert(s.leave().ok);assert(s.join(code).ok);assert.equal(s.current().id,ownId);assert.equal(s.current().puzzles.spring.owned.length,1);assert.equal(data.get('aming-diary-progress'),'personal');
 });
+
+test('邀請團散布固定；僅遷移未遊玩種子，不覆寫玩家已產生的收藏',()=>{
+ const {s,c,data}=setup();s.join('20060119');const raw=JSON.parse(data.get(c.storageKey)),g=raw.guilds.find(g=>g.code==='20060119');
+ for(const p of c.puzzles){assert.equal(g.puzzles[p.id].owned.length,p.initial.length);assert.equal(g.puzzles[p.id].owned.join(','),c.invitedGuild.pieces[p.id].join(','));g.puzzles[p.id].owned=[...p.initial];}
+ delete g.puzzleLayoutVersion;const legacy=JSON.stringify(raw),migrated=setup(legacy);assert.equal(migrated.s.current().puzzles.spring.owned.join(','),c.invitedGuild.pieces.spring.join(','));assert.equal(migrated.data.get(c.storageKey),legacy);
+ g.draws--;g.puzzles.spring.owned.push(11);const played=setup(JSON.stringify(raw));assert.equal(played.s.current().puzzles.spring.owned.join(','),g.puzzles.spring.owned.join(','));
+});
