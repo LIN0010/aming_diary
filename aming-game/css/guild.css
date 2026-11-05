@@ -154,11 +154,11 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; }
  mask-image:radial-gradient(circle at left 58px,transparent 8px,#000 9px),radial-gradient(circle at right 58px,transparent 8px,#000 9px);
  -webkit-mask-size:51% 100%;mask-size:51% 100%;-webkit-mask-position:left,right;mask-position:left,right;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
 }
-/* 短橫向螢幕讓完整互動物件留在底部導覽上方。 */
-@media(max-height:520px) and (min-aspect-ratio:3/2) {
- .gl-entry-mode .gl-world { width:calc((100dvh - 110px) * var(--gl-room-ratio));left:50%;top:calc(50% - 55px);transform:translate(-50%,-50%); }
- .gl-entry-mode .gl-room { overflow:hidden; }
-}
+/* 手機橫向入口以 cover 方式鋪滿；背景與熱區沿用同一原圖座標。 */
+.mobile-nav .gl-entry-mode .gl-world { width:max(100%,calc(var(--game-height,100dvh) * var(--gl-room-ratio))); left:50%; top:50%; transform:translate(-50%,-50%); }
+.mobile-nav .gl-entry-mode .gl-room { overflow:hidden; }
+.mobile-nav .gl-entry-mode::before { content:none; }
+.mobile-nav .gl-entry-heading { top:max(12px,env(safe-area-inset-top,0px)); left:max(14px,env(safe-area-inset-left,0px)); right:max(14px,env(safe-area-inset-right,0px)); }
 
 /* 三種登記模式共用透明板夾；紙張範圍與原圖保持比例。 */
 .gl-clipboard-art { display:none; }
