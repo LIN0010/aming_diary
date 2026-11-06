@@ -23,6 +23,8 @@
   const stickerToggle=tools.querySelector('[data-layout="stickers"]');stickerToggle.setAttribute('aria-controls',picker.id);stickerToggle.setAttribute('aria-expanded','false');
   toolbar.append(tools);
   ctx.on(tools,'keydown',e=>{if(e.key==='Escape'){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');stickerToggle.focus();}});
+  const officialPhoto=groups.find(g=>g.id==='aming-photo').node;
+  let legacyPhoto;
   let domRecords=[];
   try{
    const raw=localStorage.getItem(KEY);
@@ -30,21 +32,23 @@
     const saved=data.stations.ruisui;
     if(saved){
      if(!Array.isArray(saved.objects)||saved.objects.length>30||saved.stationId!=='ruisui'||saved.photo&&!/^data:image\/(jpeg|png|webp);base64,/.test(saved.photo))throw Error('invalid');
-     for(const o of saved.objects)if(!o.id||!['photo','sticker'].includes(o.type)||o.type==='sticker'&&!Object.hasOwn(ASSETS,o.source)||![o.x,o.y,o.scale,o.angle,o.order].every(Number.isFinite)||o.scale<=0)throw Error('invalid');
+     for(const o of saved.objects)if(!o.id||!['photo','sticker','official-photo'].includes(o.type)||o.type==='sticker'&&!Object.hasOwn(ASSETS,o.source)||![o.x,o.y,o.scale,o.angle,o.order].every(Number.isFinite)||o.scale<=0)throw Error('invalid');
      records=saved.objects;photo=saved.photo||null;
      domRecords=saved.domObjects||[];
     }
    }
   }catch(_){protectedSave=true;report('無法讀取手帳排版，原存檔已保留。');}
-  try{domEditor=JournalDomLayout.mount({ctx,groups,saved:domRecords,checkpoint,changed:()=>{dirty=true;canvas?.discardActiveObject();updateTools();},select:()=>{canvas?.discardActiveObject();updateTools();}});}catch(_){protectedSave=true;report('無法讀取 HTML 排版，原存檔已保留。');}
+  legacyPhoto=domRecords.find(r=>r.id==='aming-photo');domRecords=domRecords.filter(r=>r.id!=='aming-photo');
+  try{domEditor=JournalDomLayout.mount({ctx,groups:groups.filter(g=>g.id!=='aming-photo'),saved:domRecords,checkpoint,changed:()=>{dirty=true;canvas?.discardActiveObject();updateTools();},select:()=>{canvas?.discardActiveObject();updateTools();}});}catch(_){protectedSave=true;report('無法讀取 HTML 排版，原存檔已保留。');}
   ctx.on(ctx.root,'pointerdown',e=>{if(editing&&canvas?.getActiveObject()&&!e.target.closest('.pf-actions')&&!canvas.findTarget(e)&&domEditor?.hitStart(e))e.stopImmediatePropagation();},{capture:true});
   function defaultRecords(){
    const r=label.getBoundingClientRect(),p=page.getBoundingClientRect();
-   return [{id:'player-polaroid',type:'photo',source:'player-photo',x:p.width?(r.left+r.width/2-p.left)/p.width:.65,y:p.height?(r.top+r.height/2-p.top)/p.height:.78,scale:label.offsetWidth/(page.clientWidth||1)*W/240,angle:3,order:0}];
+   return [{id:'player-polaroid',type:'photo',source:'player-photo',x:p.width?(r.left+r.width/2-p.left)/p.width:.65,y:p.height?(r.top+r.height/2-p.top)/p.height:.78,scale:label.offsetWidth/(page.clientWidth||1)*W/240,angle:3,order:0},officialDefault()];
   }
+  function officialDefault(){const r=officialPhoto.getBoundingClientRect(),p=page.getBoundingClientRect();return {id:'aming-photo',type:'official-photo',source:'aming-photo',x:(r.left+r.width/2-p.left)/p.width,y:(r.top+r.height/2-p.top)/p.height,scale:officialPhoto.offsetWidth/p.width*W/240,angle:-2,aspect:officialPhoto.offsetWidth/officialPhoto.offsetHeight,order:1};}
   // 官方預設值只由原 HTML 位置產生；不以玩家的儲存值回寫。
   let defaults;
-  function capture(){return canvas?canvas.getObjects().map((o,order)=>({id:o.journalId,type:o.journalType,source:o.journalSource,x:o.left/W,y:o.top/H,scale:o.scaleX,angle:o.angle,order})):clone(records||defaults||[]);}
+  function capture(){return canvas?canvas.getObjects().map((o,order)=>({id:o.journalId,type:o.journalType,source:o.journalSource,x:o.left/W,y:o.top/H,scale:o.scaleX,angle:o.angle,order,...(o.journalType==='official-photo'?{aspect:o.journalAspect}:{})})):clone(records||defaults||[]);}
   function checkpoint(){history.push({fabric:clone(capture()),dom:domEditor?.capture()||[]});if(history.length>30)history.shift();}
   function changed(){records=capture();dirty=true;updateTools();}
   function updateTools(){
@@ -63,7 +67,11 @@
   function image(src){return new Promise((resolve,reject)=>fabric.Image.fromURL(src,value=>value?.width?resolve(value):reject(Error('圖片載入失敗'))));}
   async function object(record){
    let result;
-   if(record.type==='photo'){
+   if(record.type==='official-photo'){
+    const aspect=Number.isFinite(record.aspect)&&record.aspect>.2&&record.aspect<4?record.aspect:1;
+    const h=240/aspect,img=await image(officialPhoto.querySelector('img').src);img.scale(Math.min(220/img.width,(h-38)/img.height));img.set({left:0,top:-9,originX:'center',originY:'center'});
+    result=new fabric.Group([new fabric.Rect({left:-120,top:-h/2,width:240,height:h,fill:'#fffcf3'}),img,new fabric.Text(officialPhoto.querySelector('span').textContent.trim(),{fontSize:12,fill:'#806d55',left:0,top:h/2-16,originX:'center',originY:'center'}),new fabric.Rect({left:-35,top:-h/2-7,width:70,height:16,fill:'rgba(201,183,153,.65)'})],{originX:'center',originY:'center'});result.journalAspect=aspect;
+   }else if(record.type==='photo'){
     const paper=new fabric.Rect({left:-120,top:-90,width:240,height:180,fill:'#fffcf3',stroke:'#d6c8af',strokeWidth:1});
     const parts=[paper];
     if(photo){const img=await image(photo);img.scale(Math.min(220/img.width,140/img.height));img.set({left:0,top:-10,originX:'center',originY:'center'});parts.push(img);}
@@ -89,6 +97,8 @@
   function ensure(){
    if(canvas)return;
    if(!records){defaults=defaultRecords();records=clone(defaults);}
+   else if(!records.some(r=>r.type==='official-photo')){const initial=officialDefault();if(legacyPhoto){initial.x=legacyPhoto.x+legacyPhoto.width/2;initial.y=legacyPhoto.y+legacyPhoto.width*.75/initial.aspect/2;initial.scale=legacyPhoto.width*W/240;initial.angle=legacyPhoto.angle;}records.push(initial);}
+   officialPhoto.style.visibility='hidden';
    canvas=new fabric.Canvas(element,{width:W,height:H,selection:false,preserveObjectStacking:true,allowTouchScrolling:false,enableRetinaScaling:true});
    let photoPress=null;
    const point=e=>{const p=e.changedTouches?.[0]||e;return {x:p.clientX,y:p.clientY};};

@@ -76,7 +76,7 @@ try:
    page.set_viewport_size({'width':932 if mobile else 1200,'height':430 if mobile else 760});page.wait_for_timeout(600)
    frame=page.locator('.pf-stage').bounding_box();layer=page.locator('.journal-decoration-layer').bounding_box();assert abs(layer['width']-frame['width']/2)<3
    page.locator('[data-book="edit"]').click();layer_ready(page);before=page.evaluate('testCanvas.getObjects().length');confirmation['accept']=False;tool(page,'reset').click();assert page.evaluate('testCanvas.getObjects().length')==before;confirmation['accept']=True;tool(page,'reset').click();layer_ready(page);page.locator('[data-book="edit"]').click()
-   reset=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui');assert reset['photo']==saved['photo'];assert len(reset['objects'])==1;assert reset['objects'][0]['x']>.35 and reset['objects'][0]['scale']>.4,reset['objects'];assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='保留的瑞穗心得'
+   reset=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui');assert reset['photo']==saved['photo'];assert len(reset['objects'])==2;assert reset['objects'][0]['x']>.35 and reset['objects'][0]['scale']>.4,reset['objects'];assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='保留的瑞穗心得'
    page.wait_for_function('document.querySelector(".journal-decoration-preview").naturalWidth===600')
    page.screenshot(path=f'/workspace/work/fabric-read-{w}.png')
    # 儲存失敗不得離開編輯模式；重試保留草稿。

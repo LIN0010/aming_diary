@@ -206,7 +206,7 @@ function scheduleBookLayout(){
  if(disposed||layoutFrame)return;
  layoutFrame=requestAnimationFrame(()=>{
   layoutFrame=0;if(disposed)return;
-  controls.classList.toggle('is-compact',book.getBoundingClientRect().right+54>document.documentElement.clientWidth);
+  controls.classList.toggle('is-compact',book.getBoundingClientRect().right+78>document.documentElement.clientWidth);
   const size=measureBook(),key=`${size.width}x${size.height}`;
   if(size.width<2||size.height<2)return;
   // 等連續兩個繪製週期取得相同尺寸，避開Safari旋轉過渡值。
