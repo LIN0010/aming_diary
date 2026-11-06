@@ -49,7 +49,7 @@ try:
    drag(page,True,mobile);bookmark(page,True)
    drag(page,False,mobile);bookmark(page,False)
    page.locator('#ruisui-journal').click();ready(page);bookmark(page,True)
-   page.evaluate('GameProgress.completeRuisui()');page.locator('#travel-note').fill('書籤狀態測試心得');page.locator('.pf-index-tab').click();ready(page);bookmark(page,False);assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='書籤狀態測試心得'
+   page.evaluate('GameProgress.completeRuisui()');page.locator('[data-book="edit"]').click();page.locator('#travel-note').fill('書籤狀態測試心得');page.locator('.pf-index-tab').click();ready(page);bookmark(page,False);assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='書籤狀態測試心得'
    # 原生 API 正、反向跨頁與最後封底，狀態同步不依賴控制鈕。
    for dest in [3,5,7,9,11,13,15]:
     page.evaluate('testBook.flipNext()');page.wait_for_function('(i)=>testBook.getState()==="read"&&testBook.getCurrentPageIndex()===i',arg=dest);bookmark(page,dest<15)

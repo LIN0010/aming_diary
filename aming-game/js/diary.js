@@ -79,8 +79,30 @@ const book=document.createElement('section');book.className='pf-book';
 const frame=document.createElement('div');frame.className='pf-frame';
 const stage=document.createElement('div');stage.className='pf-stage';frame.append(stage);
 const controls=document.createElement('nav');controls.className='pf-actions';controls.setAttribute('aria-label','日記操作');
-controls.innerHTML='<button type="button" class="pf-index-tab" data-book="index" hidden aria-label="返回目錄" title="返回目錄">目錄</button><button type="button" data-book="close">闔上日記</button><span role="status" aria-live="polite"></span>';
+controls.innerHTML='<button type="button" class="pf-index-tab" data-book="index" hidden aria-label="返回目錄" title="返回目錄">目錄</button><button type="button" data-book="close">闔上日記</button><button type="button" data-book="edit" hidden aria-pressed="false">編輯手帳</button><span role="status" aria-live="polite"></span>';
 const indexBookmark=controls.querySelector('[data-book="index"]');
+// 編輯器整合邊界：未來照片／貼紙工具共用模式與手勢閘門，不在本次新增排版資料。
+const journalEditor={mode:'read',station:'ruisui'};
+const editToggle=controls.querySelector('[data-book="edit"]');
+const noteReading=document.createElement('div');noteReading.id='travel-note-reading';noteReading.className='travel-note-reading';
+travelNote.before(noteReading);travelNote.hidden=true;travelNote.readOnly=true;saveTravel.hidden=true;
+function syncJournalMode(){
+ const editing=journalEditor.mode==='edit',unlocked=GameProgress.hasMemory('ruisui-01');
+ const text=GameProgress.snapshot().notes[journalEditor.station]||'';
+ noteReading.textContent=text||'尚未留下旅行心得。';noteReading.classList.toggle('is-empty',!text);
+ noteReading.hidden=editing;travelNote.hidden=!editing;travelNote.readOnly=!editing;saveTravel.hidden=!editing;
+ book.dataset.journalMode=journalEditor.mode;
+ editToggle.textContent=editing?'完成編輯':'編輯手帳';editToggle.setAttribute('aria-pressed',String(editing));
+ editToggle.hidden=!(readingActive&&engine?.getCurrentPageIndex()===9&&unlocked);
+}
+function changeJournalMode(next){
+ if(flipping||layoutPhase||!engine||engine.getState()!=='read')return false;
+ if(next==='edit'){
+  if(!readingActive||engine.getCurrentPageIndex()!==9||!GameProgress.hasMemory('ruisui-01'))return false;
+  travelNote.value=GameProgress.snapshot().notes[journalEditor.station]||'';
+ }else if(journalEditor.mode==='edit'&&!saveTravelNote())return false;
+ journalEditor.mode=next;syncJournalMode();return true;
+}
 diaryIndex.before(book);book.append(indexBookmark,frame,controls);stationDiary.remove();
 backToIndex.textContent='← 返回目錄';
 function makePage(title,hard=false){const page=document.createElement('section');page.className='pf-page'+(hard?' pf-hard':'');if(hard)page.dataset.density='hard';if(title){const h=document.createElement('h2');h.textContent=title;page.append(h);}return page;}
@@ -168,7 +190,7 @@ function syncIndexBookmark(){
  indexBookmark.classList.remove('pf-index-fading');indexBookmark.disabled=false;
  indexBookmark.hidden=!(readingActive&&current>=3&&current<=14);
 }
-function renderBook(n){book.style.setProperty('--pf-closed-anchor',engine?.getCurrentPageIndex()===15?'.25':'.75');pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;syncIndexBookmark();}
+function renderBook(n){syncJournalMode();book.style.setProperty('--pf-closed-anchor',engine?.getCurrentPageIndex()===15?'.25':'.75');pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;syncIndexBookmark();}
 let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);
 let sizeObserver,layoutFrame=0,stableSize='',appliedSize='';
 function measureBook(){return {width:Math.round(frame.clientWidth),height:Math.round(frame.clientHeight)};}
@@ -226,6 +248,7 @@ async function oneFlip(forward){
  await new Promise((resolve,reject)=>{function check(){if(disposed){resolve();return;}if(engine.getState()==='read'&&engine.getCurrentPageIndex()!==before){resolve();return;}if(performance.now()-start>6000){reject(new Error('翻頁未完成，請重試。'));return;}ctx.delay(check,16);}ctx.delay(check,16);});
 }
 async function turnTo(target){
+ if(journalEditor.mode==='edit'&&!changeJournalMode('read'))return;
  if(flipping||layoutPhase||engine&&engine.getState()!=='read'||target===pageNumber&&engine?.getCurrentPageIndex()===pageFor(target))return;if(noteDirty&&!saveTravelNote())return;
  flipping=true;book.setAttribute('aria-busy','true');frame.inert=true;controls.inert=true;stationDiary.inert=true;
  const closeFade=target===-1?fadeIndexForClose():null;
@@ -237,7 +260,7 @@ ctx.on(cover,'click',()=>{if(!readingActive)turnTo(0);});
 ctx.on(backCover,'click',()=>{if(!readingActive)turnTo(6);});
 // 封面先放大、同步尺寸再翻開；內容手勢交給輸入與捲動，紙張邊緣交給套件。
 for(const type of ['mousedown','touchstart'])ctx.on(stage,type,event=>{
- if(!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}
+ if(journalEditor.mode==='edit'||!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}
  const point=event.touches?.[0]||event, page=event.target.closest('.pf-page'), rect=page?.getBoundingClientRect();
  const edge=rect&&(point.clientX-rect.left<22||rect.right-point.clientX<22);
  if(event.target.closest('input,textarea,label,a,button:not(.station-journal)')||!edge&&event.target.closest('.journal-content,.station-journal,.pf-rui-column'))event.stopPropagation();
@@ -246,7 +269,7 @@ for(const type of ['mousedown','touchstart'])ctx.on(cover,type,event=>{
  if(!readingActive)event.stopPropagation();
 });
 ctx.on(indexBookmark,'click',()=>turnTo(0));
-ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber===-1?0:pageNumber+(action==='next'?1:-1));});
+ctx.on(controls,'click',e=>{const action=e.target.closest('[data-book]')?.dataset.book;if(action==='edit'){changeJournalMode(journalEditor.mode==='read'?'edit':'read');return;}if(action)turnTo(action==='index'?0:action==='close'?-1:pageNumber===-1?0:pageNumber+(action==='next'?1:-1));});
 ctx.beforeLeave(()=>!flipping&&!layoutPhase&&(!engine||engine.getState()==='read'));
 ctx.on(ctx.root,'scroll',()=>{if(readingActive){ctx.root.scrollLeft=0;ctx.root.scrollTop=0;}},{passive:true});
 ctx.cleanup(()=>{readingUI.forEach(el=>el.inert=false);disposed=true;cancelAnimationFrame(layoutFrame);sizeObserver?.disconnect();resolveReady();engine?.destroy();});
@@ -459,6 +482,8 @@ ctx.subscribe((state, status) => {
         savedMessage.textContent = "✓ 已記錄這段旅程";
     }
     if (!noteDirty) travelNote.value = state.notes.ruisui ?? "";
+    if(!found)journalEditor.mode='read';
+    syncJournalMode();
     markVisibleMemoryRead();
 });
 

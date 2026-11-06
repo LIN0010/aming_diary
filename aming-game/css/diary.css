@@ -1789,7 +1789,7 @@ body {
 .pf-reading .pf-frame { inset:0; touch-action:pan-y; }
 .pf-actions[hidden] { display:none; }
 .pf-actions { position:absolute; top:-34px; right:0; display:flex; align-items:center; gap:12px; z-index:20; }
-.pf-actions button[data-book="close"] {
+.pf-actions button:is([data-book="close"],[data-book="edit"]) {
  min-height:32px; box-sizing:border-box; padding:6px 20px;
  border:1px solid rgba(255,255,255,.65); border-radius:999px;
  background:rgba(255,250,240,.82); color:#604a36;
@@ -1798,8 +1798,8 @@ body {
  cursor:pointer; font:14px/18px 'Noto Serif TC','PMingLiU',serif;
  transition:background .2s ease;
 }
-.pf-actions button[data-book="close"]:hover { background:rgba(255,250,240,.96); }
-.pf-actions button[data-book="close"]:focus-visible { outline:2px solid #95734d; outline-offset:2px; }
+.pf-actions button:is([data-book="close"],[data-book="edit"]):hover { background:rgba(255,250,240,.96); }
+.pf-actions button:is([data-book="close"],[data-book="edit"]):focus-visible { outline:2px solid #95734d; outline-offset:2px; }
 .pf-reading .pf-actions {
  top:max(-34px,calc(env(safe-area-inset-top,0px) + 2px - (var(--game-height) - var(--read-height)) / 2));
  left:max(0px,calc(env(safe-area-inset-left,0px) + 8px - (100vw - var(--read-height) * var(--pf-spread-ratio)) / 2));
@@ -1918,3 +1918,8 @@ body {
 
 /* 開發調整列避開左上闔書鍵。 */
 .pf-reading .pf-border-panel { left:auto; right:max(52px,calc(env(safe-area-inset-right,0px) + 48px)); width:min(360px,calc(100vw - 190px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px))); }
+
+/* 心得閱讀視圖與既有 textarea 分離，紙張橫線沿用原間距。 */
+.travel-note-reading { min-height:180px; padding:4px 2px; white-space:pre-wrap; overflow-wrap:anywhere; color:#5d534a; font:15px/34px "DFKai-SB","KaiTi",serif; letter-spacing:.06em; background:repeating-linear-gradient(to bottom,transparent 0,transparent 33px,rgba(117,104,86,.11) 34px); cursor:default; }
+.travel-note-reading.is-empty { color:#a09686; }
+.pf-book #travel-note[hidden],.pf-book #travel-note-reading[hidden],.pf-book #save-travel[hidden],.pf-actions [data-book="edit"][hidden] { display:none !important; }
