@@ -115,7 +115,7 @@ for(let n=1;n<=entries.length;n++){
  stage.append(left,right);
 }
 const backCover=makePage('',true);backCover.classList.add('pf-scrapbook-back-cover');
-const backCoverImage=document.createElement('img');backCoverImage.className='pf-cover-image';backCoverImage.src='images/diary-back-cover-scrapbook.png';backCoverImage.alt='復古鐵道旅行手帳封底';backCoverImage.draggable=false;backCover.append(backCoverImage);stage.append(backCover);
+const backCoverImage=document.createElement('img');backCoverImage.className='pf-cover-image';backCoverImage.src='images/diary-back-cover-scrapbook2.png';backCoverImage.alt='復古鐵道旅行手帳封底';backCoverImage.draggable=false;backCover.append(backCoverImage);stage.append(backCover);
 let readingActive=false,layoutPhase=false;
 const readingUI=[ctx.query('.diary-header'),ctx.query('.bottom-nav')];
 // 只搬移既有節點：左欄照片、右欄故事與心得，各自捲動。

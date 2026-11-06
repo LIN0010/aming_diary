@@ -38,7 +38,7 @@ try:
    for dest in [3,5,7,9,11,13]:page.evaluate('testBook.flipNext()');settled(page,dest)
    page.evaluate('testBook.flipNext()');settled(page,15);page.wait_for_function('!document.querySelector("#diary-screen").classList.contains("pf-reading")');settled(page,15)
    back=page.locator('.pf-scrapbook-back-cover');expect(back.locator('h2')).to_have_count(0);expect(back).to_have_attribute('data-density','hard')
-   back_image=back.locator('img');expect(back_image).to_have_attribute('src','images/diary-back-cover-scrapbook.png')
+   back_image=back.locator('img');expect(back_image).to_have_attribute('src','images/diary-back-cover-scrapbook2.png')
    assert back_image.evaluate('async e=>{await e.decode();return e.naturalWidth===1086&&e.naturalHeight===1448&&getComputedStyle(e).transform==="none"&&getComputedStyle(e).objectFit==="contain"}')
    br=center(page,'back',w);ir=back_image.bounding_box();assert all(abs(br[k]-ir[k])<1 for k in ['x','y','width','height']);assert abs(br['width']/br['height']-.75)<.003
    assert back.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
