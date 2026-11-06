@@ -90,8 +90,23 @@
    if(canvas)return;
    if(!records){defaults=defaultRecords();records=clone(defaults);}
    canvas=new fabric.Canvas(element,{width:W,height:H,selection:false,preserveObjectStacking:true,allowTouchScrolling:false,enableRetinaScaling:true});
+   let photoPress=null;
+   const point=e=>{const p=e.changedTouches?.[0]||e;return {x:p.clientX,y:p.clientY};};
+   const photoCenter=e=>{
+    const o=e.target;if(o?.journalType!=='photo'||o.__corner)return false;
+    const p=fabric.util.transformPoint(e.absolutePointer||canvas.getPointer(e.e),fabric.util.invertTransform(o.calcTransformMatrix()));
+    return Math.abs(p.x)<o.width*.32&&Math.abs(p.y)<o.height*.30;
+   };
+   canvas.on('mouse:down',e=>{photoPress=editing&&canEdit()&&!busy&&photoCenter(e)?{target:e.target,...point(e.e),moved:false}:null;});
+   canvas.on('mouse:up',e=>{
+    const press=photoPress;photoPress=null;if(!press||!editing||!canEdit()||busy||press.moved||e.target!==press.target||!photoCenter(e))return;
+    const p=point(e.e);if(Math.hypot(p.x-press.x,p.y-press.y)>6)return;
+    // 同一個既有 input／upload 管線；檔案選擇器由真實點擊事件同步開啟。
+    input.click();
+   });
+   canvas.on('mouse:move',e=>{if(photoPress){const p=point(e.e);if(Math.hypot(p.x-photoPress.x,p.y-photoPress.y)>6)photoPress.moved=true;}canvas.upperCanvasEl.title=editing&&photoCenter(e)?(photo?'更換照片':'加入旅行照片'):'';});
    canvas.on('before:transform',checkpoint);
-   for(const name of ['object:moving','object:scaling','object:rotating'])canvas.on(name,e=>{bound(e.target);captionSync();});
+   for(const name of ['object:moving','object:scaling','object:rotating'])canvas.on(name,e=>{if(photoPress)photoPress.moved=true;bound(e.target);captionSync();});
    canvas.on('object:modified',changed);
    for(const name of ['selection:created','selection:updated','selection:cleared'])canvas.on(name,()=>{if(canvas.getActiveObject())domEditor?.clear();ctx.root.classList.toggle('journal-fabric-selected',!!canvas.getActiveObject());updateTools();});
    layer.hidden=false;label.classList.add('journal-photo-replaced');ctx.query('#player-journal .page-date').style.visibility='hidden';resize();draw(records);
