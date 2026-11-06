@@ -1739,7 +1739,7 @@ body {
 .pf-stage .stf__block { width:100%; height:100%; }
 .pf-page { box-sizing:border-box; padding:24px; background:#f5ecdb; color:#503b2c; overflow:hidden; }
 .pf-hard { background:#4a2f22; color:#ead9b7; }
-.pf-stage .pf-page.pf-scrapbook-cover { padding:0; border:0; background:transparent; }
+.pf-stage .pf-page:is(.pf-scrapbook-cover,.pf-scrapbook-back-cover) { padding:0; border:0; background:transparent; }
 .pf-cover-image { display:block; width:100%; height:100%; object-fit:contain; user-select:none; }
 .pf-hard h2 { text-align:center; margin-top:50%; font:clamp(24px,4vw,48px)/1.5 'PMingLiU',serif; }
 .pf-toc { overflow:auto; }

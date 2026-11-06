@@ -34,7 +34,18 @@ try:
    # 可視高度變動後不重新建立引擎，開闔仍置中。
    page.set_viewport_size({'width':w,'height':h-40});page.wait_for_function('(h)=>document.querySelector("#diary-screen").clientHeight===h',arg=h-40);settled(page,0);center(page,'.pf-scrapbook-cover',w)
    cover.click();settled(page,1);center(page,'.pf-frame',w)
-   page.evaluate('testBook.turnToPage(13)');settled(page,13);page.evaluate('testBook.flipNext()');settled(page,15);page.wait_for_function('!document.querySelector("#diary-screen").classList.contains("pf-reading")');settled(page,15);center(page,'back',w)
+   # 逐站向前翻至最後跨頁，再翻到硬封底。
+   for dest in [3,5,7,9,11,13]:page.evaluate('testBook.flipNext()');settled(page,dest)
+   page.evaluate('testBook.flipNext()');settled(page,15);page.wait_for_function('!document.querySelector("#diary-screen").classList.contains("pf-reading")');settled(page,15)
+   back=page.locator('.pf-scrapbook-back-cover');expect(back.locator('h2')).to_have_count(0);expect(back).to_have_attribute('data-density','hard')
+   back_image=back.locator('img');expect(back_image).to_have_attribute('src','images/diary-back-cover-scrapbook.png')
+   assert back_image.evaluate('async e=>{await e.decode();return e.naturalWidth===1086&&e.naturalHeight===1448&&getComputedStyle(e).transform==="none"&&getComputedStyle(e).objectFit==="contain"}')
+   br=center(page,'back',w);ir=back_image.bounding_box();assert all(abs(br[k]-ir[k])<1 for k in ['x','y','width','height']);assert abs(br['width']/br['height']-.75)<.003
+   assert back.evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgba(0, 0, 0, 0)'
+   page.screenshot(path=f'/workspace/work/diary-back-closed-{w}.png')
+   # 點封底反向翻回最後跨頁，再以原操作闔回正封面。
+   back.click();settled(page,13);center(page,'.pf-frame',w)
+   page.locator('[data-book="close"]').click();settled(page,0);center(page,'.pf-scrapbook-cover',w)
    assert page.evaluate('engineCount')==1;assert not errors,errors
    print('PASS actual cover CG, no title/crop, centered front/spread/back, resize, one engine',w,h,flush=True);context.close()
   browser.close()
