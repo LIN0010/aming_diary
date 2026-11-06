@@ -216,7 +216,8 @@ function scheduleBookLayout(){
 }
 function initBook(size){
  if(disposed||engine)return;
- engine=new St.PageFlip(stage,{width:size.width/2,height:size.height,size:'stretch',minWidth:1,maxWidth:1200,minHeight:1,maxHeight:1200,autoSize:false,usePortrait:false,showCover:true,useMouseEvents:true,showPageCorners:false,disableFlipByClick:true,mobileScrollSupport:false,clickEventForward:false,flippingTime:reduced.matches?1:350,startPage:pageFor(pageNumber)});
+ // 套件在初始化時依此註冊可 preventDefault 的 touchmove；每次起拖再依書頁決定捲動策略。
+ engine=new St.PageFlip(stage,{width:size.width/2,height:size.height,size:'stretch',minWidth:1,maxWidth:1200,minHeight:1,maxHeight:1200,autoSize:false,usePortrait:false,showCover:true,useMouseEvents:true,showPageCorners:false,disableFlipByClick:true,mobileScrollSupport:true,clickEventForward:false,flippingTime:reduced.matches?1:350,startPage:pageFor(pageNumber)});
  engine.on('init',()=>{appliedSize=`${size.width}x${size.height}`;resolveReady();scheduleBookLayout();});
  const settleNative=()=>{
   if(disposed||flipping||layoutPhase)return;
@@ -260,12 +261,17 @@ async function turnTo(target){
 }
 ctx.on(cover,'click',()=>{if(!readingActive)turnTo(0);});
 ctx.on(backCover,'click',()=>{if(!readingActive)turnTo(6);});
-// 封面先放大、同步尺寸再翻開；內容手勢交給輸入與捲動，紙張邊緣交給套件。
+// 封面先放大、同步尺寸再翻開；閱讀內容可拖曳，真正的操作元件保留事件。
 for(const type of ['mousedown','touchstart'])ctx.on(stage,type,event=>{
  if(journalEditor.mode==='edit'||!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}
- const point=event.touches?.[0]||event, page=event.target.closest('.pf-page'), rect=page?.getBoundingClientRect();
+ const target=event.target, column=target.closest('.pf-rui-column');
+ const point=event.touches?.[0]||event, rect=target.closest('.pf-page')?.getBoundingClientRect();
  const edge=rect&&(point.clientX-rect.left<22||rect.right-point.clientX<22);
- if(event.target.closest('input,textarea,label,a,button:not(.station-journal)')||!edge&&event.target.closest('.journal-content,.station-journal,.pf-rui-column'))event.stopPropagation();
+ const control=target.closest('input,textarea,label,a,button:not(.station-journal)');
+ // 閱讀模式的照片 label 已停用選檔，視同一般紙面；其餘互動元件照常保護。
+ if((control&&!control.matches('.player-photo[aria-disabled="true"]'))||(!column&&!edge&&target.closest('.journal-content,.station-journal'))){event.stopPropagation();return;}
+ // 瑞穗內頁讓套件原生區分水平翻頁與垂直閱讀捲動；其他頁維持原設定。
+ if(type==='touchstart')engine.getSettings().mobileScrollSupport=Boolean(column);
 },{capture:true});
 for(const type of ['mousedown','touchstart'])ctx.on(cover,type,event=>{
  if(!readingActive)event.stopPropagation();

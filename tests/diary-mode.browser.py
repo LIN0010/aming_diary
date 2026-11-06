@@ -13,8 +13,11 @@ def click_photo(page,mobile):
  page.locator('.player-photo').scroll_into_view_if_needed();r=page.locator('.player-photo').bounding_box();x=r['x']+r['width']/2;y=r['y']+r['height']/2
  page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
 def ready(page,index=9):page.wait_for_function('(i)=>testBook.getState()==="read"&&testBook.getCurrentPageIndex()===i&&!document.querySelector(".pf-book").hasAttribute("aria-busy")',arg=index)
-def drag(page,mobile,forward=True):
+def drag(page,mobile,forward=True,selector=None):
+ if selector:page.locator(selector).first.scroll_into_view_if_needed()
  r=page.locator('.pf-stage').bounding_box();x=r['x']+(r['width']-3 if forward else 3);y=r['y']+r['height']*.8;dx=(-1 if forward else 1)*r['width']*.8
+ if selector:
+  t=page.locator(selector).first.bounding_box();x=t['x']+t['width']*.5;y=t['y']+t['height']*.5;dx=r['x']+r['width']*(.15 if forward else .85)-x
  if mobile:
   c=page.context.new_cdp_session(page);c.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]});page.wait_for_timeout(300)
   for n in range(1,13):c.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x+dx*n/12,'y':y}]})
@@ -35,6 +38,11 @@ try:
    expect(page.locator('#player-photo-input')).to_be_disabled();click_photo(page,mobile);page.wait_for_timeout(100);assert not choosers
    # 即使模擬遲到的 change，閱讀模式也不會接收照片。
    page.locator('#player-photo-input').set_input_files(str(ROOT/'aming-game/images/cow.png'));expect(page.locator('#player-photo-preview')).to_be_hidden()
+   # 從瑞穗文字、心得空白、左頁日期與照片內部起拖，不只測紙張邊緣。
+   for selector,forward,destination in [('.diary-entry p:nth-of-type(2)',True,11),('#travel-note-reading',True,11),('.pf-photo-column .page-date',False,7),('.player-photo',False,7),('.photo-card img',False,7)]:
+    drag(page,mobile,forward,selector);ready(page,destination)
+    assert page.evaluate('getSelection().toString()')==''
+    page.evaluate('(forward)=>forward?testBook.flipPrev():testBook.flipNext()',forward);ready(page)
    frame=page.locator('.pf-frame').bounding_box();drag(page,mobile);ready(page,11);drag(page,mobile,False);ready(page)
    page.locator('[data-book="edit"]').click();expect(page.locator('[data-book="edit"]')).to_have_text('完成編輯');expect(page.locator('#travel-note')).to_have_value('原有心得\n第二行');expect(page.locator('#travel-note-reading')).to_be_hidden()
    expect(page.locator('#player-photo-input')).to_be_enabled()
@@ -42,6 +50,8 @@ try:
    selected.value.set_files(str(ROOT/'aming-game/images/cow.png'));expect(page.locator('#player-photo-preview')).to_be_visible();preview=page.locator('#player-photo-preview').get_attribute('src');assert len(choosers)==1
    page.locator('#travel-note').fill('編輯後的旅程\n保留換行與 <文字>')
    drag(page,mobile);page.wait_for_timeout(400);assert page.evaluate('testBook.getCurrentPageIndex()')==9 and page.evaluate('testBook.getState()')=='read'
+   drag(page,mobile,True,'#travel-note');page.wait_for_timeout(400);ready(page)
+   assert page.locator('#travel-note').evaluate('(e)=>getComputedStyle(e).userSelect')!='none'
    assert page.locator('.pf-frame').bounding_box()==frame
    # 既有存檔失敗時，保持編輯模式及草稿，不能誤報完成。
    page.evaluate("()=>{window.originalSet=Storage.prototype.setItem;Storage.prototype.setItem=function(){throw new DOMException('full','QuotaExceededError')};}")

@@ -63,6 +63,8 @@ try:
    page.locator('.memory-fragment-info').scroll_into_view_if_needed();r=page.locator('.memory-fragment-info').bounding_box();col=page.locator('.pf-text-column').bounding_box();assert r['y']>=col['y'] and r['y']+r['height']<=col['y']+col['height']+1
    page.locator('#travel-note').fill('照片左頁、故事右頁的心得');page.locator('[data-book="edit"]').click();assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='照片左頁、故事右頁的心得'
    page.locator('[data-book="edit"]').click();page.locator('#player-photo-input').set_input_files({'name':'landscape.svg','mimeType':'image/svg+xml','buffer':b'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120"><rect width="320" height="120" fill="#b7c2b0"/></svg>'});picture(page,'#player-photo-preview');page.locator('[data-book="edit"]').click()
+   # 閱讀模式仍可垂直捲動故事，不能因恢復水平翻頁而失去閱讀操作。
+   scroll(page,'.pf-text-column',mobile)
    for selector in ['.pf-photo-column','.pf-text-column']:page.locator(selector).evaluate('(e)=>e.scrollTop=0')
    page.screenshot(path=f'/workspace/work/collage-photo-{width}.png')
    assert page.locator('#diary-screen').evaluate('(e)=>e.scrollTop===0&&e.scrollLeft===0&&e.scrollHeight===e.clientHeight')

@@ -1925,3 +1925,7 @@ body {
 .pf-book #travel-note[hidden],.pf-book #travel-note-reading[hidden],.pf-book #save-travel[hidden],.pf-actions [data-book="edit"][hidden] { display:none !important; }
 
 .pf-book[data-journal-mode="read"] .player-photo { cursor:default; }
+
+/* 只限制瑞穗閱讀紙面的瀏覽器選取；編輯模式保留文字游標與選取。 */
+.pf-book[data-journal-mode="read"] .pf-rui-column { user-select:none; -webkit-user-select:none; }
+.pf-book[data-journal-mode="read"] .pf-rui-column img { -webkit-user-drag:none; }
