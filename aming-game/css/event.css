@@ -214,14 +214,37 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-quiz-choice { display: flex; gap: 16px; align-items: center; width: 100%; padding: 20px; border: 1px dashed #c2cbbb; border-radius: 12px; background: #f9f8ef; color: #5b6f68; text-align: left; transition: background .18s, transform .18s; }
 .ev-quiz-choice > span { flex-shrink: 0; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #bccbc5; border-radius: 50%; font: 16px Georgia, serif; }
 .ev-quiz-choice:not(:disabled):is(:hover, :focus-visible), .ev-quiz-choice.is-selected { background: #e1e9e4; color: #40564e; transform: translateY(-2px); }
-.ev-race-reveal { max-width: 720px; margin: 28px auto; padding: 46px 30px; border-radius: 16px; background: radial-gradient(ellipse at top left, #efdee1, transparent 60%), linear-gradient(145deg, #f7f4e9, #e0e9e3); }
-#event-screen .ev-result-seal { font-size: 56px; color: #8ca295; margin: 18px 0 !important; }
-.ev-race-reveal h2 { margin: 16px 0 !important; }
-.ev-race-reveal .ev-muted { margin: 20px 0 !important; }
+/* 陣營揭曉專屬明信片；只改結果卡片，不更動其他活動區塊。 */
+.ev-race-reveal { max-width:1040px; margin:24px auto; padding:9px; border:0; border-radius:5px; text-align:left; background:repeating-linear-gradient(135deg,#b87570 0 12px,#faf6eb 12px 24px,#7892a0 24px 36px,#faf6eb 36px 48px); box-shadow:0 8px 24px #67553b24; }
+.ev-postcard-paper { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.08fr); background-color:#fcf7e9; background-image:radial-gradient(#9a805215 .6px,transparent .8px); background-size:4px 4px; }
+.ev-postcard-illustration { min-width:0; min-height:350px; position:relative; overflow:hidden; margin:16px; }
+.ev-postcard-landscape { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:70% 60%; }
+.ev-postcard--sage .ev-postcard-landscape { object-position:25% 45%; }
+.ev-postcard-ticket { position:absolute; bottom:20px; left:14px; padding:9px 14px; background:#fff8e9eb; border:1px dashed #b9a582; color:#76634e; font:12px/1.7 Georgia,serif; letter-spacing:.08em; transform:rotate(-5deg); box-shadow:0 2px 6px #55463120; }
+.ev-postcard-ticket small { font:12px 'Noto Serif TC',serif; }
+.ev-postcard-copy { position:relative; min-width:0; padding:94px 30px 30px; margin:20px 0; border-left:1px solid #bba98270; }
+.ev-postcard-message { background:repeating-linear-gradient(to bottom,transparent 0 31px,#ac987b20 31px 32px); padding-bottom:8px; }
+.ev-postcard-postage { position:absolute; top:0; right:22px; height:75px; width:200px; pointer-events:none; color:#877a64; }
+.ev-postcard-stamp { position:absolute; right:0; top:0; width:56px; height:68px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:3px dotted #b8a589; outline:1px solid #c9b99b; outline-offset:-5px; color:#758674; background:#e8eadc; transform:rotate(5deg); }
+.ev-postcard-stamp small { font:8px Georgia,serif; letter-spacing:.06em; }
+.ev-postcard-postmark { position:absolute; right:35px; top:8px; width:60px; height:60px; display:grid; place-content:center; text-align:center; border:1px solid #8b7c6380; border-radius:50%; font:10px/1.5 Georgia,serif; letter-spacing:.1em; transform:rotate(-14deg); opacity:.8; }
+.ev-postcard-waves { position:absolute; right:81px; top:29px; opacity:.5; }
+.ev-postcard-copy .ev-button { margin-top:4px; }
+.ev-race-reveal h2 { margin:12px 0 !important; font-size:clamp(22px,2.5vw,30px) !important; }
+.ev-race-reveal .ev-muted { margin:14px 0 !important; font-size:12px; line-height:1.8; }
 @media (max-width: 700px) {
     .ev-quiz-stage { padding: 24px 18px; }
     .ev-quiz-choice { padding: 18px 14px; gap: 12px; font-size: 14px !important; }
-    .ev-race-reveal { padding: 30px 20px; }
+    .ev-race-reveal { padding:7px; }
+    .ev-postcard-paper { grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); }
+    .ev-postcard-illustration { margin:10px; min-height:320px; }
+    .ev-postcard-copy { padding:86px 16px 18px; margin:12px 0; }
+    .ev-postcard-ticket { left:8px; padding:7px 9px; }
+}
+@media(max-width:540px) {
+    .ev-postcard-paper { grid-template-columns:minmax(0,1fr); }
+    .ev-postcard-illustration { min-height:180px; margin-bottom:0; }
+    .ev-postcard-copy { border-left:0; border-top:1px solid #bba98270; margin:12px; padding-left:12px; padding-right:12px; }
 }
 
 /* 僅「開始測驗」確認卡浮在活動介紹上；題目仍使用原逐題畫面。 */
