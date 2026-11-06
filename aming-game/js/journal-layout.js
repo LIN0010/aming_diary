@@ -2,6 +2,7 @@
 (() => {
  'use strict';
  const KEY='aming-diary-journal-layouts', W=600, H=800;
+ const PHOTO_UPLOAD={width:.64,height:.60};
  const ASSETS=Object.freeze({compass:'images/guild-compass.png',journal:'images/guild-journal.png',tape:null});
  const clone=x=>JSON.parse(JSON.stringify(x));
  const paths={done:'m5 12 4 4L20 5',close:'M9 6 3 12l6 6M3 12h13a5 5 0 0 0 5-5',edit:'m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5',photo:'M3 5h18v16H3ZM7 5l2-3h6l2 3M8 13a4 4 0 1 0 8 0 4 4 0 1 0-8 0',sticker:'M3 3h18v12l-6 6H3ZM15 21v-6h6M7 8h2m5 0h2M8 12q4 4 8 0',delete:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',undo:'M9 4 3 10l6 6M3 10h11a7 7 0 0 1 7 7',reset:'M3 11a9 9 0 1 1 2 7M3 3v8h8',more:'m8 4 8 8-8 8'};
@@ -81,6 +82,11 @@
    }else if(record.source==='tape'){result=new fabric.Rect({width:100,height:26,fill:'rgba(201,183,153,.65)',originX:'center',originY:'center'});}
    else{result=await image(ASSETS[record.source]);result.scaleToWidth(90);result=new fabric.Group([result],{originX:'center',originY:'center'});}
    result.set({left:record.x*W,top:record.y*H,scaleX:record.scale,scaleY:record.scale,angle:record.angle,cornerColor:'#b99358',borderColor:'#987847',cornerSize:14,transparentCorners:false,lockScalingFlip:true});
+   if(record.type==='photo'&&!photo){
+    // 與 photoCenter 共用範圍，僅在既有群組內加入底色，不改變群組外框或尺寸。
+    const area=new fabric.Rect({left:0,top:0,originX:'center',originY:'center',width:result.width*PHOTO_UPLOAD.width,height:result.height*PHOTO_UPLOAD.height,fill:'#E1D5BD',stroke:'rgba(105,89,72,.4)',strokeWidth:1,strokeDashArray:[4,3]});
+    result.insertAt(area,1);result.getObjects().find(o=>o.type==='text').set({left:0,top:0});
+   }
    result.journalId=record.id;result.journalType=record.type;result.journalSource=record.source;bound(result);return result;
   }
   async function draw(next){
@@ -105,7 +111,7 @@
    const photoCenter=e=>{
     const o=e.target;if(o?.journalType!=='photo'||o.__corner)return false;
     const p=fabric.util.transformPoint(e.absolutePointer||canvas.getPointer(e.e),fabric.util.invertTransform(o.calcTransformMatrix()));
-    return Math.abs(p.x)<o.width*.32&&Math.abs(p.y)<o.height*.30;
+    return Math.abs(p.x)<o.width*PHOTO_UPLOAD.width/2&&Math.abs(p.y)<o.height*PHOTO_UPLOAD.height/2;
    };
    canvas.on('mouse:down',e=>{photoPress=editing&&canEdit()&&!busy&&photoCenter(e)?{target:e.target,...point(e.e),moved:false}:null;});
    canvas.on('mouse:up',e=>{
@@ -114,7 +120,7 @@
     // 同一個既有 input／upload 管線；檔案選擇器由真實點擊事件同步開啟。
     input.click();
    });
-   canvas.on('mouse:move',e=>{if(photoPress){const p=point(e.e);if(Math.hypot(p.x-photoPress.x,p.y-photoPress.y)>6)photoPress.moved=true;}canvas.upperCanvasEl.title=editing&&photoCenter(e)?(photo?'更換照片':'加入旅行照片'):'';});
+   canvas.on('mouse:move',e=>{if(photoPress){const p=point(e.e);if(Math.hypot(p.x-photoPress.x,p.y-photoPress.y)>6)photoPress.moved=true;}if(editing&&photoCenter(e))canvas.setCursor('pointer');canvas.upperCanvasEl.title=editing&&photoCenter(e)?(photo?'更換照片':'加入旅行照片'):'';});
    canvas.on('before:transform',checkpoint);
    for(const name of ['object:moving','object:scaling','object:rotating'])canvas.on(name,e=>{if(photoPress)photoPress.moved=true;bound(e.target);captionSync();});
    canvas.on('object:modified',changed);

@@ -36,9 +36,14 @@ try:
    def photo_point(frame=False,reading=False):
     o=page.evaluate('(()=>{const o=testCanvas.getObjects()[0];const p=fabric.util.transformPoint(new fabric.Point('+('105' if frame else '0')+',0),o.calcTransformMatrix());return {x:p.x/600,y:p.y/800}})()');r=page.locator('.journal-decoration-layer' if reading else '.upper-canvas').bounding_box();return r['x']+o['x']*r['width'],r['y']+o['y']*r['height']
    page.locator('[data-book="edit"]').click();layer_ready(page)
+   empty=page.evaluate('(()=>{const o=testCanvas.getObjects()[0],r=o.getObjects().find(c=>c.fill==="#E1D5BD");return {width:o.width,height:o.height,rx:r.width/o.width,ry:r.height/o.height}})()');assert abs(empty['rx']-.64)<.0001 and abs(empty['ry']-.60)<.0001
+   if not mobile:
+    page.mouse.move(*photo_point());assert page.locator('.upper-canvas').evaluate('(e)=>getComputedStyle(e).cursor')=='pointer'
+   page.screenshot(path=f'/workspace/work/photo-upload-area-{w}.png')
    click_at(*photo_point(True));page.wait_for_timeout(100);assert not opened
    with page.expect_file_chooser() as selected:click_at(*photo_point())
    selected.value.set_files(str(ROOT/'aming-game/images/cow.png'));layer_ready(page);page.wait_for_function('document.querySelector("#player-photo-preview").src.startsWith("data:image/jpeg")');first=page.locator('#player-photo-preview').get_attribute('src')
+   loaded=page.evaluate('(()=>{const o=testCanvas.getObjects()[0];return {width:o.width,height:o.height,grey:o.getObjects().some(c=>c.fill==="#E1D5BD")}})()');assert not loaded['grey'] and loaded['width']==empty['width'] and loaded['height']==empty['height']
    x,y=photo_point();drag(page,x,y,18,-12,mobile);page.wait_for_timeout(100);assert len(opened)==1
    transform=page.evaluate('(()=>{const o=testCanvas.getObjects()[0];return [o.left,o.top,o.angle,o.scaleX]})()')
    with page.expect_file_chooser() as selected:click_at(*photo_point())

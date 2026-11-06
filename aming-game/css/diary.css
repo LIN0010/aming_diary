@@ -1973,3 +1973,5 @@ body {
 .journal-dom-paper { position:relative; min-height:100%; }
 
 @media(orientation:landscape) and (max-height:500px) { .journal-dom-content .diary-entry { display:flex; flex-direction:column; } }
+
+.pf-book .player-photo:not(.has-photo) #photo-placeholder { position:absolute; left:50%; top:50%; width:64%; height:60%; box-sizing:border-box; transform:translate(-50%,-50%); background:#E1D5BD; border:1px dashed rgba(105,89,72,.4); }
