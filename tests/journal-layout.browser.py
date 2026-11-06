@@ -14,7 +14,7 @@ def tool(page,action):
  if action in ['compass','journal'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
- point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.upper-canvas').bounding_box()
+ point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
  drag(page,r['x']+point['x']/600*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
 
 def layer_ready(page):page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")==="false"')
@@ -30,7 +30,7 @@ try:
   for w,h in [(1440,900),(852,393)]:
    mobile=w<1000;context=browser.new_context(viewport={'width':w,'height':h},is_mobile=mobile,has_touch=mobile);page=context.new_page();confirmation={'accept':True};page.on('dialog',lambda d:d.accept() if confirmation['accept'] else d.dismiss());errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
    bundle=(ROOT/'aming-game/vendor/page-flip/page-flip.browser.js').read_text();page.route('**/page-flip.browser.js',lambda r:r.fulfill(body=bundle+';const Orig=St.PageFlip;St.PageFlip=class extends Orig{constructor(...a){super(...a);window.testBook=this;window.engineCount=(window.engineCount||0)+1;}};',content_type='application/javascript'))
-   fb=(ROOT/'aming-game/vendor/fabric/fabric.min.js').read_text();page.route('**/fabric.min.js',lambda r:r.fulfill(body=fb+';const init=fabric.Canvas.prototype.initialize;fabric.Canvas.prototype.initialize=function(...args){window.testCanvas=this;return init.apply(this,args)};',content_type='application/javascript'))
+   fb=(ROOT/'aming-game/vendor/fabric/fabric.min.js').read_text();page.route('**/fabric.min.js',lambda r:r.fulfill(body=fb+';const init=fabric.Canvas.prototype.initialize;fabric.Canvas.prototype.initialize=function(...args){if(args[0].closest(".journal-decoration-layer"))window.testCanvas=this;return init.apply(this,args)};',content_type='application/javascript'))
    page.goto(f'http://127.0.0.1:{server.server_port}/game.html#/diary?station=ruisui');ready(page)
    expect(page.locator('[data-book="edit"]')).to_be_hidden();expect(page.locator('.journal-decoration-layer')).to_be_hidden()
    page.evaluate('GameProgress.completeRuisui()');expect(page.locator('.photo-card img')).to_be_visible();expect(page.locator('.journal-layout-tools')).to_be_hidden()
@@ -41,21 +41,21 @@ try:
    chooser.value.set_files(str(ROOT/'aming-game/images/cow.png'));layer_ready(page)
    page.wait_for_function('document.querySelector("#player-photo-preview").src.startsWith("data:image/jpeg")')
    # 照片與拍立得為同一組，實際拖動及旋轉縮放後一起保存。
-   r=page.locator('.upper-canvas').bounding_box();initial=page.evaluate('({x:testCanvas.getObjects()[0].left/600,y:testCanvas.getObjects()[0].top/800})');drag(page,r['x']+r['width']*initial['x'],r['y']+r['height']*initial['y'],-r['width']*.10,-r['height']*.06,mobile)
+   r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();initial=page.evaluate('({x:testCanvas.getObjects()[0].left/600,y:testCanvas.getObjects()[0].top/800})');drag(page,r['x']+r['width']*initial['x'],r['y']+r['height']*initial['y'],-r['width']*.10,-r['height']*.06,mobile)
    control(page,'mtr',22,10,mobile);control(page,'tr',12,-12,mobile)
    tool(page,'compass').click();layer_ready(page);tool(page,'journal').click();layer_ready(page)
    # 工具列在書頁右側，且沒有旋轉／縮放／選取模式按鈕。
    rail=page.locator('.pf-actions').bounding_box();book=page.locator('.pf-stage').bounding_box();assert rail['x']>=book['x']+book['width'] and rail['x']+rail['width']<=w
    assert page.locator('[data-layout=rotate],[data-layout=smaller],[data-layout=larger],[data-layout=select]').count()==0
    # Fabric 原生控制與滑鼠／觸控拖曳，使用實際上層 canvas，不呼叫搬移 API。
-   canvas=page.locator('.upper-canvas');r=canvas.bounding_box();x=r['x']+r['width']*.4;y=r['y']+r['height']*.55
+   canvas=page.locator('.journal-decoration-layer .upper-canvas');r=canvas.bounding_box();x=r['x']+r['width']*.4;y=r['y']+r['height']*.55
    drag(page,x,y,r['width']*.18,-r['height']*.12,mobile);assert page.evaluate('testBook.getCurrentPageIndex()')==9
    control(page,'mtr',22,10,mobile);control(page,'tr',12,-12,mobile);tool(page,'undo').click();layer_ready(page)
    tool(page,'delete').click() if tool(page,'delete').is_enabled() else None
    tool(page,'compass').click();layer_ready(page)
    count=page.evaluate('testCanvas.getObjects().length');tool(page,'delete').click();assert page.evaluate('testCanvas.getObjects().length')==count-1
    tool(page,'compass').click();layer_ready(page)
-   r=page.locator('.upper-canvas').bounding_box();x=r['x']+r['width']*.92;y=r['y']+r['height']*.08
+   r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();x=r['x']+r['width']*.92;y=r['y']+r['height']*.08
    page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
    assert page.evaluate('testCanvas.getActiveObject()==null');expect(tool(page,'delete')).to_be_disabled()
    page.locator('#travel-note').fill('保留的瑞穗心得');page.locator('[data-book="edit"]').click();expect(page.locator('#travel-note')).to_be_hidden();expect(page.locator('.journal-layout-tools')).to_be_hidden()

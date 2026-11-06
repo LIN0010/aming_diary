@@ -271,7 +271,7 @@ ctx.on(backCover,'click',()=>{if(!readingActive)turnTo(6);});
 // 封面先放大、同步尺寸再翻開；閱讀內容可拖曳，真正的操作元件保留事件。
 for(const type of ['mousedown','touchstart'])ctx.on(stage,type,event=>{
  if(journalEditor.mode==='edit'){
-  if(!event.target.closest('.journal-decoration-layer,.journal-layout-tools'))event.stopImmediatePropagation();
+  if(!event.target.closest('.journal-decoration-layer,.journal-memory-layer,.journal-layout-tools'))event.stopImmediatePropagation();
   return;
  }
  if(!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}

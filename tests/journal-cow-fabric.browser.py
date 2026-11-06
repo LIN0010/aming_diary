@@ -14,7 +14,7 @@ def tool(page,action):
  if action in ['compass','journal'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
- point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.upper-canvas').bounding_box()
+ point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
  drag(page,r['x']+point['x']/600*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
 
 def layer_ready(page):page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")==="false"')
@@ -30,13 +30,13 @@ try:
   for w,h in [(1440,900),(852,393)]:
    mobile=w<1000;context=browser.new_context(viewport={'width':w,'height':h},is_mobile=mobile,has_touch=mobile);page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
    bundle=(ROOT/'aming-game/vendor/page-flip/page-flip.browser.js').read_text();page.route('**/page-flip.browser.js',lambda r:r.fulfill(body=bundle+';const Orig=St.PageFlip;St.PageFlip=class extends Orig{constructor(...a){super(...a);window.testBook=this;window.engineCount=(window.engineCount||0)+1;}};',content_type='application/javascript'))
-   fb=(ROOT/'aming-game/vendor/fabric/fabric.min.js').read_text();page.route('**/fabric.min.js',lambda r:r.fulfill(body=fb+';const init=fabric.Canvas.prototype.initialize;fabric.Canvas.prototype.initialize=function(...args){window.testCanvas=this;return init.apply(this,args)};',content_type='application/javascript'))
+   fb=(ROOT/'aming-game/vendor/fabric/fabric.min.js').read_text();page.route('**/fabric.min.js',lambda r:r.fulfill(body=fb+';const init=fabric.Canvas.prototype.initialize;fabric.Canvas.prototype.initialize=function(...args){if(args[0].closest(".journal-decoration-layer"))window.testCanvas=this;return init.apply(this,args)};',content_type='application/javascript'))
    page.goto(f'http://127.0.0.1:{server.server_port}/game.html#/diary?station=ruisui');ready(page);page.evaluate('GameProgress.completeRuisui()')
    page.locator('[data-book="edit"]').click();layer_ready(page)
    assert page.locator('[data-dom-object="aming-photo"]').count()==0
    for kind in ['official-photo','photo']:
     o=page.evaluate('(kind)=>{const o=testCanvas.getObjects().find(o=>o.journalType===kind);return {x:o.left/600,y:o.top/800,scale:o.scaleX,angle:o.angle}}',kind)
-    r=page.locator('.upper-canvas').bounding_box();drag(page,r['x']+o['x']*r['width'],r['y']+o['y']*r['height'],14,10,mobile)
+    r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();drag(page,r['x']+o['x']*r['width'],r['y']+o['y']*r['height'],14,10,mobile)
     assert page.evaluate('testCanvas.getActiveObject()?.journalType')==kind
     control(page,'mtr',20,10,mobile);control(page,'tr',12,-12,mobile)
     after=page.evaluate('({scale:testCanvas.getActiveObject().scaleX,angle:testCanvas.getActiveObject().angle})')

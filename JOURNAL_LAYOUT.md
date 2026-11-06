@@ -65,3 +65,13 @@ DOM 與 Fabric 共用復原及恢復預設；不得刪除官方群組。閱讀�
 工具列顯示圖示及繁體中文名稱；窄視窗仍可收合。此為分階段交付：回憶碎片／故事／心得目前仍使用原 DOM 控制，跨頁拖移與重疊面積吸附尚未加入。不能把本階段視為整套統一互動或跨頁功能已完成。
 
 測試：`tests/journal-cow-fabric.browser.py`（桌面／橫向觸控，兩組原生控制點與保存）；玩家照片中央上傳及更換另由 `tests/journal-photo-click.browser.py` 回歸驗證。
+
+## 回憶碎片原生 Fabric 群組階段
+
+新增 `journal-memory.js`：右頁乳牛奶盒與原標籤使用真正 Fabric.Group、原生八點縮放及旋轉控制桿，移除該物件的 DOM 編輯外框。原圖片、標籤與收藏事件節點保留；閱讀時使用同頁透明投影與可聚焦的點擊入口呼叫既有收藏匣。只裁切右頁 Fabric 互動畫布的命中範圍，避免透明區攔截故事與心得；不改 StPageFlip 幾何。
+
+同一份車站存檔新增 `memoryObject`，包含 id/type/source/page/x/y/scale/angle/order，座標相對單頁 600×800。讀取舊 domObjects 的 memory-fragment 時轉換位置、寬度與角度，不重設照片或心得。共用既有復原、恢復預設及寫入失敗保護；官方碎片不可刪除。
+
+`tests/journal-memory.browser.py` 驗證桌面／手機橫向觸控的真實選取、拖曳、原生控制點、心得輸入、收藏點擊及重載；照片中央選檔與 HTML 故事群組另做回歸。沒有 iPhone Safari 實機驗證。
+
+此階段完成碎片遷移，故事／心得仍使用既有 HTML 編輯器；跨頁拖曳及書脊吸附尚未實作，memoryObject.page 目前為 right。後續階段才處理統一文字控制層與跨頁歸屬，不能宣稱此階段已完成跨頁功能。

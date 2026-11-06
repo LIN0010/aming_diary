@@ -9,7 +9,7 @@
  function button(node,label,icon){if(node.getAttribute('aria-label')===label&&node.querySelector('svg'))return;node.title=label;node.setAttribute('aria-label',label);node.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[icon]||paths.edit}"/></svg><span class="journal-tool-name"></span>`;node.querySelector('span').textContent=label;}
  window.JournalLayout={button,mount({ctx,page,toolbar,label,input,preview,canEdit,report,groups}){
   let canvas,editing=false,dead=false,busy=0,photo=null,records=null,history=[],dirty=false,protectedSave=false,sequence=0;
-  let domEditor;
+  let domEditor,memoryEditor;
   const layer=document.createElement('div');layer.className='journal-decoration-layer';layer.hidden=true;
   const snapshot=document.createElement('img');snapshot.className='journal-decoration-preview';snapshot.alt='我的旅行照片與手帳裝飾';snapshot.draggable=false;layer.append(snapshot);
   const element=document.createElement('canvas');element.setAttribute('aria-label','個人旅行照片與貼紙編輯區');layer.append(element);page.append(layer);
@@ -26,7 +26,7 @@
   ctx.on(tools,'keydown',e=>{if(e.key==='Escape'){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');stickerToggle.focus();}});
   const officialPhoto=groups.find(g=>g.id==='aming-photo').node;
   let legacyPhoto;
-  let domRecords=[];
+  let domRecords=[],memoryRecord=null;
   try{
    const raw=localStorage.getItem(KEY);
    if(raw){const data=JSON.parse(raw);if(data.version!==1||!data.stations)throw Error('unsupported');
@@ -35,12 +35,14 @@
      if(!Array.isArray(saved.objects)||saved.objects.length>30||saved.stationId!=='ruisui'||saved.photo&&!/^data:image\/(jpeg|png|webp);base64,/.test(saved.photo))throw Error('invalid');
      for(const o of saved.objects)if(!o.id||!['photo','sticker','official-photo'].includes(o.type)||o.type==='sticker'&&!Object.hasOwn(ASSETS,o.source)||![o.x,o.y,o.scale,o.angle,o.order].every(Number.isFinite)||o.scale<=0)throw Error('invalid');
      records=saved.objects;photo=saved.photo||null;
-     domRecords=saved.domObjects||[];
+     domRecords=saved.domObjects||[];memoryRecord=saved.memoryObject||null;
     }
    }
   }catch(_){protectedSave=true;report('無法讀取手帳排版，原存檔已保留。');}
   legacyPhoto=domRecords.find(r=>r.id==='aming-photo');domRecords=domRecords.filter(r=>r.id!=='aming-photo');
-  try{domEditor=JournalDomLayout.mount({ctx,groups:groups.filter(g=>g.id!=='aming-photo'),saved:domRecords,checkpoint,changed:()=>{dirty=true;canvas?.discardActiveObject();updateTools();},select:()=>{canvas?.discardActiveObject();updateTools();}});}catch(_){protectedSave=true;report('無法讀取 HTML 排版，原存檔已保留。');}
+  const legacyMemory=domRecords.find(r=>r.id==='memory-fragment');domRecords=domRecords.filter(r=>r.id!=='memory-fragment');
+  try{memoryEditor=JournalMemory.mount({ctx,node:groups.find(g=>g.id==='memory-fragment').node,saved:memoryRecord,legacy:legacyMemory,beforeChange:checkpoint,onChange:()=>{dirty=true;updateTools();},onSelect:()=>{canvas?.discardActiveObject();domEditor?.clear();updateTools();},report});}catch(_){protectedSave=true;report('無法讀取回憶碎片排版，原存檔已保留。');}
+  try{domEditor=JournalDomLayout.mount({ctx,groups:groups.filter(g=>!['aming-photo','memory-fragment'].includes(g.id)),saved:domRecords,checkpoint,changed:()=>{dirty=true;canvas?.discardActiveObject();updateTools();},select:()=>{canvas?.discardActiveObject();memoryEditor?.clear();updateTools();}});}catch(_){protectedSave=true;report('無法讀取 HTML 排版，原存檔已保留。');}
   ctx.on(ctx.root,'pointerdown',e=>{if(editing&&canvas?.getActiveObject()&&!e.target.closest('.pf-actions')&&!canvas.findTarget(e)&&domEditor?.hitStart(e))e.stopImmediatePropagation();},{capture:true});
   function defaultRecords(){
    const r=label.getBoundingClientRect(),p=page.getBoundingClientRect();
@@ -50,7 +52,7 @@
   // 官方預設值只由原 HTML 位置產生；不以玩家的儲存值回寫。
   let defaults;
   function capture(){return canvas?canvas.getObjects().map((o,order)=>({id:o.journalId,type:o.journalType,source:o.journalSource,x:o.left/W,y:o.top/H,scale:o.scaleX,angle:o.angle,order,...(o.journalType==='official-photo'?{aspect:o.journalAspect}:{})})):clone(records||defaults||[]);}
-  function checkpoint(){history.push({fabric:clone(capture()),dom:domEditor?.capture()||[]});if(history.length>30)history.shift();}
+  function checkpoint(){history.push({fabric:clone(capture()),dom:domEditor?.capture()||[],memory:memoryEditor?.capture()});if(history.length>30)history.shift();}
   function changed(){records=capture();dirty=true;updateTools();}
   function updateTools(){
    const selected=canvas?.getActiveObject();
@@ -124,24 +126,24 @@
    canvas.on('before:transform',checkpoint);
    for(const name of ['object:moving','object:scaling','object:rotating'])canvas.on(name,e=>{if(photoPress)photoPress.moved=true;bound(e.target);captionSync();});
    canvas.on('object:modified',changed);
-   for(const name of ['selection:created','selection:updated','selection:cleared'])canvas.on(name,()=>{if(canvas.getActiveObject())domEditor?.clear();ctx.root.classList.toggle('journal-fabric-selected',!!canvas.getActiveObject());updateTools();});
+   for(const name of ['selection:created','selection:updated','selection:cleared'])canvas.on(name,()=>{if(canvas.getActiveObject()){domEditor?.clear();memoryEditor?.clear();}ctx.root.classList.toggle('journal-fabric-selected',!!canvas.getActiveObject());updateTools();});
    layer.hidden=false;label.classList.add('journal-photo-replaced');ctx.query('#player-journal .page-date').style.visibility='hidden';resize();draw(records);
   }
   function sync(){
    const unlocked=GameProgress.hasMemory('ruisui-01');
-   domEditor?.sync(editing&&unlocked);
+   memoryEditor?.sync(editing&&unlocked);domEditor?.sync(editing&&unlocked);
    if(!unlocked){caption.hidden=true;layer.hidden=true;tools.hidden=true;return;}
    if((editing||records||photo)&&page.clientWidth&&page.clientHeight)ensure();
    if(canvas){layer.hidden=false;layer.classList.toggle('is-editing',editing);canvas.selection=false;canvas.skipTargetFind=!editing;resize();canvas.requestRenderAll();}
    tools.hidden=!editing;if(!editing){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');}updateTools();
   }
   function save(){
-   if(busy){report('照片與裝飾準備中，請稍候。');return false;}
+   if(busy||memoryEditor?.busy){report('照片與裝飾準備中，請稍候。');return false;}
    if(!dirty)return true;
    if(protectedSave){report('原手帳存檔尚無法讀取，請保留本頁。');return false;}
    try{const raw=localStorage.getItem(KEY),data=raw?JSON.parse(raw):{version:1,stations:{}};
     if(data.version!==1||!data.stations)throw Error('unsupported');
-    data.stations.ruisui={stationId:'ruisui',photo,objects:capture(),domObjects:domEditor?.capture()||[]};localStorage.setItem(KEY,JSON.stringify(data));dirty=false;report('');return true;
+    data.stations.ruisui={stationId:'ruisui',photo,objects:capture(),domObjects:domEditor?.capture()||[],memoryObject:memoryEditor?.capture()};localStorage.setItem(KEY,JSON.stringify(data));dirty=false;report('');return true;
    }catch(_){report('手帳排版尚未儲存，請保留本頁並重試。');return false;}
   }
   async function upload(file){
@@ -164,8 +166,8 @@
    const action=button.dataset.layout,selected=canvas.getActiveObject();
    if(action==='photo'){input.click();return;}
    if(action==='stickers'){picker.hidden=!picker.hidden;stickerToggle.setAttribute('aria-expanded',String(!picker.hidden));return;}
-   if(action==='undo'){const previous=history.pop();if(previous){dirty=true;domEditor?.restore(previous.dom);await draw(previous.fabric);}return;}
-   if(action==='reset'){if(!window.confirm('恢復官方預設排版？照片、旅行心得與遊戲進度會保留。'))return;checkpoint();dirty=true;domEditor?.reset();await draw(clone(defaults));return;}
+   if(action==='undo'){const previous=history.pop();if(previous){dirty=true;domEditor?.restore(previous.dom);memoryEditor?.restore(previous.memory);await draw(previous.fabric);}return;}
+   if(action==='reset'){if(!window.confirm('恢復官方預設排版？照片、旅行心得與遊戲進度會保留。'))return;checkpoint();dirty=true;domEditor?.reset();memoryEditor?.reset();await draw(clone(defaults));return;}
    if(Object.hasOwn(ASSETS,action)){
     picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');
     if(canvas.getObjects().length>=21){report('這一頁最多放置 20 張個人貼紙。');return;}
@@ -179,6 +181,6 @@
   for(const type of ['mousedown','touchstart']){ctx.on(layer,type,e=>{if(editing)e.stopPropagation();});ctx.on(tools,type,e=>e.stopPropagation());}
   const observer=new ResizeObserver(()=>{if(!canvas&&(records||photo||editing))sync();else resize();});observer.observe(page);
   ctx.cleanup(()=>{dead=true;sequence++;observer.disconnect();canvas?.dispose();layer.remove();caption.remove();tools.remove();});
-  return {setMode(value){if(editing!==value){if(value)defaults=defaultRecords();editing=value;canvas?.discardActiveObject();if(!editing)publish();}sync();},save,upload,get dirty(){return dirty;},get busy(){return !!busy;}};
+  return {setMode(value){if(editing!==value){if(value)defaults=defaultRecords();editing=value;canvas?.discardActiveObject();if(!editing)publish();}sync();},save,upload,get dirty(){return dirty;},get busy(){return !!busy||!!memoryEditor?.busy;}};
  }};
 })();

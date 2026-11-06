@@ -14,7 +14,7 @@ def tool(page,action):
  if action in ['compass','journal'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
- point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.upper-canvas').bounding_box()
+ point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
  drag(page,r['x']+point['x']/600*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
 
 def layer_ready(page):page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")==="false"')
@@ -30,15 +30,15 @@ try:
   for w,h in [(1440,900),(852,393)]:
    mobile=w<1000;context=browser.new_context(viewport={'width':w,'height':h},is_mobile=mobile,has_touch=mobile);page=context.new_page();opened=[];page.on('filechooser',lambda f:opened.append(f))
    bundle=(ROOT/'aming-game/vendor/page-flip/page-flip.browser.js').read_text();page.route('**/page-flip.browser.js',lambda r:r.fulfill(body=bundle+';const Orig=St.PageFlip;St.PageFlip=class extends Orig{constructor(...a){super(...a);window.testBook=this;}};',content_type='application/javascript'))
-   fb=(ROOT/'aming-game/vendor/fabric/fabric.min.js').read_text();page.route('**/fabric.min.js',lambda r:r.fulfill(body=fb+';const init=fabric.Canvas.prototype.initialize;fabric.Canvas.prototype.initialize=function(...args){window.testCanvas=this;return init.apply(this,args)};',content_type='application/javascript'))
+   fb=(ROOT/'aming-game/vendor/fabric/fabric.min.js').read_text();page.route('**/fabric.min.js',lambda r:r.fulfill(body=fb+';const init=fabric.Canvas.prototype.initialize;fabric.Canvas.prototype.initialize=function(...args){if(args[0].closest(".journal-decoration-layer"))window.testCanvas=this;return init.apply(this,args)};',content_type='application/javascript'))
    page.goto(f'http://127.0.0.1:{server.server_port}/game.html#/diary?station=ruisui');ready(page);page.evaluate('GameProgress.completeRuisui()')
    def click_at(x,y):page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
    def photo_point(frame=False,reading=False):
-    o=page.evaluate('(()=>{const o=testCanvas.getObjects()[0];const p=fabric.util.transformPoint(new fabric.Point('+('105' if frame else '0')+',0),o.calcTransformMatrix());return {x:p.x/600,y:p.y/800}})()');r=page.locator('.journal-decoration-layer' if reading else '.upper-canvas').bounding_box();return r['x']+o['x']*r['width'],r['y']+o['y']*r['height']
+    o=page.evaluate('(()=>{const o=testCanvas.getObjects()[0];const p=fabric.util.transformPoint(new fabric.Point('+('105' if frame else '0')+',0),o.calcTransformMatrix());return {x:p.x/600,y:p.y/800}})()');r=page.locator('.journal-decoration-layer' if reading else '.journal-decoration-layer .upper-canvas').bounding_box();return r['x']+o['x']*r['width'],r['y']+o['y']*r['height']
    page.locator('[data-book="edit"]').click();layer_ready(page)
    empty=page.evaluate('(()=>{const o=testCanvas.getObjects()[0],r=o.getObjects().find(c=>c.fill==="#E1D5BD");return {width:o.width,height:o.height,rx:r.width/o.width,ry:r.height/o.height}})()');assert abs(empty['rx']-.64)<.0001 and abs(empty['ry']-.60)<.0001
    if not mobile:
-    page.mouse.move(*photo_point());assert page.locator('.upper-canvas').evaluate('(e)=>getComputedStyle(e).cursor')=='pointer'
+    page.mouse.move(*photo_point());assert page.locator('.journal-decoration-layer .upper-canvas').evaluate('(e)=>getComputedStyle(e).cursor')=='pointer'
    page.screenshot(path=f'/workspace/work/photo-upload-area-{w}.png')
    click_at(*photo_point(True));page.wait_for_timeout(100);assert not opened
    with page.expect_file_chooser() as selected:click_at(*photo_point())
