@@ -1739,6 +1739,8 @@ body {
 .pf-stage .stf__block { width:100%; height:100%; }
 .pf-page { box-sizing:border-box; padding:24px; background:#f5ecdb; color:#503b2c; overflow:hidden; }
 .pf-hard { background:#4a2f22; color:#ead9b7; }
+.pf-stage .pf-page.pf-scrapbook-cover { padding:0; border:0; background:transparent; }
+.pf-cover-image { display:block; width:100%; height:100%; object-fit:contain; user-select:none; }
 .pf-hard h2 { text-align:center; margin-top:50%; font:clamp(24px,4vw,48px)/1.5 'PMingLiU',serif; }
 .pf-toc { overflow:auto; }
 .pf-toc h2 { height:60px; font:25px/1.5 serif; margin:0; }
@@ -1775,14 +1777,15 @@ body {
  .pf-book .back-to-index { position:static; }
 }
 
-/* 正式實體書模式：書頁比例固定；只在翻動前後調整舞台。 */
-.pf-book { --closed-height:min(calc(76vw / 1.44),calc(var(--game-height) - var(--game-nav-space,108px) - 100px)); width:calc(var(--closed-height) * 1.44); height:var(--closed-height); left:calc((100% - var(--closed-height) * 1.44) / 2); top:70px; transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease; }
+/* 雙頁舞台維持固定頁面比例；閉合以可見單頁的中心定位，展開以整個跨頁定位。
+   StPageFlip showCover 在前封面顯示右頁（中心 .75），封底顯示左頁（中心 .25）。 */
+.pf-book { --pf-spread-ratio:1.5; --pf-closed-anchor:.75; --closed-height:min(calc(76vw / var(--pf-spread-ratio)),calc(var(--game-height) - var(--game-nav-space,108px) - 100px)); width:calc(var(--closed-height) * var(--pf-spread-ratio)); height:var(--closed-height); left:calc(50% - var(--closed-height) * var(--pf-spread-ratio) * var(--pf-closed-anchor)); top:70px; transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease; }
 .pf-frame { inset:0; touch-action:pan-y; }
 #diary-screen { transition:background .35s ease; }
 .diary-header,.bottom-nav { transition:opacity .25s ease; }
 .pf-ui-hidden .diary-header,.pf-ui-hidden .bottom-nav { opacity:0; pointer-events:none; }
 #diary-screen.pf-reading { background:#8e765e; overflow:clip; }
-#diary-screen.pf-reading .pf-book { --read-height:min(calc(92vw / 1.44),calc(var(--game-height) - 72px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); width:calc(var(--read-height) * 1.44); height:var(--read-height); left:calc((100% - var(--read-height) * 1.44) / 2); top:calc((var(--game-height) - var(--read-height)) / 2); }
+#diary-screen.pf-reading .pf-book { --read-height:min(calc(92vw / var(--pf-spread-ratio)),calc(var(--game-height) - 72px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); width:calc(var(--read-height) * var(--pf-spread-ratio)); height:var(--read-height); left:calc((100% - var(--read-height) * var(--pf-spread-ratio)) / 2); top:calc((var(--game-height) - var(--read-height)) / 2); }
 .pf-reading .pf-frame { inset:0; touch-action:pan-y; }
 .pf-actions[hidden] { display:none; }
 .pf-actions { position:absolute; top:-34px; right:0; display:flex; align-items:center; gap:12px; z-index:20; }
@@ -1799,7 +1802,7 @@ body {
 .pf-actions button[data-book="close"]:focus-visible { outline:2px solid #95734d; outline-offset:2px; }
 .pf-reading .pf-actions {
  top:max(-34px,calc(env(safe-area-inset-top,0px) + 2px - (var(--game-height) - var(--read-height)) / 2));
- left:max(0px,calc(env(safe-area-inset-left,0px) + 8px - (100vw - var(--read-height) * 1.44) / 2));
+ left:max(0px,calc(env(safe-area-inset-left,0px) + 8px - (100vw - var(--read-height) * var(--pf-spread-ratio)) / 2));
  right:auto;
 }
 /* 獨立紙質索引：位於 stage 外，16px 藏在不透明書頁下方。 */
@@ -1808,7 +1811,7 @@ body {
 .pf-index-tab { display:none; }
 .pf-reading .pf-index-tab {
  position:absolute; top:24%;
- --index-exposure:max(20px,min(44px,calc((100vw - var(--read-height) * 1.44) / 2 - env(safe-area-inset-left,0px) - 4px)));
+ --index-exposure:max(20px,min(44px,calc((100vw - var(--read-height) * var(--pf-spread-ratio)) / 2 - env(safe-area-inset-left,0px) - 4px)));
  left:calc(-1 * var(--index-exposure));
  z-index:0; display:flex; align-items:center; justify-content:center;
  box-sizing:border-box; width:calc(var(--index-exposure) + 16px); height:80px; padding:8px 16px 8px 0;

@@ -84,7 +84,8 @@ const indexBookmark=controls.querySelector('[data-book="index"]');
 diaryIndex.before(book);book.append(indexBookmark,frame,controls);stationDiary.remove();
 backToIndex.textContent='← 返回目錄';
 function makePage(title,hard=false){const page=document.createElement('section');page.className='pf-page'+(hard?' pf-hard':'');if(hard)page.dataset.density='hard';if(title){const h=document.createElement('h2');h.textContent=title;page.append(h);}return page;}
-const cover=makePage('阿明的日記',true);stage.append(cover);
+const cover=makePage('',true);cover.classList.add('pf-scrapbook-cover');
+const coverImage=document.createElement('img');coverImage.className='pf-cover-image';coverImage.src='images/diary-cover-scrapbook.png';coverImage.alt='阿明的復古鐵道旅行手帳封面';coverImage.draggable=false;cover.append(coverImage);stage.append(cover);
 const leftIndex=makePage('目錄');leftIndex.classList.add('pf-toc');
 const heading=diaryIndex.querySelector('.index-title');heading.remove();
 const leftList=document.createElement('div');leftList.className='station-journals';entries.slice(0,3).forEach(e=>leftList.append(e));leftIndex.append(leftList);
@@ -166,7 +167,7 @@ function syncIndexBookmark(){
  indexBookmark.classList.remove('pf-index-fading');indexBookmark.disabled=false;
  indexBookmark.hidden=!(readingActive&&current>=3&&current<=14);
 }
-function renderBook(n){pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;syncIndexBookmark();}
+function renderBook(n){book.style.setProperty('--pf-closed-anchor',engine?.getCurrentPageIndex()===15?'.25':'.75');pageNumber=n;stationDiary.classList.toggle('show',n===4);book.classList.toggle('pf-station',n===4);controls.hidden=!readingActive;syncIndexBookmark();}
 let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);
 let sizeObserver,layoutFrame=0,stableSize='',appliedSize='';
 function measureBook(){return {width:Math.round(frame.clientWidth),height:Math.round(frame.clientHeight)};}
