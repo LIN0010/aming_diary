@@ -19,7 +19,11 @@ try:
     for n in range(3):
      expect(page.locator('#ev-question-progress')).to_have_text(f'{n+1} / 3');expect(page.locator('#ev-team-result')).to_have_count(0);page.locator(f'[data-answer="{answer}"]').click()
     card=page.locator('#ev-team-result');expect(card).to_be_visible();data=page.evaluate('(id)=>EventConfig.race.teams.find(t=>t.id===id)',team)
-    expect(card.locator('h2')).to_contain_text(data['name']);expect(card.locator('.ev-postcard-message > p')).to_have_text(data['subtitle']);expect(card.locator('.ev-eyebrow')).to_have_text('YOUR JOURNEY BEGINS');expect(card.locator('.ev-muted')).to_have_text('依照你的三道旅行選擇完成分隊，結果已保存。')
+    expect(card.locator('h2')).to_have_text(data['name']);expect(card.locator('.ev-postcard-message > p')).to_have_text(data['subtitle']);expect(card.locator('.ev-eyebrow')).to_have_text('YOUR JOURNEY BEGINS');expect(card.locator('.ev-muted')).to_have_text('依照你的三道旅行選擇完成分隊，結果已保存。')
+    expect(card.locator('.ev-postcard-prompt')).to_have_text('你的旅行陣營是');expect(card.locator('.ev-postcard-writing-line')).to_have_count(2)
+    assert card.locator('.ev-postcard-message').evaluate('(e)=>Array.from(e.children).map(x=>x.tagName).join(",")')=='H2,HR,P,HR'
+    assert card.locator('.ev-postcard-prompt').evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)<parseFloat(getComputedStyle(e.nextElementSibling.querySelector("h2")).fontSize)')
+    assert card.locator('.ev-postcard-copy').evaluate('(e)=>getComputedStyle(e).textAlign')=='left'
     assert page.evaluate('EventStore.snapshot().team')==team;saved=page.evaluate('EventStore.snapshot()')
     assert card.evaluate('(e)=>getComputedStyle(e).backgroundImage.includes("repeating-linear-gradient")')
     expect(page.locator('.ev-postcard-landscape')).to_have_attribute('src',data['cover']['image'])
