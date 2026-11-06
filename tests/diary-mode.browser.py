@@ -9,6 +9,9 @@ ROOT=Path(__file__).resolve().parents[1]
 class Quiet(SimpleHTTPRequestHandler):
  def log_message(self,*a):pass
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(ROOT/'aming-game')));Thread(target=server.serve_forever,daemon=True).start()
+def click_photo(page,mobile):
+ page.locator('.player-photo').scroll_into_view_if_needed();r=page.locator('.player-photo').bounding_box();x=r['x']+r['width']/2;y=r['y']+r['height']/2
+ page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
 def ready(page,index=9):page.wait_for_function('(i)=>testBook.getState()==="read"&&testBook.getCurrentPageIndex()===i&&!document.querySelector(".pf-book").hasAttribute("aria-busy")',arg=index)
 def drag(page,mobile,forward=True):
  r=page.locator('.pf-stage').bounding_box();x=r['x']+(r['width']-3 if forward else 3);y=r['y']+r['height']*.8;dx=(-1 if forward else 1)*r['width']*.8
@@ -28,8 +31,15 @@ try:
    page.evaluate("GameProgress.completeRuisui();GameProgress.saveNote('ruisui','原有心得\\n第二行')")
    expect(page.locator('#travel-note-reading')).to_have_text('原有心得\n第二行');expect(page.locator('#travel-note')).to_be_hidden()
    page.locator('#travel-note-reading').click();assert page.evaluate('document.activeElement.id')!='travel-note'
+   choosers=[];page.on('filechooser',lambda f:choosers.append(f))
+   expect(page.locator('#player-photo-input')).to_be_disabled();click_photo(page,mobile);page.wait_for_timeout(100);assert not choosers
+   # 即使模擬遲到的 change，閱讀模式也不會接收照片。
+   page.locator('#player-photo-input').set_input_files(str(ROOT/'aming-game/images/cow.png'));expect(page.locator('#player-photo-preview')).to_be_hidden()
    frame=page.locator('.pf-frame').bounding_box();drag(page,mobile);ready(page,11);drag(page,mobile,False);ready(page)
    page.locator('[data-book="edit"]').click();expect(page.locator('[data-book="edit"]')).to_have_text('完成編輯');expect(page.locator('#travel-note')).to_have_value('原有心得\n第二行');expect(page.locator('#travel-note-reading')).to_be_hidden()
+   expect(page.locator('#player-photo-input')).to_be_enabled()
+   with page.expect_file_chooser() as selected:page.locator('.player-photo').click()
+   selected.value.set_files(str(ROOT/'aming-game/images/cow.png'));expect(page.locator('#player-photo-preview')).to_be_visible();preview=page.locator('#player-photo-preview').get_attribute('src');assert len(choosers)==1
    page.locator('#travel-note').fill('編輯後的旅程\n保留換行與 <文字>')
    drag(page,mobile);page.wait_for_timeout(400);assert page.evaluate('testBook.getCurrentPageIndex()')==9 and page.evaluate('testBook.getState()')=='read'
    assert page.locator('.pf-frame').bounding_box()==frame
@@ -37,6 +47,8 @@ try:
    page.evaluate("()=>{window.originalSet=Storage.prototype.setItem;Storage.prototype.setItem=function(){throw new DOMException('full','QuotaExceededError')};}")
    page.locator('#travel-note').fill('儲存失敗後仍保留');page.locator('[data-book="edit"]').click();expect(page.locator('[data-book="edit"]')).to_have_text('完成編輯');expect(page.locator('#travel-note')).to_have_value('儲存失敗後仍保留')
    page.evaluate('()=>{Storage.prototype.setItem=originalSet;}');page.locator('[data-book="edit"]').click();expect(page.locator('#travel-note')).to_be_hidden();expect(page.locator('#travel-note-reading')).to_have_text('儲存失敗後仍保留');assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='儲存失敗後仍保留'
+   expect(page.locator('#player-photo-input')).to_be_disabled();click_photo(page,mobile);page.wait_for_timeout(100);assert len(choosers)==1
+   page.locator('#player-photo-input').set_input_files(str(ROOT/'aming-game/images/aming.png'));expect(page.locator('#player-photo-preview')).to_have_attribute('src',preview)
    drag(page,mobile);ready(page,11);drag(page,mobile,False);ready(page);assert page.evaluate('engineCount')==1
    page.wait_for_function("location.hash.includes('station=ruisui')");page.reload();page.wait_for_function('window.testBook');ready(page);expect(page.locator('#travel-note')).to_be_hidden();expect(page.locator('#travel-note-reading')).to_have_text('儲存失敗後仍保留');expect(page.locator('[data-book="edit"]')).to_have_text('編輯手帳')
    page.locator('[data-book="edit"]').click();page.locator('#travel-note').fill('闔書也保留草稿');page.locator('[data-book="close"]').click();ready(page,0)

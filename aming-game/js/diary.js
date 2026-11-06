@@ -91,6 +91,8 @@ function syncJournalMode(){
  const text=GameProgress.snapshot().notes[journalEditor.station]||'';
  noteReading.textContent=text||'尚未留下旅行心得。';noteReading.classList.toggle('is-empty',!text);
  noteReading.hidden=editing;travelNote.hidden=!editing;travelNote.readOnly=!editing;saveTravel.hidden=!editing;
+ ctx.id('player-photo-input').disabled=!editing||!unlocked;
+ ctx.query('.player-photo').setAttribute('aria-disabled',String(!editing||!unlocked));
  book.dataset.journalMode=journalEditor.mode;
  editToggle.textContent=editing?'完成編輯':'編輯手帳';editToggle.setAttribute('aria-pressed',String(editing));
  editToggle.hidden=!(readingActive&&engine?.getCurrentPageIndex()===9&&unlocked);
@@ -349,7 +351,12 @@ const playerPhoto =
 
 let previewURL;
 
+ctx.on(playerPhoto, 'click', event => {
+    if(journalEditor.mode!=='edit'||!GameProgress.hasMemory('ruisui-01')){event.preventDefault();event.stopImmediatePropagation();}
+}, {capture:true});
 ctx.on(photoInput, "change", () => {
+    // 防止檔案選擇器開啟後切回閱讀模式，仍套用遲到的選檔結果。
+    if(journalEditor.mode!=='edit'||!GameProgress.hasMemory('ruisui-01')){photoInput.value='';return;}
 
     const file = photoInput.files[0];
 

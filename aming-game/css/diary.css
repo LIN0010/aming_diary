@@ -1923,3 +1923,5 @@ body {
 .travel-note-reading { min-height:180px; padding:4px 2px; white-space:pre-wrap; overflow-wrap:anywhere; color:#5d534a; font:15px/34px "DFKai-SB","KaiTi",serif; letter-spacing:.06em; background:repeating-linear-gradient(to bottom,transparent 0,transparent 33px,rgba(117,104,86,.11) 34px); cursor:default; }
 .travel-note-reading.is-empty { color:#a09686; }
 .pf-book #travel-note[hidden],.pf-book #travel-note-reading[hidden],.pf-book #save-travel[hidden],.pf-actions [data-book="edit"][hidden] { display:none !important; }
+
+.pf-book[data-journal-mode="read"] .player-photo { cursor:default; }
