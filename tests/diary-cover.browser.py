@@ -24,7 +24,7 @@ try:
    bundle=(ROOT/'aming-game/vendor/page-flip/page-flip.browser.js').read_text();page.route('**/page-flip.browser.js',lambda r:r.fulfill(body=bundle+';const Original=St.PageFlip;St.PageFlip=class extends Original{constructor(...a){super(...a);window.testBook=this;window.engineCount=(window.engineCount||0)+1;}};',content_type='application/javascript'))
    page.goto(f'http://127.0.0.1:{server.server_port}/game.html#/diary');page.wait_for_function('window.testBook&&document.querySelectorAll(".stf__item").length===16');settled(page,0)
    cover=page.locator('.pf-scrapbook-cover');expect(cover.locator('h2')).to_have_count(0);expect(cover).to_have_attribute('data-density','hard')
-   image=cover.locator('img');expect(image).to_have_attribute('src','images/diary-cover-scrapbook.png');assert image.evaluate('async e=>{await e.decode();return e.naturalWidth===1086&&e.naturalHeight===1448}')
+   image=cover.locator('img');expect(image).to_have_attribute('src','images/diary-cover-scrapbook2.png');assert image.evaluate('async e=>{await e.decode();return e.naturalWidth===1086&&e.naturalHeight===1448}')
    r=center(page,'.pf-scrapbook-cover',w);im=image.bounding_box();assert all(abs(r[k]-im[k])<1 for k in ['x','y','width','height']);assert abs(r['width']/r['height']-.75)<.003
    page.screenshot(path=f'/workspace/work/diary-cover-closed-{w}.png')
    for repeat in range(2):
