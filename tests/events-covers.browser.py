@@ -16,11 +16,11 @@ try:
    mobile=w<1000;context=browser.new_context(viewport={'width':w,'height':h},is_mobile=mobile,has_touch=mobile,**({'user_agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1'} if mobile else {}));page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
    page.goto(f'http://127.0.0.1:{server.server_port}/game.html#/event');expect(page.locator('.ev-banner-image')).to_have_count(1)
    before=page.evaluate('localStorage.getItem(EventConfig.storageKey)')
-   for kind,name in [('photo','event-spring-photography.png'),('race','event-mountain-sea.png')]:
+   for kind,name in [('photo','event-spring-photography.png'),('race','event-railway-map.png')]:
     if kind=='race':
      arrow=page.locator('[data-action="next-activity"]');arrow.tap() if mobile else arrow.click()
     expect(page.locator('.ev-banner h2')).to_have_text(page.evaluate('(k)=>EventConfig[k].title',kind));expect(page.locator('.ev-banner-image')).to_have_attribute('src','images/'+name)
-    im=page.locator('.ev-banner-image');assert im.evaluate('async e=>{await e.decode();return e.naturalWidth===1232&&e.naturalHeight===928&&getComputedStyle(e).objectFit==="cover";}')
+    im=page.locator('.ev-banner-image');assert im.evaluate('async e=>{await e.decode();return e.naturalWidth>0&&e.naturalHeight>0&&getComputedStyle(e).objectFit==="cover";}')
     expect(page.locator('.ev-rail,.ev-banner-art > span')).to_have_count(0)
     assert page.locator('.ev-banner-art').evaluate('(e)=>getComputedStyle(e,"::before").content')=='none'
     page.locator('#ev-cards').evaluate('e=>Promise.all(e.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})))')

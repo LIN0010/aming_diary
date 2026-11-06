@@ -22,6 +22,7 @@ try:
     expect(card.locator('h2')).to_contain_text(data['name']);expect(card.locator('.ev-postcard-message > p')).to_have_text(data['subtitle']);expect(card.locator('.ev-eyebrow')).to_have_text('YOUR JOURNEY BEGINS');expect(card.locator('.ev-muted')).to_have_text('依照你的三道旅行選擇完成分隊，結果已保存。')
     assert page.evaluate('EventStore.snapshot().team')==team;saved=page.evaluate('EventStore.snapshot()')
     assert card.evaluate('(e)=>getComputedStyle(e).backgroundImage.includes("repeating-linear-gradient")')
+    expect(page.locator('.ev-postcard-landscape')).to_have_attribute('src',data['cover']['image'])
     assert page.locator('.ev-postcard-landscape').evaluate('async e=>{await e.decode();return e.naturalWidth>0&&getComputedStyle(e).objectFit==="cover"}')
     assert card.evaluate('e=>e.scrollWidth<=e.clientWidth+1')
     card.evaluate('e=>Promise.all(e.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})))')

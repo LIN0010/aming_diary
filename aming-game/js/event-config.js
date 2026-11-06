@@ -28,13 +28,13 @@
             ]
         },
         race: {
-            cover: { image: "images/event-mountain-sea.png", position: "50% 65%", alt: "山景、海景與沿岸鐵道" },
+            cover: { image: "images/event-railway-map.png", position: "50% 55%", alt: "第一人稱手持旅行地圖，前方是月台與列車" },
             id: "rail-2027", title: "鐵道旅行陣營戰",
             start: "2027-03-15T00:00:00+08:00", end: "2027-04-01T00:00:00+08:00",
             introduction: "有人追逐下一個遠方，有人收藏沿途的小事。找到你的旅行節奏，一起為陣營留下足跡。",
             teams: [
-                { id: "blue", name: "逐風列車", subtitle: "追著海風，奔向新的地平線", score: 260, members: 18 },
-                { id: "sage", name: "拾光月台", subtitle: "慢一點，把日常的風景收進口袋", score: 340, members: 23 }
+                { cover: { image: "images/camp-wind-train.png", position: "34% 50%", alt: "逐風列車穿過花田與遠山" }, id: "blue", name: "逐風列車", subtitle: "追著海風，奔向新的地平線", score: 260, members: 18 },
+                { cover: { image: "images/camp-memory-platform.png", position: "50% 55%", alt: "樹蔭下的月台、列車與長椅" }, id: "sage", name: "拾光月台", subtitle: "慢一點，把日常的風景收進口袋", score: 340, members: 23 }
             ],
             questions: [
                 { title: "火車即將進站，你會選擇……", choices: ["跳上下一班，看看未知的遠方", "坐在月台，聽完這一首風的聲音"] },
