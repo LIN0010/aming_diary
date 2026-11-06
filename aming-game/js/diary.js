@@ -85,6 +85,9 @@ const indexBookmark=controls.querySelector('[data-book="index"]');
 const journalEditor={mode:'read',station:'ruisui'};
 let layoutEditor;
 const editToggle=controls.querySelector('[data-book="edit"]');
+JournalLayout.button(controls.querySelector('[data-book="close"]'),'闔上日記','close');
+const toolToggle=document.createElement('button');toolToggle.type='button';toolToggle.className='journal-tool-toggle';JournalLayout.button(toolToggle,'展開／收合編輯工具','more');toolToggle.setAttribute('aria-controls','journal-edit-tools');toolToggle.setAttribute('aria-expanded','false');controls.append(toolToggle);
+ctx.on(toolToggle,'click',()=>{const open=controls.classList.toggle('tools-expanded');toolToggle.setAttribute('aria-expanded',String(open));});
 const noteReading=document.createElement('div');noteReading.id='travel-note-reading';noteReading.className='travel-note-reading';
 travelNote.before(noteReading);travelNote.hidden=true;travelNote.readOnly=true;saveTravel.hidden=true;
 function syncJournalMode(){
@@ -96,7 +99,8 @@ function syncJournalMode(){
  ctx.query('.player-photo').setAttribute('aria-disabled',String(!editing||!unlocked));
  book.dataset.journalMode=journalEditor.mode;
  layoutEditor?.setMode(editing);
- editToggle.textContent=editing?'完成編輯':'編輯手帳';editToggle.setAttribute('aria-pressed',String(editing));
+ toolToggle.hidden=!editing;if(!editing){controls.classList.remove('tools-expanded');toolToggle.setAttribute('aria-expanded','false');}
+ JournalLayout.button(editToggle,editing?'完成編輯':'編輯手帳',editing?'done':'edit');editToggle.setAttribute('aria-pressed',String(editing));
  editToggle.hidden=!(readingActive&&engine?.getCurrentPageIndex()===9&&unlocked);
 }
 function changeJournalMode(next){
@@ -202,6 +206,7 @@ function scheduleBookLayout(){
  if(disposed||layoutFrame)return;
  layoutFrame=requestAnimationFrame(()=>{
   layoutFrame=0;if(disposed)return;
+  controls.classList.toggle('is-compact',book.getBoundingClientRect().right+54>document.documentElement.clientWidth);
   const size=measureBook(),key=`${size.width}x${size.height}`;
   if(size.width<2||size.height<2)return;
   // 等連續兩個繪製週期取得相同尺寸，避開Safari旋轉過渡值。
@@ -362,7 +367,7 @@ const playerPhoto =
 
 
 const layoutStatus=document.createElement('p');layoutStatus.className='journal-layout-status';layoutStatus.setAttribute('role','status');layoutStatus.hidden=true;book.append(layoutStatus);
-layoutEditor=JournalLayout.mount({ctx,page:photoColumn.parentElement,label:playerPhoto,input:photoInput,preview:photoPreview,
+layoutEditor=JournalLayout.mount({ctx,page:photoColumn.parentElement,toolbar:controls,label:playerPhoto,input:photoInput,preview:photoPreview,
  canEdit:()=>journalEditor.mode==='edit'&&GameProgress.hasMemory('ruisui-01'),
  report:message=>{layoutStatus.textContent=message;layoutStatus.hidden=!message;}});
 ctx.on(playerPhoto,'click',event=>{

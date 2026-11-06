@@ -1788,23 +1788,19 @@ body {
 #diary-screen.pf-reading .pf-book { --read-height:min(calc(92vw / var(--pf-spread-ratio)),calc(var(--game-height) - 72px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))); width:calc(var(--read-height) * var(--pf-spread-ratio)); height:var(--read-height); left:calc((100% - var(--read-height) * var(--pf-spread-ratio)) / 2); top:calc((var(--game-height) - var(--read-height)) / 2); }
 .pf-reading .pf-frame { inset:0; touch-action:pan-y; }
 .pf-actions[hidden] { display:none; }
-.pf-actions { position:absolute; top:-34px; right:0; display:flex; align-items:center; gap:12px; z-index:20; }
-.pf-actions button:is([data-book="close"],[data-book="edit"]) {
- min-height:32px; box-sizing:border-box; padding:6px 20px;
- border:1px solid rgba(255,255,255,.65); border-radius:999px;
- background:rgba(255,250,240,.82); color:#604a36;
- backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
- box-shadow:0 3px 12px rgba(55,42,30,.12);
- cursor:pointer; font:14px/18px 'Noto Serif TC','PMingLiU',serif;
- transition:background .2s ease;
-}
-.pf-actions button:is([data-book="close"],[data-book="edit"]):hover { background:rgba(255,250,240,.96); }
-.pf-actions button:is([data-book="close"],[data-book="edit"]):focus-visible { outline:2px solid #95734d; outline-offset:2px; }
-.pf-reading .pf-actions {
- top:max(-34px,calc(env(safe-area-inset-top,0px) + 2px - (var(--game-height) - var(--read-height)) / 2));
- left:max(0px,calc(env(safe-area-inset-left,0px) + 8px - (100vw - var(--read-height) * var(--pf-spread-ratio)) / 2));
- right:auto;
-}
+.pf-reading .pf-actions,.pf-actions { position:absolute; top:0; left:calc(100% + 8px); right:auto; display:flex; flex-direction:column; align-items:center; gap:6px; width:44px; max-height:100%; overflow:auto; z-index:20; padding:0; scrollbar-width:thin; scrollbar-color:#c9b58f transparent; }
+.pf-actions button { display:grid; place-items:center; flex:0 0 auto; width:42px; height:42px; padding:0; border:1px solid #c4ae88; border-radius:6px; background:rgba(255,250,240,.94); color:#604a36; box-shadow:0 2px 5px #604a3615; cursor:pointer; }
+.pf-actions button svg { display:block; width:20px; height:20px; }
+.pf-actions button:hover { background:#eee0c6; }
+.pf-actions button:focus-visible { outline:2px solid #8b704b; outline-offset:-3px; }
+.pf-actions button:disabled { opacity:.4; cursor:default; }
+.journal-tool-name { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.pf-actions .journal-tool-toggle { display:none; }
+.pf-actions.is-compact { left:auto; right:0; top:-34px; width:auto; max-width:100%; height:32px; flex-direction:row; overflow:auto; }
+.pf-actions.is-compact button { width:32px; height:32px; }
+.pf-actions.is-compact .journal-tool-toggle { display:grid; }
+.pf-actions.is-compact:not(.tools-expanded) .journal-layout-tools { display:none; }
+.pf-actions.is-compact .journal-layout-tools,.pf-actions.is-compact .journal-sticker-picker { flex-direction:row; }
 /* 獨立紙質索引：位於 stage 外，16px 藏在不透明書頁下方。 */
 .pf-book { isolation:isolate; }
 .pf-frame { z-index:1; }
@@ -1937,12 +1933,11 @@ body {
 .journal-decoration-layer.is-editing,.journal-decoration-layer.is-editing .upper-canvas { pointer-events:auto; }
 .journal-decoration-layer:not(.is-editing) .upper-canvas { pointer-events:none; }
 .pf-book .journal-photo-replaced { visibility:hidden; }
-.journal-layout-tools { position:absolute; left:8px; top:8px; width:min(170px,42%); box-sizing:border-box; z-index:12; display:flex; flex-wrap:wrap; gap:4px; max-height:42%; overflow:auto; padding:6px; background:rgba(250,243,228,.94); border:1px solid #c9b58f; border-radius:6px; box-shadow:0 2px 8px #5e49351a; touch-action:pan-y; }
-.journal-layout-tools button { min-height:36px; padding:4px 8px; border:1px solid #c4ae88; border-radius:4px; background:#eee3cd; color:#604a36; font:12px/1.4 'Noto Serif TC',serif; cursor:pointer; }
-.journal-layout-tools button:hover { background:#e6d5b7; }
-.journal-layout-tools button:disabled { opacity:.45; cursor:default; }
-.journal-layout-tools button:focus-visible { outline:2px solid #8b704b; outline-offset:1px; }
+.journal-layout-tools,.journal-sticker-picker { display:flex; flex-direction:column; gap:6px; align-items:center; }
+.journal-sticker-picker { padding:4px 0; border-block:1px solid #c9b58f; }
+.journal-sticker-picker[hidden] { display:none; }
+.journal-sticker-picker img { width:28px; height:28px; object-fit:contain; }
 .journal-layout-status { position:absolute; left:0; right:0; bottom:0; z-index:30; padding:8px; background:#fff3d8; color:#604a36; text-align:center; }
-.journal-decoration-layer[hidden],.journal-layout-tools[hidden],.journal-layout-status[hidden] { display:none; }
+.journal-decoration-layer[hidden],.journal-layout-tools[hidden],.journal-tool-toggle[hidden],.journal-layout-status[hidden] { display:none; }
 .journal-decoration-preview { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; user-select:none; -webkit-user-drag:none; }
 .journal-decoration-layer.is-editing .journal-decoration-preview,.journal-decoration-layer:not(.is-editing) .canvas-container { display:none; }

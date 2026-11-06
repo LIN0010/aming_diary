@@ -4,14 +4,22 @@
  const KEY='aming-diary-journal-layouts', W=600, H=800;
  const ASSETS=Object.freeze({compass:'images/guild-compass.png',journal:'images/guild-journal.png'});
  const clone=x=>JSON.parse(JSON.stringify(x));
- window.JournalLayout={mount({ctx,page,label,input,preview,canEdit,report}){
+ const paths={done:'m5 12 4 4L20 5',close:'M9 6 3 12l6 6M3 12h13a5 5 0 0 0 5-5',edit:'m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5',photo:'M3 5h18v16H3ZM7 5l2-3h6l2 3M8 13a4 4 0 1 0 8 0 4 4 0 1 0-8 0',sticker:'M3 3h18v12l-6 6H3ZM15 21v-6h6M7 8h2m5 0h2M8 12q4 4 8 0',delete:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',undo:'M9 4 3 10l6 6M3 10h11a7 7 0 0 1 7 7',reset:'M3 11a9 9 0 1 1 2 7M3 3v8h8',more:'m8 4 8 8-8 8'};
+ function button(node,label,icon){if(node.getAttribute('aria-label')===label&&node.querySelector('svg'))return;node.title=label;node.setAttribute('aria-label',label);node.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[icon]||paths.edit}"/></svg><span class="journal-tool-name"></span>`;node.querySelector('span').textContent=label;}
+ window.JournalLayout={button,mount({ctx,page,toolbar,label,input,preview,canEdit,report}){
   let canvas,editing=false,dead=false,busy=0,photo=null,records=null,history=[],dirty=false,protectedSave=false,sequence=0;
   const layer=document.createElement('div');layer.className='journal-decoration-layer';layer.hidden=true;
   const snapshot=document.createElement('img');snapshot.className='journal-decoration-preview';snapshot.alt='我的旅行照片與手帳裝飾';snapshot.draggable=false;layer.append(snapshot);
   const element=document.createElement('canvas');element.setAttribute('aria-label','個人旅行照片與貼紙編輯區');layer.append(element);page.append(layer);
   const tools=document.createElement('div');tools.className='journal-layout-tools';tools.hidden=true;tools.setAttribute('role','toolbar');tools.setAttribute('aria-label','手帳裝飾編輯');
-  tools.innerHTML='<button type="button" data-layout="select">選取／拖曳</button><button type="button" data-layout="photo">選擇照片</button><button type="button" data-layout="compass">指南針貼紙</button><button type="button" data-layout="journal">手帳貼紙</button><button type="button" data-layout="rotate" aria-label="順時針旋轉十五度">旋轉 ↻</button><button type="button" data-layout="smaller">縮小 −</button><button type="button" data-layout="larger">放大 ＋</button><button type="button" data-layout="delete">刪除裝飾</button><button type="button" data-layout="undo">復原上一步</button><button type="button" data-layout="reset">恢復預設排版</button>';
-  page.append(tools);
+  tools.id='journal-edit-tools';
+  for(const [action,name,icon] of [['photo','新增旅行照片','photo'],['stickers','新增貼紙','sticker'],['delete','刪除選取的個人裝飾','delete'],['undo','復原上一步','undo'],['reset','恢復官方預設排版','reset']]){const item=document.createElement('button');item.type='button';item.dataset.layout=action;button(item,name,icon);tools.append(item);}
+  const picker=document.createElement('div');picker.className='journal-sticker-picker';picker.id='journal-sticker-picker';picker.hidden=true;picker.setAttribute('role','group');picker.setAttribute('aria-label','選擇貼紙');
+  for(const [id,name] of [['compass','指南針貼紙'],['journal','手帳貼紙']]){const item=document.createElement('button');item.type='button';item.dataset.layout=id;item.title=name;item.setAttribute('aria-label',name);const img=document.createElement('img');img.src=ASSETS[id];img.alt='';img.width=28;img.height=28;item.append(img);picker.append(item);}
+  tools.querySelector('[data-layout="stickers"]').after(picker);
+  const stickerToggle=tools.querySelector('[data-layout="stickers"]');stickerToggle.setAttribute('aria-controls',picker.id);stickerToggle.setAttribute('aria-expanded','false');
+  toolbar.append(tools);
+  ctx.on(tools,'keydown',e=>{if(e.key==='Escape'){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');stickerToggle.focus();}});
   try{
    const raw=localStorage.getItem(KEY);
    if(raw){const data=JSON.parse(raw);if(data.version!==1||!data.stations)throw Error('unsupported');
@@ -34,10 +42,9 @@
   function changed(){records=capture();dirty=true;updateTools();}
   function updateTools(){
    const selected=canvas?.getActiveObject();
-   for(const name of ['rotate','smaller','larger'])tools.querySelector(`[data-layout="${name}"]`).disabled=!!busy||!selected;
    tools.querySelector('[data-layout="delete"]').disabled=!!busy||!selected||selected.journalType!=='sticker';
    tools.querySelector('[data-layout="undo"]').disabled=!!busy||!history.length;
-   for(const name of ['reset','compass','journal','photo'])tools.querySelector(`[data-layout="${name}"]`).disabled=!!busy;
+   for(const name of ['reset','compass','journal','photo','stickers'])tools.querySelector(`[data-layout="${name}"]`).disabled=!!busy;
    layer.setAttribute('aria-busy',String(!!busy));
   }
   function bound(o){
@@ -86,7 +93,7 @@
    if(!unlocked){layer.hidden=true;tools.hidden=true;return;}
    if((editing||records||photo)&&page.clientWidth&&page.clientHeight)ensure();
    if(canvas){layer.hidden=false;layer.classList.toggle('is-editing',editing);canvas.selection=false;canvas.skipTargetFind=!editing;resize();canvas.requestRenderAll();}
-   tools.hidden=!editing;updateTools();
+   tools.hidden=!editing;if(!editing){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');}updateTools();
   }
   function save(){
    if(busy){report('照片與裝飾準備中，請稍候。');return false;}
@@ -116,17 +123,16 @@
    const button=event.target.closest('[data-layout]');if(!button||!editing||busy)return;
    const action=button.dataset.layout,selected=canvas.getActiveObject();
    if(action==='photo'){input.click();return;}
-   if(action==='select'){canvas.isDrawingMode=false;layer.querySelector('.upper-canvas').focus();return;}
+   if(action==='stickers'){picker.hidden=!picker.hidden;stickerToggle.setAttribute('aria-expanded',String(!picker.hidden));return;}
    if(action==='undo'){const previous=history.pop();if(previous){dirty=true;await draw(previous);}return;}
-   if(action==='reset'){checkpoint();dirty=true;await draw(clone(defaults));return;}
+   if(action==='reset'){if(!window.confirm('恢復官方預設排版？照片、旅行心得與遊戲進度會保留。'))return;checkpoint();dirty=true;await draw(clone(defaults));return;}
    if(ASSETS[action]){
+    picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');
     if(canvas.getObjects().length>=21){report('這一頁最多放置 20 張個人貼紙。');return;}
     checkpoint();const next=capture();next.push({id:crypto.randomUUID(),type:'sticker',source:action,x:.4,y:.55,scale:1,angle:-8,order:next.length});dirty=true;await draw(next);canvas.setActiveObject(canvas.getObjects().at(-1));canvas.requestRenderAll();updateTools();return;
    }
    if(!selected)return;checkpoint();
    if(action==='delete'&&selected.journalType==='sticker'){canvas.remove(selected);canvas.discardActiveObject();}
-   if(action==='rotate')selected.rotate(selected.angle+15);
-   if(action==='smaller'||action==='larger')selected.scale(selected.scaleX*(action==='larger'?1.12:1/1.12));
    bound(selected);changed();canvas.requestRenderAll();
   });
   // 只在編輯層終止冒泡，不把整張 HTML 書頁停用。
