@@ -10,6 +10,7 @@
         maxImageBytes: 180000,
         maxFileBytes: 10 * 1024 * 1024,
         photo: {
+            cover: { image: "images/event-spring-photography.png", position: "58% 70%", alt: "櫻花樹下的野餐墊與春日風景" },
             id: "spring-2027", title: "春日花季攝影祭",
             start: "2027-03-15T00:00:00+08:00", end: "2027-04-01T00:00:00+08:00",
             introduction: "把沿途的春天，留在同一本相簿裡。每一張照片，都是我們共同走過的風景。",
@@ -27,6 +28,7 @@
             ]
         },
         race: {
+            cover: { image: "images/event-mountain-sea.png", position: "50% 65%", alt: "山景、海景與沿岸鐵道" },
             id: "rail-2027", title: "鐵道旅行陣營戰",
             start: "2027-03-15T00:00:00+08:00", end: "2027-04-01T00:00:00+08:00",
             introduction: "有人追逐下一個遠方，有人收藏沿途的小事。找到你的旅行節奏，一起為陣營留下足跡。",

@@ -41,17 +41,14 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .ev-data-note details p { margin-top: 8px !important; }
 #ev-clock { color: #918b7a; font-size: 11px; }
 .ev-banner { position: relative; display: grid; grid-template-columns: .9fr 1.2fr; background: var(--ev-paper); border-radius: 14px; box-shadow: 0 8px 24px #6e644215; overflow: hidden; margin: 18px 0 30px; }
-.ev-banner-art { min-height: 260px; position: relative; overflow: hidden; display: flex; align-items: flex-start; padding: 24px; background: radial-gradient(ellipse at 22% 30%, #f4dfe6 0 8%, transparent 30%), radial-gradient(ellipse at 80% 55%, #e2c4cf 0 10%, transparent 32%), linear-gradient(155deg, #e9eedc, #c5d7c3 65%, #98b29f); }
-.ev-banner-art::before { content: ""; position: absolute; width: 130%; height: 95%; bottom: -60%; left: -10%; transform: rotate(-12deg); border-radius: 50%; background: #8ca99566; box-shadow: 0 -25px 0 15px #b0c3af55; }
-.ev-banner-art > span { position: relative; z-index: 1; font-family: Georgia, serif; color: #657e6d; font-size: 14px; letter-spacing: .2em; }
-.ev-rail { position: absolute; width: 130%; height: 26px; left: -10%; bottom: 50px; border-top: 2px solid #536d6055; border-bottom: 2px solid #536d6055; background: repeating-linear-gradient(90deg, transparent 0 23px, #536d6033 23px 26px); transform: rotate(-12deg); }
+.ev-banner-art { min-width:0; min-height:260px; position:relative; overflow:hidden; padding:0; background:#e5e8db; }
+.ev-banner-image { display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.ev-banner-image[hidden] { display:none; }
 .ev-banner-copy { padding: 30px 32px; align-self: center; }
 .ev-banner-copy h2 { margin: 12px 0 !important; }
 .ev-banner-copy > p { color: #787669; font-size: 14px; }
 .ev-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: #7f826f; margin: 18px 0; }
 .ev-tag { display: inline-block; padding: 3px 10px; border-radius: 4px; background: #e4ebdf; color: #5f7860; font-size: 11px; letter-spacing: .04em; }
-.ev-race .ev-banner-art { background: radial-gradient(ellipse at 80% 10%, #fff8df, transparent 50%), linear-gradient(145deg, #c2d5d7, #94adb3 60%, #ced6bf); }
-.ev-race .ev-banner-art > span { color: #526f7b; }
 .ev-button { display: inline-block; min-height: 40px; padding: 10px 20px; border: 1px solid #5e765f; border-radius: 24px; background: #5e765f; color: #fffdf6; font-size: 13px !important; letter-spacing: .04em; transition: background .2s, transform .2s; }
 .ev-button:not(:disabled):is(:hover, :focus-visible) { transform: translateY(-2px); background: #4f6750; color: #fffdf6; border-color: #4f6750; }
 .ev-button.ev-secondary { background: #f9f8ef; color: #4d664d; border-color: #c4cebc; }
@@ -364,3 +361,7 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 .mobile-nav .ev-photo-panel > .ev-paper { padding:12px; }
 .mobile-nav .ev-photo-panel .ev-upload-grid { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
 .mobile-nav .ev-start-modal { max-height:calc(var(--game-height) - var(--mobile-top) - 16px); overflow-y:auto; }
+
+/* 橫向手機維持票券左右欄；原有窄螢幕直向版仍沿用上下排版。 */
+.mobile-nav .ev-banner { grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr); }
+.mobile-nav .ev-banner-art { border-right:2px dashed rgba(115,137,117,.35); border-bottom:0; }

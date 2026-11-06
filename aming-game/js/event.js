@@ -60,7 +60,7 @@ GameScenes.register("event", ctx => {
     function banner(kind, hero = false, summary = "", action = "open-" + kind, label = "參加活動 →") {
         const event = C[kind];
         return `<section class="ev-banner ev-${kind} ${hero ? "ev-hero" : ""}">
-            <div class="ev-banner-art" aria-label="活動主視覺"><span>${kind === "photo" ? "SPRING / 2027" : "TWO WAYS, ONE JOURNEY"}</span><div class="ev-rail" aria-hidden="true"></div></div>
+            <div class="ev-banner-art" role="img" aria-label="${h(event.cover.alt)}"><img class="ev-banner-image" src="${h(event.cover.image)}" alt="" style="object-position:${h(event.cover.position)}" decoding="async"></div>
             <div class="ev-banner-copy"><span class="ev-tag">${hero ? "本期推薦 · " : ""}${kind === "photo" ? "全服合作" : "陣營競賽"}</span>
             <h2>${h(event.title)}</h2><p>${h(event.introduction)}</p><div class="ev-meta"><span>${dates(kind)}</span><span class="ev-status">${phaseText(kind)}</span><span data-countdown="${kind}">${timeLeft(kind)}</span></div>
             ${summary ? `<p class="ev-pass-summary">${h(summary)}</p>` : ""}
@@ -231,6 +231,9 @@ GameScenes.register("event", ctx => {
         ctx.id("ev-lightbox-description").textContent = photo ? (photo.description || "一段來自你的本機旅行紀錄。") : `${sample.name} · 模擬旅人，此封面為 CSS 佔位區。`;
         modal.showModal();
     }
+    ctx.on(ctx.root, "error", event => {
+        if(event.target.matches?.('.ev-banner-image')) event.target.hidden=true;
+    }, { capture:true });
     ctx.on(ctx.root, "click", event => {
         const target = event.target.closest("button"); if (!target || target.disabled) return;
         if (event.isTrusted && activatedTouches.has(target)) { activatedTouches.delete(target); event.preventDefault(); return; }
