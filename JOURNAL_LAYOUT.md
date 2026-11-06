@@ -1,9 +1,9 @@
 # 瑞穗自由手帳編輯（第二階段最小版本）
 
 - 原有 StPageFlip 2.0.7 不變；新增 Fabric.js 5.3.0 瀏覽器版，MIT 授權及原文見 THIRD_PARTY_LICENSES.md / aming-game/vendor/fabric/LICENSE。
-- 入口：解鎖瑞穗記憶 → 瑞穗跨頁 → 編輯手帳。Fabric 只操作左頁的玩家拍立得、照片和個人貼紙；右頁故事、心得、收藏碎片仍是原 HTML。
+- 入口：解鎖瑞穗記憶 → 瑞穗跨頁 → 編輯手帳。Fabric 操作玩家拍立得、照片和個人貼紙；新增 DOM 群組編輯器操作探索拍立得、故事、心得及收藏碎片，所有敘事文字保留 HTML。
 - 玩家照片及拍立得一起移動／旋轉／縮放；保留上傳照片。刪除工具只刪除自行加入的貼紙。
-- 貼紙暫用專案既有的 images/guild-compass.png、images/guild-journal.png；尚未加入專用紙膠帶素材，不生成額外圖片。
+- 貼紙使用專案既有的 images/guild-compass.png、images/guild-journal.png；紙膠帶重用現有半透明紙膠帶色塊樣式，以向量矩形呈現，不新增插畫素材。
 - 原生 Fabric 控制點可縮放與旋轉，直接點選拖曳，不需切換選取工具。右側方形圖示列整合闔書、編輯、照片、貼紙選單、刪除、復原與恢復預設；窄視窗移至書本上方留白並可收合。恢復預設需先確認；刪除只對個人貼紙啟用。拖曳不影響翻頁引擎的建立次數。
 
 ## 讀寫與預設
@@ -46,4 +46,14 @@ ResizeObserver 只同步 Fabric 顯示尺寸；單頁邏輯尺寸不變。Fabric
 
 執行 `python tests/journal-layout.browser.py`、`python tests/diary-mode.browser.py` 及 `python tests/diary-photo-text.browser.py`。測試使用本機 Chromium、真實滑鼠／CDP 觸控事件及手機橫向 viewport 模擬；不是 iPhone Safari 實機測試。
 
-尚未擴充其他站點、右頁裝飾、多張玩家照片、貼紙素材上傳、圖層調整工具、雲端保存或多指手勢；本階段僅提供單一選取物件的拖曳與控制點操作。復原記錄限本次頁面操作，最多 30 步，不跨重新整理。
+尚未擴充其他站點、多張玩家照片、貼紙素材上傳、圖層調整工具、雲端保存或多指手勢；本階段僅提供單一選取物件的拖曳與控制點操作。復原記錄限本次頁面操作，最多 30 步，不跨重新整理。
+
+## HTML 主要內容群組擴充
+
+`journal-dom-layout.js` 管理四個保留原節點的 HTML 群組：aming-photo（照片、相框、說明）、memory-fragment（圖片及標籤）、aming-story（完整章節／故事）、player-writing（完整標題／心得／既有保存控制）。同一車站存檔新增 `domObjects` 陣列；每筆包含 id、page、type=html、x/y、width、angle、order。舊存檔沒有此欄位時使用原 HTML 的位置，不重設照片或進度。
+
+HTML 文字以寬度重排，維持字級，內容自然增高；極長內容可在區塊內捲動。手機的心得原位於右頁較下方，因此保留右頁內部捲動，不把內容擠回上方；書本外層不捲動。圖片群組維持比例；控制點支援拖曳及鍵盤方向鍵。選取時暫時置前只影響操作，不回寫已儲存圖層。
+
+DOM 與 Fabric 共用復原及恢復預設；不得刪除官方群組。閱讀時清除選取框，收藏碎片保留滑鼠／鍵盤開啟既有碎片匣。玩家相片說明使用跟隨 Fabric 位置的 HTML 標籤。鎖定記憶時獨立群組也會隱藏，避免移出原容器後洩漏內容。
+
+新增驗證：`python tests/journal-dom.browser.py`（桌面 1440×900／觸控橫向 852×393）：四群組選取、移動、調整寬度、旋轉、完整文字、心得保存、收藏操作、閱讀拖曳翻頁、重新整理、恢復預設與尺寸變化。仍未做 iPhone Safari 實機驗證。

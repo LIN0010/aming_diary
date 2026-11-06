@@ -18,6 +18,7 @@ def picture(page,selector):
 def scroll(page,selector,mobile):
  el=page.locator(selector);el.evaluate('(e)=>e.scrollTop=0');r=el.bounding_box();x=r['x']+r['width']*.5;y=r['y']+r['height']*.7
  if mobile:
+  if selector=='.journal-dom-surface':x=r['x']+r['width']-3 # 編輯時以空白頁緣捲動，物件本身用於排版拖曳。
   c=page.context.new_cdp_session(page);c.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]})
   for k in range(1,10):c.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':y-r['height']*.55*k/9}]})
   c.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});c.detach()
@@ -59,12 +60,12 @@ try:
    expect(page.locator('.player-photo')).to_have_class(re.compile('has-photo'));page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")=="false"');picture(page,'#player-photo-preview')
    portrait_frame=page.locator('.player-photo').bounding_box()
    assert abs(portrait_frame['width']-player['width'])<1 and abs(portrait_frame['height']-player['height'])<1
-   scroll(page,'.pf-photo-column',mobile);scroll(page,'.pf-text-column',mobile)
-   page.locator('.memory-fragment-info').scroll_into_view_if_needed();r=page.locator('.memory-fragment-info').bounding_box();col=page.locator('.pf-text-column').bounding_box();assert r['y']>=col['y'] and r['y']+r['height']<=col['y']+col['height']+1
+   scroll(page,'.pf-photo-column',mobile);scroll(page,'.journal-dom-surface' if page.locator('.journal-dom-surface').count() else '.pf-text-column',mobile)
+   page.locator('.memory-fragment-info').scroll_into_view_if_needed();r=page.locator('.memory-fragment-info').bounding_box();col=page.locator('.journal-dom-surface' if page.locator('.journal-dom-surface').count() else '.pf-text-column').bounding_box();assert r['y']>=col['y'] and r['y']+r['height']<=col['y']+col['height']+1
    page.locator('#travel-note').fill('照片左頁、故事右頁的心得');page.locator('[data-book="edit"]').click();assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='照片左頁、故事右頁的心得'
    page.locator('[data-book="edit"]').click();page.locator('#player-photo-input').set_input_files({'name':'landscape.svg','mimeType':'image/svg+xml','buffer':b'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120"><rect width="320" height="120" fill="#b7c2b0"/></svg>'});page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")=="false"');picture(page,'#player-photo-preview');page.locator('[data-book="edit"]').click()
    # 閱讀模式仍可垂直捲動故事，不能因恢復水平翻頁而失去閱讀操作。
-   scroll(page,'.pf-text-column',mobile)
+   scroll(page,'.journal-dom-surface' if page.locator('.journal-dom-surface').count() else '.pf-text-column',mobile)
    for selector in ['.pf-photo-column','.pf-text-column']:page.locator(selector).evaluate('(e)=>e.scrollTop=0')
    page.screenshot(path=f'/workspace/work/collage-photo-{width}.png')
    assert page.locator('#diary-screen').evaluate('(e)=>e.scrollTop===0&&e.scrollLeft===0&&e.scrollHeight===e.clientHeight')

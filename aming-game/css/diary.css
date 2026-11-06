@@ -1941,3 +1941,35 @@ body {
 .journal-decoration-layer[hidden],.journal-layout-tools[hidden],.journal-tool-toggle[hidden],.journal-layout-status[hidden] { display:none; }
 .journal-decoration-preview { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; user-select:none; -webkit-user-drag:none; }
 .journal-decoration-layer.is-editing .journal-decoration-preview,.journal-decoration-layer:not(.is-editing) .canvas-container { display:none; }
+
+/* HTML 群組與 Fabric 共用書頁座標；文字只改寬度，不縮小字體。 */
+.journal-dom-object { position:absolute; box-sizing:border-box; transform-origin:center; }
+.journal-dom-object.is-editing { touch-action:none; cursor:move; }
+.journal-dom-content { max-height:var(--dom-max-height); overflow:auto; min-width:0; }
+.journal-dom-content > :is(.diary-entry,.travel-entry,.memory-fragment,.photo-card) { position:relative; inset:auto; float:none; width:100%; max-width:none; height:auto; min-height:0; margin:0; transform:none; box-sizing:border-box; }
+.journal-dom-content .diary-entry { display:block; }
+.journal-dom-content .memory-fragment-image { width:100%; }
+.journal-dom-content .photo-card { aspect-ratio:var(--dom-photo-ratio); display:flex; flex-direction:column; padding:10px 10px 28px; }
+.journal-dom-content .photo-card img { width:100%; height:0; min-height:0; flex:1; object-fit:contain; }
+.journal-dom-content .diary-entry p { font-size:15px; line-height:1.9; }
+.journal-dom-content .travel-entry h2 { font-size:22px; }
+.journal-dom-content #travel-note { width:100%; min-height:120px; box-sizing:border-box; resize:vertical; font-size:15px; }
+.journal-dom-handles { display:none; }
+.journal-dom-object.is-selected.is-editing { outline:1px dashed #987847; }
+.journal-dom-object.is-selected.is-editing > .journal-dom-handles { display:block; }
+.journal-dom-handles button { position:absolute; width:28px; height:28px; padding:0; display:grid; place-items:center; border:1px solid #987847; color:#604a36; background:#fff5de; border-radius:4px; touch-action:none; cursor:grab; }
+.journal-dom-handles [data-dom-handle=move] { top:0; left:0; }
+.journal-dom-handles [data-dom-handle=resize] { bottom:0; right:0; cursor:ew-resize; }
+.journal-dom-handles [data-dom-handle=rotate] { top:0; right:0; }
+.journal-dom-object.is-text .journal-dom-content { overflow-wrap:anywhere; }
+.journal-dom-object.is-editing textarea { cursor:text; touch-action:pan-y; user-select:text; -webkit-user-select:text; }
+.journal-dom-content [role=button] { cursor:pointer; }
+.pf-book[data-journal-mode="read"] .journal-dom-object { user-select:none; -webkit-user-select:none; }
+.journal-photo-caption { position:absolute; z-index:9; margin:0; color:#806d55; text-align:center; font:10px/1.3 serif; pointer-events:none; transform-origin:center; }
+/* 選取 Fabric 物件時，讓其旋轉與角落控制點不被較高的 HTML 群組截住。 */
+.journal-fabric-selected .journal-dom-object.is-editing { pointer-events:none; }
+.journal-tape-swatch::before { content:''; display:block; width:28px; height:12px; background:rgba(201,183,153,.65); transform:rotate(-8deg); }
+.journal-dom-surface { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+.journal-dom-paper { position:relative; min-height:100%; }
+
+@media(orientation:landscape) and (max-height:500px) { .journal-dom-content .diary-entry { display:flex; flex-direction:column; } }

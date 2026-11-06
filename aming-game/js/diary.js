@@ -275,10 +275,10 @@ for(const type of ['mousedown','touchstart'])ctx.on(stage,type,event=>{
   return;
  }
  if(!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}
- const target=event.target, column=target.closest('.pf-rui-column');
+ const target=event.target, column=target.closest('.pf-rui-column,.journal-dom-object,.journal-dom-surface');
  const point=event.touches?.[0]||event, rect=target.closest('.pf-page')?.getBoundingClientRect();
  const edge=rect&&(point.clientX-rect.left<22||rect.right-point.clientX<22);
- const control=target.closest('input,textarea,label,a,button:not(.station-journal)');
+ const control=target.closest('input,textarea,label,a,[role="button"],button:not(.station-journal)');
  // 閱讀模式的照片 label 已停用選檔，視同一般紙面；其餘互動元件照常保護。
  if((control&&!control.matches('.player-photo[aria-disabled="true"]'))||(!column&&!edge&&target.closest('.journal-content,.station-journal'))){event.stopPropagation();return;}
  // 瑞穗內頁讓套件原生區分水平翻頁與垂直閱讀捲動；其他頁維持原設定。
@@ -296,6 +296,10 @@ renderBook(-1);
 
 /* 打開回憶碎片 */
 
+const openMemory=()=>{memoryDrawer.classList.add('show');memoryOverlay.classList.add('show');};
+const collectible=ctx.query('.memory-fragment');collectible.tabIndex=0;collectible.setAttribute('role','button');collectible.setAttribute('aria-label','查看瑞穗回憶碎片');
+ctx.on(collectible,'click',()=>{if(journalEditor.mode==='read')openMemory();});
+ctx.on(collectible,'keydown',e=>{if(journalEditor.mode==='read'&&['Enter',' '].includes(e.key)){e.preventDefault();openMemory();}});
 ctx.on(memoryCount, "click", () => {
 
     memoryDrawer.classList.add("show");
@@ -367,7 +371,11 @@ const playerPhoto =
 
 
 const layoutStatus=document.createElement('p');layoutStatus.className='journal-layout-status';layoutStatus.setAttribute('role','status');layoutStatus.hidden=true;book.append(layoutStatus);
-layoutEditor=JournalLayout.mount({ctx,page:photoColumn.parentElement,toolbar:controls,label:playerPhoto,input:photoInput,preview:photoPreview,
+layoutEditor=JournalLayout.mount({ctx,page:photoColumn.parentElement,toolbar:controls,groups:[
+ {id:'aming-photo',name:'探索乳牛拍立得',node:ctx.query('.photo-card'),side:'left'},
+ {id:'memory-fragment',name:'瑞穗回憶碎片',node:ctx.query('.memory-fragment'),side:'right'},
+ {id:'aming-story',name:'阿明的日記',node:storyEntry,side:'right',text:true},
+ {id:'player-writing',name:'我的旅行心得',node:ctx.query('.travel-entry'),side:'right',text:true}],label:playerPhoto,input:photoInput,preview:photoPreview,
  canEdit:()=>journalEditor.mode==='edit'&&GameProgress.hasMemory('ruisui-01'),
  report:message=>{layoutStatus.textContent=message;layoutStatus.hidden=!message;}});
 ctx.on(playerPhoto,'click',event=>{
