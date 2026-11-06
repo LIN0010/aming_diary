@@ -1929,3 +1929,20 @@ body {
 /* 只限制瑞穗閱讀紙面的瀏覽器選取；編輯模式保留文字游標與選取。 */
 .pf-book[data-journal-mode="read"] .pf-rui-column { user-select:none; -webkit-user-select:none; }
 .pf-book[data-journal-mode="read"] .pf-rui-column img { -webkit-user-drag:none; }
+
+
+/* 個人裝飾層屬於瑞穗左頁，跟隨 StPageFlip；不改動故事與收藏 DOM。 */
+.journal-decoration-layer { position:absolute; inset:0; z-index:8; pointer-events:none; overflow:hidden; }
+.journal-decoration-layer canvas { display:block; max-width:none; max-height:none; }
+.journal-decoration-layer.is-editing,.journal-decoration-layer.is-editing .upper-canvas { pointer-events:auto; }
+.journal-decoration-layer:not(.is-editing) .upper-canvas { pointer-events:none; }
+.pf-book .journal-photo-replaced { visibility:hidden; }
+.journal-layout-tools { position:absolute; left:8px; top:8px; width:min(170px,42%); box-sizing:border-box; z-index:12; display:flex; flex-wrap:wrap; gap:4px; max-height:42%; overflow:auto; padding:6px; background:rgba(250,243,228,.94); border:1px solid #c9b58f; border-radius:6px; box-shadow:0 2px 8px #5e49351a; touch-action:pan-y; }
+.journal-layout-tools button { min-height:36px; padding:4px 8px; border:1px solid #c4ae88; border-radius:4px; background:#eee3cd; color:#604a36; font:12px/1.4 'Noto Serif TC',serif; cursor:pointer; }
+.journal-layout-tools button:hover { background:#e6d5b7; }
+.journal-layout-tools button:disabled { opacity:.45; cursor:default; }
+.journal-layout-tools button:focus-visible { outline:2px solid #8b704b; outline-offset:1px; }
+.journal-layout-status { position:absolute; left:0; right:0; bottom:0; z-index:30; padding:8px; background:#fff3d8; color:#604a36; text-align:center; }
+.journal-decoration-layer[hidden],.journal-layout-tools[hidden],.journal-layout-status[hidden] { display:none; }
+.journal-decoration-preview { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; user-select:none; -webkit-user-drag:none; }
+.journal-decoration-layer.is-editing .journal-decoration-preview,.journal-decoration-layer:not(.is-editing) .canvas-container { display:none; }

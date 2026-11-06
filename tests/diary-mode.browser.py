@@ -46,8 +46,8 @@ try:
    frame=page.locator('.pf-frame').bounding_box();drag(page,mobile);ready(page,11);drag(page,mobile,False);ready(page)
    page.locator('[data-book="edit"]').click();expect(page.locator('[data-book="edit"]')).to_have_text('完成編輯');expect(page.locator('#travel-note')).to_have_value('原有心得\n第二行');expect(page.locator('#travel-note-reading')).to_be_hidden()
    expect(page.locator('#player-photo-input')).to_be_enabled()
-   with page.expect_file_chooser() as selected:page.locator('.player-photo').click()
-   selected.value.set_files(str(ROOT/'aming-game/images/cow.png'));expect(page.locator('#player-photo-preview')).to_be_visible();preview=page.locator('#player-photo-preview').get_attribute('src');assert len(choosers)==1
+   with page.expect_file_chooser() as selected:page.locator('[data-layout="photo"]').click()
+   selected.value.set_files(str(ROOT/'aming-game/images/cow.png'));page.wait_for_function('document.querySelector("#player-photo-preview").src.startsWith("data:image/jpeg")');page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")=="false"');preview=page.locator('#player-photo-preview').get_attribute('src');assert len(choosers)==1
    page.locator('#travel-note').fill('編輯後的旅程\n保留換行與 <文字>')
    drag(page,mobile);page.wait_for_timeout(400);assert page.evaluate('testBook.getCurrentPageIndex()')==9 and page.evaluate('testBook.getState()')=='read'
    drag(page,mobile,True,'#travel-note');page.wait_for_timeout(400);ready(page)

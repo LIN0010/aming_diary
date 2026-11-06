@@ -54,15 +54,15 @@ try:
    page.screenshot(path=f'/workspace/work/collage-empty-{width}.png')
    page.locator('.player-photo').scroll_into_view_if_needed()
    page.locator('[data-book="edit"]').click()
-   with page.expect_file_chooser() as chooser:page.locator('.player-photo').click()
+   with page.expect_file_chooser() as chooser:page.locator('[data-layout="photo"]').click()
    chooser.value.set_files({'name':'portrait.svg','mimeType':'image/svg+xml','buffer':b'<svg xmlns="http://www.w3.org/2000/svg" width="160" height="320"><rect width="160" height="320" fill="#d5c7aa"/></svg>'})
-   expect(page.locator('.player-photo')).to_have_class(re.compile('has-photo'));picture(page,'#player-photo-preview')
+   expect(page.locator('.player-photo')).to_have_class(re.compile('has-photo'));page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")=="false"');picture(page,'#player-photo-preview')
    portrait_frame=page.locator('.player-photo').bounding_box()
    assert abs(portrait_frame['width']-player['width'])<1 and abs(portrait_frame['height']-player['height'])<1
    scroll(page,'.pf-photo-column',mobile);scroll(page,'.pf-text-column',mobile)
    page.locator('.memory-fragment-info').scroll_into_view_if_needed();r=page.locator('.memory-fragment-info').bounding_box();col=page.locator('.pf-text-column').bounding_box();assert r['y']>=col['y'] and r['y']+r['height']<=col['y']+col['height']+1
    page.locator('#travel-note').fill('照片左頁、故事右頁的心得');page.locator('[data-book="edit"]').click();assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='照片左頁、故事右頁的心得'
-   page.locator('[data-book="edit"]').click();page.locator('#player-photo-input').set_input_files({'name':'landscape.svg','mimeType':'image/svg+xml','buffer':b'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120"><rect width="320" height="120" fill="#b7c2b0"/></svg>'});picture(page,'#player-photo-preview');page.locator('[data-book="edit"]').click()
+   page.locator('[data-book="edit"]').click();page.locator('#player-photo-input').set_input_files({'name':'landscape.svg','mimeType':'image/svg+xml','buffer':b'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="120"><rect width="320" height="120" fill="#b7c2b0"/></svg>'});page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")=="false"');picture(page,'#player-photo-preview');page.locator('[data-book="edit"]').click()
    # 閱讀模式仍可垂直捲動故事，不能因恢復水平翻頁而失去閱讀操作。
    scroll(page,'.pf-text-column',mobile)
    for selector in ['.pf-photo-column','.pf-text-column']:page.locator(selector).evaluate('(e)=>e.scrollTop=0')
@@ -77,7 +77,7 @@ try:
      c.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});c.detach()
     else:page.mouse.move(x,y);page.mouse.down();page.mouse.move(x+dx,y,steps=18);page.mouse.up()
     page.wait_for_function('(i)=>testBook.getState()==="read"&&testBook.getCurrentPageIndex()===i',arg=destination)
-   page.locator('.pf-index-tab').click();ready(page);page.locator('#ruisui-journal').click();ready(page);picture(page,'#player-photo-preview');expect(page.locator('#travel-note')).to_have_value('照片左頁、故事右頁的心得');assert page.evaluate('engineCount')==1
+   page.locator('.pf-index-tab').click();ready(page);page.locator('#ruisui-journal').click();ready(page);expect(page.locator('.journal-decoration-preview')).to_be_visible();expect(page.locator('#travel-note')).to_have_value('照片左頁、故事右頁的心得');assert page.evaluate('engineCount')==1
    assert page.locator('.pf-undiscovered-lock svg').count()==12
    page.reload(wait_until='domcontentloaded');page.wait_for_function('window.testBook&&testBook.getCurrentPageIndex()===9');ready(page);expect(page.locator('#travel-note')).to_have_value('照片左頁、故事右頁的心得');assert not errors,errors
    context.close();print('PASS photo/text spread',width,height,flush=True)

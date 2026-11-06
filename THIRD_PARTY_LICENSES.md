@@ -39,3 +39,34 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Fabric.js（npm: fabric）
+
+- 版本：5.3.0（發布包 package.json 與瀏覽器版本標記核對）
+- 作者：Juriy Zaytsev；著作權人見下列原文
+- 官方 GitHub：https://github.com/fabricjs/fabric.js
+- 授權：MIT
+- 發布來源：https://cdn.jsdelivr.net/npm/fabric@5.3.0/
+- 使用檔案：`aming-game/vendor/fabric/fabric.min.js`
+- 原始授權副本：`aming-game/vendor/fabric/LICENSE`
+
+以下為發布包 LICENSE 原文：
+
+```text
+Copyright (c) 2008-2015 Printio (Juriy Zaytsev, Maxim Chernyak)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

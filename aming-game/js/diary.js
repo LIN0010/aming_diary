@@ -81,8 +81,9 @@ const stage=document.createElement('div');stage.className='pf-stage';frame.appen
 const controls=document.createElement('nav');controls.className='pf-actions';controls.setAttribute('aria-label','日記操作');
 controls.innerHTML='<button type="button" class="pf-index-tab" data-book="index" hidden aria-label="返回目錄" title="返回目錄">目錄</button><button type="button" data-book="close">闔上日記</button><button type="button" data-book="edit" hidden aria-pressed="false">編輯手帳</button><span role="status" aria-live="polite"></span>';
 const indexBookmark=controls.querySelector('[data-book="index"]');
-// 編輯器整合邊界：未來照片／貼紙工具共用模式與手勢閘門，不在本次新增排版資料。
+// 心得與個人裝飾編輯器共用模式及手勢閘門，仍保留原 HTML 書頁。
 const journalEditor={mode:'read',station:'ruisui'};
+let layoutEditor;
 const editToggle=controls.querySelector('[data-book="edit"]');
 const noteReading=document.createElement('div');noteReading.id='travel-note-reading';noteReading.className='travel-note-reading';
 travelNote.before(noteReading);travelNote.hidden=true;travelNote.readOnly=true;saveTravel.hidden=true;
@@ -94,6 +95,7 @@ function syncJournalMode(){
  ctx.id('player-photo-input').disabled=!editing||!unlocked;
  ctx.query('.player-photo').setAttribute('aria-disabled',String(!editing||!unlocked));
  book.dataset.journalMode=journalEditor.mode;
+ layoutEditor?.setMode(editing);
  editToggle.textContent=editing?'完成編輯':'編輯手帳';editToggle.setAttribute('aria-pressed',String(editing));
  editToggle.hidden=!(readingActive&&engine?.getCurrentPageIndex()===9&&unlocked);
 }
@@ -102,7 +104,7 @@ function changeJournalMode(next){
  if(next==='edit'){
   if(!readingActive||engine.getCurrentPageIndex()!==9||!GameProgress.hasMemory('ruisui-01'))return false;
   travelNote.value=GameProgress.snapshot().notes[journalEditor.station]||'';
- }else if(journalEditor.mode==='edit'&&!saveTravelNote())return false;
+ }else if(journalEditor.mode==='edit'&&(!layoutEditor?.save()||!saveTravelNote()))return false;
  journalEditor.mode=next;syncJournalMode();return true;
 }
 diaryIndex.before(book);book.append(indexBookmark,frame,controls);stationDiary.remove();
@@ -263,7 +265,11 @@ ctx.on(cover,'click',()=>{if(!readingActive)turnTo(0);});
 ctx.on(backCover,'click',()=>{if(!readingActive)turnTo(6);});
 // 封面先放大、同步尺寸再翻開；閱讀內容可拖曳，真正的操作元件保留事件。
 for(const type of ['mousedown','touchstart'])ctx.on(stage,type,event=>{
- if(journalEditor.mode==='edit'||!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}
+ if(journalEditor.mode==='edit'){
+  if(!event.target.closest('.journal-decoration-layer,.journal-layout-tools'))event.stopImmediatePropagation();
+  return;
+ }
+ if(!readingActive||flipping||layoutPhase||noteDirty&&!saveTravelNote()) {event.stopImmediatePropagation();return;}
  const target=event.target, column=target.closest('.pf-rui-column');
  const point=event.touches?.[0]||event, rect=target.closest('.pf-page')?.getBoundingClientRect();
  const edge=rect&&(point.clientX-rect.left<22||rect.right-point.clientX<22);
@@ -355,31 +361,15 @@ const playerPhoto =
     ctx.query(".player-photo");
 
 
-let previewURL;
-
-ctx.on(playerPhoto, 'click', event => {
-    if(journalEditor.mode!=='edit'||!GameProgress.hasMemory('ruisui-01')){event.preventDefault();event.stopImmediatePropagation();}
-}, {capture:true});
-ctx.on(photoInput, "change", () => {
-    // 防止檔案選擇器開啟後切回閱讀模式，仍套用遲到的選檔結果。
-    if(journalEditor.mode!=='edit'||!GameProgress.hasMemory('ruisui-01')){photoInput.value='';return;}
-
-    const file = photoInput.files[0];
-
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-        window.alert("請選擇圖片檔案。");
-        return;
-    }
-    if (previewURL) URL.revokeObjectURL(previewURL);
-    previewURL = URL.createObjectURL(file);
-    photoPreview.src = previewURL;
-
-    playerPhoto.classList.add("has-photo");
-
-});
-
+const layoutStatus=document.createElement('p');layoutStatus.className='journal-layout-status';layoutStatus.setAttribute('role','status');layoutStatus.hidden=true;book.append(layoutStatus);
+layoutEditor=JournalLayout.mount({ctx,page:photoColumn.parentElement,label:playerPhoto,input:photoInput,preview:photoPreview,
+ canEdit:()=>journalEditor.mode==='edit'&&GameProgress.hasMemory('ruisui-01'),
+ report:message=>{layoutStatus.textContent=message;layoutStatus.hidden=!message;}});
+ctx.on(playerPhoto,'click',event=>{
+ if(journalEditor.mode!=='edit'||!GameProgress.hasMemory('ruisui-01')){event.preventDefault();event.stopImmediatePropagation();}
+},{capture:true});
+ctx.on(photoInput,'change',()=>layoutEditor.upload(photoInput.files[0]));
+syncJournalMode();
 
 /* ==========================
    儲存旅行心得
@@ -422,14 +412,14 @@ ctx.on(travelNote, "input", () => {
 ctx.on(travelNote, "blur", () => { if (noteDirty) saveTravelNote(); });
 ctx.on(saveTravel, "click", saveTravelNote);
 ctx.on(window, "beforeunload", event => {
-    if (noteDirty && !saveTravelNote()) {
+    if (layoutEditor.busy || (layoutEditor.dirty && !layoutEditor.save()) || (noteDirty && !saveTravelNote())) {
         event.preventDefault();
         event.returnValue = "";
     }
 });
 ctx.on(window, "pagehide", event => {
     if (noteDirty) saveTravelNote();
-    if (!event.persisted && previewURL) URL.revokeObjectURL(previewURL);
+    if (layoutEditor.dirty) layoutEditor.save();
 });
 
 /* ==========================
@@ -504,7 +494,7 @@ if (station === "ruisui") ctx.delay(()=>turnTo(4),0);
 if (params.get("memories") === "1") memoryCount.click();
 
 // 切換場景前先存心得；失敗時保留原畫面與文字。
-ctx.beforeLeave(() => !noteDirty || saveTravelNote());
-ctx.cleanup(() => { if (previewURL) URL.revokeObjectURL(previewURL); });
+ctx.beforeLeave(() => !layoutEditor.busy && (!layoutEditor.dirty || layoutEditor.save()) && (!noteDirty || saveTravelNote()));
+
 
 });
