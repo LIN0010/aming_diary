@@ -11,6 +11,7 @@ class Quiet(SimpleHTTPRequestHandler):
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(ROOT/'aming-game')));Thread(target=server.serve_forever,daemon=True).start()
 def ready(page,index=9):page.wait_for_function('(i)=>window.testBook&&testBook.getCurrentPageIndex()===i&&testBook.getState()==="read"&&!document.querySelector(".pf-book").hasAttribute("aria-busy")',arg=index)
 def tool(page,action):
+ if page.locator(".journal-layout-tools").is_hidden() and page.locator(".journal-tool-toggle").is_visible():page.locator(".journal-tool-toggle").click()
  if action in ['compass','journal'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
@@ -44,6 +45,9 @@ try:
    r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();initial=page.evaluate('({x:testCanvas.getObjects()[0].left/testCanvas.getWidth(),y:testCanvas.getObjects()[0].top/800})');drag(page,r['x']+r['width']*initial['x'],r['y']+r['height']*initial['y'],-r['width']*.10,-r['height']*.06,mobile)
    control(page,'mtr',22,10,mobile);control(page,'tr',12,-12,mobile)
    tool(page,'compass').click();layer_ready(page);tool(page,'journal').click();layer_ready(page)
+   # 圖示在左、繁中在右，標籤同一行且按鈕位於書頁外。
+   for action,label in [('photo','新增照片'),('stickers','新增貼紙'),('delete','刪除裝飾'),('undo','復原上一步'),('reset','恢復預設')]:
+    b=page.locator(f'[data-layout="{action}"]');expect(b).to_have_attribute('aria-label',label);icon=b.locator('svg').bounding_box();text=b.locator('.journal-tool-name').bounding_box();assert icon['x']+icon['width']<=text['x'] and abs(icon['y']+icon['height']/2-text['y']-text['height']/2)<2
    # 工具列在書頁右側，且沒有旋轉／縮放／選取模式按鈕。
    rail=page.locator('.pf-actions').bounding_box();book=page.locator('.pf-stage').bounding_box();assert rail['x']>=book['x']+book['width'] and rail['x']+rail['width']<=w
    assert page.locator('[data-layout=rotate],[data-layout=smaller],[data-layout=larger],[data-layout=select]').count()==0

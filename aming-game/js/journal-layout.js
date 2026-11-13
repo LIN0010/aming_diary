@@ -3,7 +3,7 @@
  'use strict';
  const KEY='aming-diary-journal-layouts', W=600, H=800;
  const PHOTO_UPLOAD={width:.64,height:.60};
- const ASSETS=Object.freeze({compass:'images/guild-compass.png',journal:'images/guild-journal.png',tape:null});
+ const ASSETS=Object.freeze({compass:{src:'images/guild-compass.png',label:'指南針貼紙'},journal:{src:'images/guild-journal.png',label:'手帳貼紙'},tape:{src:null,label:'紙膠帶'}});
  const clone=x=>JSON.parse(JSON.stringify(x));
  const paths={done:'m5 12 4 4L20 5',close:'M9 6 3 12l6 6M3 12h13a5 5 0 0 0 5-5',edit:'m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5',photo:'M3 5h18v16H3ZM7 5l2-3h6l2 3M8 13a4 4 0 1 0 8 0 4 4 0 1 0-8 0',sticker:'M3 3h18v12l-6 6H3ZM15 21v-6h6M7 8h2m5 0h2M8 12q4 4 8 0',delete:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',undo:'M9 4 3 10l6 6M3 10h11a7 7 0 0 1 7 7',reset:'M3 11a9 9 0 1 1 2 7M3 3v8h8',more:'m8 4 8 8-8 8'};
  function button(node,label,icon){if(node.getAttribute('aria-label')===label&&node.querySelector('svg'))return;node.title=label;node.setAttribute('aria-label',label);node.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[icon]||paths.edit}"/></svg><span class="journal-tool-name"></span>`;node.querySelector('span').textContent=label;}
@@ -19,9 +19,9 @@
   function captionSync(){const o=canvas?.getObjects().find(o=>o.journalType==='photo');if(!o)return;const owner=o.journalPage||'left';(editing?spread.host:spread.pages[owner]).append(caption);const x=o.left-(editing?0:spread.offset(owner));const base=editing?W*2:W;const a=o.angle*Math.PI/180,dy=75*o.scaleX;caption.hidden=layer.hidden;caption.style.left=(x-Math.sin(a)*dy)/base*100+'%';caption.style.top=(o.top+Math.cos(a)*dy)/H*100+'%';caption.style.width=210*o.scaleX/base*100+'%';caption.style.transform=`translate(-50%,-50%) rotate(${o.angle}deg)`;}
   const tools=document.createElement('div');tools.className='journal-layout-tools';tools.hidden=true;tools.setAttribute('role','toolbar');tools.setAttribute('aria-label','手帳裝飾編輯');
   tools.id='journal-edit-tools';
-  for(const [action,name,icon] of [['photo','新增旅行照片','photo'],['stickers','新增貼紙','sticker'],['delete','刪除選取的個人裝飾','delete'],['undo','復原上一步','undo'],['reset','恢復官方預設排版','reset']]){const item=document.createElement('button');item.type='button';item.dataset.layout=action;button(item,name,icon);tools.append(item);}
+  for(const [action,name,icon] of [['photo','新增照片','photo'],['stickers','新增貼紙','sticker'],['delete','刪除裝飾','delete'],['undo','復原上一步','undo'],['reset','恢復預設','reset']]){const item=document.createElement('button');item.type='button';item.dataset.layout=action;button(item,name,icon);tools.append(item);}
   const picker=document.createElement('div');picker.className='journal-sticker-picker';picker.id='journal-sticker-picker';picker.hidden=true;picker.setAttribute('role','group');picker.setAttribute('aria-label','選擇貼紙');
-  for(const [id,name] of [['compass','指南針貼紙'],['journal','手帳貼紙'],['tape','紙膠帶']]){const item=document.createElement('button');item.type='button';item.dataset.layout=id;item.title=name;item.setAttribute('aria-label',name);const img=document.createElement('img');if(id==='tape'){item.className='journal-tape-swatch';}else img.src=ASSETS[id];img.alt='';img.width=28;img.height=28;if(id!=='tape')item.append(img);picker.append(item);}
+  for(const [id,asset] of Object.entries(ASSETS)){const item=document.createElement('button');item.type='button';item.dataset.layout=id;item.title=asset.label;item.setAttribute('aria-label',asset.label);const img=document.createElement('img');if(id==='tape'){item.className='journal-tape-swatch';}else img.src=asset.src;img.alt='';img.width=28;img.height=28;if(id!=='tape')item.append(img);const name=document.createElement('span');name.className='journal-tool-name';name.textContent=asset.label;item.append(name);picker.append(item);}
   tools.querySelector('[data-layout="stickers"]').after(picker);
   const stickerToggle=tools.querySelector('[data-layout="stickers"]');stickerToggle.setAttribute('aria-controls',picker.id);stickerToggle.setAttribute('aria-expanded','false');
   toolbar.append(tools);
@@ -60,7 +60,7 @@
    const selected=canvas?.getActiveObject();
    tools.querySelector('[data-layout="delete"]').disabled=!!busy||domEditor?.selected||!selected||selected.journalType!=='sticker';
    tools.querySelector('[data-layout="undo"]').disabled=!!busy||!history.length;
-   for(const name of ['reset','compass','journal','tape','photo','stickers'])tools.querySelector(`[data-layout="${name}"]`).disabled=!!busy;
+   for(const name of ['reset','photo','stickers',...Object.keys(ASSETS)])tools.querySelector(`[data-layout="${name}"]`).disabled=!!busy;
    layer.setAttribute('aria-busy',String(!!busy));
   }
   function bound(o){o.scale(Math.max(.12,Math.min(2.5,o.scaleX)));spread.fit(o,o.journalPage||'left');}
@@ -79,7 +79,7 @@
     parts.push(new fabric.Rect({left:-35,top:-97,width:70,height:18,angle:-4,fill:'rgba(201,183,153,.65)'}));
     result=new fabric.Group(parts,{originX:'center',originY:'center'});
    }else if(record.source==='tape'){result=new fabric.Rect({width:100,height:26,fill:'rgba(201,183,153,.65)',originX:'center',originY:'center'});}
-   else{result=await image(ASSETS[record.source]);result.scaleToWidth(90);result=new fabric.Group([result],{originX:'center',originY:'center'});}
+   else{result=await image(ASSETS[record.source].src);result.scaleToWidth(90);result=new fabric.Group([result],{originX:'center',originY:'center'});}
    result.set({left:record.x*W+spread.offset(record.page),top:record.y*H,scaleX:record.scale,scaleY:record.scale,angle:record.angle,cornerColor:'#b99358',borderColor:'#987847',cornerSize:14,transparentCorners:false,lockScalingFlip:true});
    if(record.type==='photo'&&!photo){
     // 與 photoCenter 共用範圍，僅在既有群組內加入底色，不改變群組外框或尺寸。

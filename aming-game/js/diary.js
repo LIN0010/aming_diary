@@ -86,7 +86,7 @@ const journalEditor={mode:'read',station:'ruisui'};
 let layoutEditor;
 const editToggle=controls.querySelector('[data-book="edit"]');
 JournalLayout.button(controls.querySelector('[data-book="close"]'),'闔上日記','close');
-const toolToggle=document.createElement('button');toolToggle.type='button';toolToggle.className='journal-tool-toggle';JournalLayout.button(toolToggle,'展開／收合編輯工具','more');toolToggle.setAttribute('aria-controls','journal-edit-tools');toolToggle.setAttribute('aria-expanded','false');controls.append(toolToggle);
+const toolToggle=document.createElement('button');toolToggle.type='button';toolToggle.className='journal-tool-toggle';JournalLayout.button(toolToggle,'編輯工具','more');toolToggle.setAttribute('aria-controls','journal-edit-tools');toolToggle.setAttribute('aria-expanded','false');controls.append(toolToggle);
 ctx.on(toolToggle,'click',()=>{const open=controls.classList.toggle('tools-expanded');toolToggle.setAttribute('aria-expanded',String(open));});
 const noteReading=document.createElement('div');noteReading.id='travel-note-reading';noteReading.className='travel-note-reading';
 travelNote.before(noteReading);travelNote.hidden=true;travelNote.readOnly=true;saveTravel.hidden=true;
@@ -206,7 +206,8 @@ function scheduleBookLayout(){
  if(disposed||layoutFrame)return;
  layoutFrame=requestAnimationFrame(()=>{
   layoutFrame=0;if(disposed)return;
-  controls.classList.toggle('is-compact',book.getBoundingClientRect().right+78>document.documentElement.clientWidth);
+  const railGutter=(document.documentElement.clientWidth-book.getBoundingClientRect().width)/2,railShift=Math.max(0,144-railGutter),compactRail=railShift>railGutter-48;
+  book.style.setProperty('--journal-rail-shift',compactRail?'0px':railShift+'px');controls.classList.toggle('is-compact',compactRail);
   const size=measureBook(),key=`${size.width}x${size.height}`;
   if(size.width<2||size.height<2)return;
   // 等連續兩個繪製週期取得相同尺寸，避開Safari旋轉過渡值。
