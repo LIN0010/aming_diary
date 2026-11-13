@@ -15,7 +15,7 @@ def tool(page,action):
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
  point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
- drag(page,r['x']+point['x']/600*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
+ drag(page,r['x']+point['x']/page.evaluate('testCanvas.getWidth()')*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
 
 def layer_ready(page):page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")==="false"')
 def drag(page,x,y,dx,dy,mobile):
@@ -34,7 +34,7 @@ try:
    page.goto(f'http://127.0.0.1:{server.server_port}/game.html#/diary?station=ruisui');ready(page);page.evaluate('GameProgress.completeRuisui()')
    def click_at(x,y):page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
    def photo_point(frame=False,reading=False):
-    o=page.evaluate('(()=>{const o=testCanvas.getObjects()[0];const p=fabric.util.transformPoint(new fabric.Point('+('105' if frame else '0')+',0),o.calcTransformMatrix());return {x:p.x/600,y:p.y/800}})()');r=page.locator('.journal-decoration-layer' if reading else '.journal-decoration-layer .upper-canvas').bounding_box();return r['x']+o['x']*r['width'],r['y']+o['y']*r['height']
+    o=page.evaluate('(()=>{const o=testCanvas.getObjects()[0];const p=fabric.util.transformPoint(new fabric.Point('+('105' if frame else '0')+',0),o.calcTransformMatrix());return {x:p.x/testCanvas.getWidth(),y:p.y/800}})()');r=page.locator('.journal-decoration-layer' if reading else '.journal-decoration-layer .upper-canvas').bounding_box();o['x']*=2 if reading else 1;return r['x']+o['x']*r['width'],r['y']+o['y']*r['height']
    page.locator('[data-book="edit"]').click();layer_ready(page)
    empty=page.evaluate('(()=>{const o=testCanvas.getObjects()[0],r=o.getObjects().find(c=>c.fill==="#E1D5BD");return {width:o.width,height:o.height,rx:r.width/o.width,ry:r.height/o.height}})()');assert abs(empty['rx']-.64)<.0001 and abs(empty['ry']-.60)<.0001
    if not mobile:

@@ -15,7 +15,7 @@ def tool(page,action):
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
  point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
- drag(page,r['x']+point['x']/600*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
+ drag(page,r['x']+point['x']/page.evaluate('testCanvas.getWidth()')*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
 
 def layer_ready(page):page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")==="false"')
 def drag(page,x,y,dx,dy,mobile):
@@ -35,7 +35,7 @@ try:
    page.locator('[data-book="edit"]').click();layer_ready(page)
    assert page.locator('[data-dom-object="aming-photo"]').count()==0
    for kind in ['official-photo','photo']:
-    o=page.evaluate('(kind)=>{const o=testCanvas.getObjects().find(o=>o.journalType===kind);return {x:o.left/600,y:o.top/800,scale:o.scaleX,angle:o.angle}}',kind)
+    o=page.evaluate('(kind)=>{const o=testCanvas.getObjects().find(o=>o.journalType===kind);return {x:o.left/testCanvas.getWidth(),y:o.top/800,scale:o.scaleX,angle:o.angle}}',kind)
     r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();drag(page,r['x']+o['x']*r['width'],r['y']+o['y']*r['height'],14,10,mobile)
     assert page.evaluate('testCanvas.getActiveObject()?.journalType')==kind
     control(page,'mtr',20,10,mobile);control(page,'tr',12,-12,mobile)

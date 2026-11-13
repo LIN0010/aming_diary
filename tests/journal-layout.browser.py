@@ -15,7 +15,7 @@ def tool(page,action):
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
  point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
- drag(page,r['x']+point['x']/600*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
+ drag(page,r['x']+point['x']/page.evaluate('testCanvas.getWidth()')*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
 
 def layer_ready(page):page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")==="false"')
 def drag(page,x,y,dx,dy,mobile):
@@ -41,14 +41,14 @@ try:
    chooser.value.set_files(str(ROOT/'aming-game/images/cow.png'));layer_ready(page)
    page.wait_for_function('document.querySelector("#player-photo-preview").src.startsWith("data:image/jpeg")')
    # 照片與拍立得為同一組，實際拖動及旋轉縮放後一起保存。
-   r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();initial=page.evaluate('({x:testCanvas.getObjects()[0].left/600,y:testCanvas.getObjects()[0].top/800})');drag(page,r['x']+r['width']*initial['x'],r['y']+r['height']*initial['y'],-r['width']*.10,-r['height']*.06,mobile)
+   r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();initial=page.evaluate('({x:testCanvas.getObjects()[0].left/testCanvas.getWidth(),y:testCanvas.getObjects()[0].top/800})');drag(page,r['x']+r['width']*initial['x'],r['y']+r['height']*initial['y'],-r['width']*.10,-r['height']*.06,mobile)
    control(page,'mtr',22,10,mobile);control(page,'tr',12,-12,mobile)
    tool(page,'compass').click();layer_ready(page);tool(page,'journal').click();layer_ready(page)
    # 工具列在書頁右側，且沒有旋轉／縮放／選取模式按鈕。
    rail=page.locator('.pf-actions').bounding_box();book=page.locator('.pf-stage').bounding_box();assert rail['x']>=book['x']+book['width'] and rail['x']+rail['width']<=w
    assert page.locator('[data-layout=rotate],[data-layout=smaller],[data-layout=larger],[data-layout=select]').count()==0
    # Fabric 原生控制與滑鼠／觸控拖曳，使用實際上層 canvas，不呼叫搬移 API。
-   canvas=page.locator('.journal-decoration-layer .upper-canvas');r=canvas.bounding_box();x=r['x']+r['width']*.4;y=r['y']+r['height']*.55
+   canvas=page.locator('.journal-decoration-layer .upper-canvas');r=canvas.bounding_box();x=r['x']+r['width']*.2;y=r['y']+r['height']*.55
    drag(page,x,y,r['width']*.18,-r['height']*.12,mobile);assert page.evaluate('testBook.getCurrentPageIndex()')==9
    control(page,'mtr',22,10,mobile);control(page,'tr',12,-12,mobile);tool(page,'undo').click();layer_ready(page)
    tool(page,'delete').click() if tool(page,'delete').is_enabled() else None
@@ -60,14 +60,14 @@ try:
    assert page.evaluate('testCanvas.getActiveObject()==null');expect(tool(page,'delete')).to_be_disabled()
    page.locator('#travel-note').fill('保留的瑞穗心得');page.locator('[data-book="edit"]').click();expect(page.locator('#travel-note')).to_be_hidden();expect(page.locator('.journal-layout-tools')).to_be_hidden()
    saved=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui');assert saved['photo'].startswith('data:image/jpeg');assert len(saved['objects'])>=2
-   frame=saved['objects'][0];assert frame['type']=='photo' and frame['x']<initial['x']-.05 and abs(frame['angle']-3)>1,frame
+   frame=saved['objects'][0];assert frame['type']=='photo' and frame['x']<initial['x']*2-.05 and abs(frame['angle']-3)>1,frame
    assert any(o['type']=='sticker' and abs(o['x']-.4)>.05 for o in saved['objects']),saved['objects']
    assert any(o['type']=='sticker' and abs(o['angle']+8)>1 for o in saved['objects']),saved['objects']
    expect(page.locator('.journal-decoration-preview')).to_be_visible();assert page.evaluate('engineCount')==1
    # 反向翻動時使用 DOM 複本：閱讀投影仍有可複製的 data 圖片。
-   page.evaluate('testBook.flipPrev()');page.wait_for_function('testBook.getState()!=="read"')
+   page.evaluate('()=>{window.flipStates=[];testBook.on("changeState",e=>flipStates.push(e.data));testBook.flipPrev()}')
    assert page.locator('.journal-decoration-preview').count()>=1
-   ready(page,7);page.evaluate('testBook.flipNext()');ready(page)
+   ready(page,7);assert page.evaluate('flipStates.includes("flipping")');page.evaluate('testBook.flipNext()');ready(page)
    page.locator('[data-book="close"]').click();ready(page,0);page.locator('.pf-scrapbook-cover').click();ready(page,1);page.locator('#ruisui-journal').click();ready(page)
    assert page.evaluate('engineCount')==1
    page.wait_for_function("location.hash.includes('station=ruisui')");page.reload();ready(page);page.wait_for_function('document.querySelector(".journal-decoration-preview").src.startsWith("data:image/png")')

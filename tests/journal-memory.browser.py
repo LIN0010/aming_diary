@@ -15,7 +15,7 @@ def tool(page,action):
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
  point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.upper-canvas').bounding_box()
- drag(page,r['x']+point['x']/600*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
+ drag(page,r['x']+point['x']/page.evaluate('testCanvas.getWidth()')*r['width'],r['y']+point['y']/800*r['height'],dx,dy,mobile)
 
 def layer_ready(page):page.wait_for_function('document.querySelector(".journal-decoration-layer").getAttribute("aria-busy")==="false"')
 def drag(page,x,y,dx,dy,mobile):
@@ -36,8 +36,8 @@ try:
    page.evaluate('window.testCanvas=canvases.find(c=>c.lowerCanvasEl.closest(".journal-memory-layer"))')
    expect(page.locator('[data-dom-object="memory-fragment"]')).to_have_count(0)
    def transform(name,dx,dy):
-    q=page.evaluate('(n)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[n].x,y:o.oCoords[n].y}}',name);r=page.locator('.journal-memory-layer .upper-canvas').bounding_box();drag(page,r['x']+q['x']/600*r['width'],r['y']+q['y']/800*r['height'],dx,dy,mobile)
-   r=page.locator('.journal-memory-layer .upper-canvas').bounding_box();o=page.evaluate('({x:testCanvas.getObjects()[0].left/600,y:testCanvas.getObjects()[0].top/800,angle:testCanvas.getObjects()[0].angle,scale:testCanvas.getObjects()[0].scaleX})')
+    q=page.evaluate('(n)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[n].x,y:o.oCoords[n].y}}',name);r=page.locator('.journal-memory-layer .upper-canvas').bounding_box();drag(page,r['x']+q['x']/page.evaluate('testCanvas.getWidth()')*r['width'],r['y']+q['y']/800*r['height'],dx,dy,mobile)
+   r=page.locator('.journal-memory-layer .upper-canvas').bounding_box();o=page.evaluate('({x:testCanvas.getObjects()[0].left/testCanvas.getWidth(),y:testCanvas.getObjects()[0].top/800,angle:testCanvas.getObjects()[0].angle,scale:testCanvas.getObjects()[0].scaleX})')
    drag(page,r['x']+o['x']*r['width'],r['y']+o['y']*r['height'],-20,-10,mobile);assert page.evaluate('!!testCanvas.getActiveObject()')
    transform('mtr',15,12);transform('tr',-12,8)
    assert page.evaluate('testBook.getCurrentPageIndex()')==9
