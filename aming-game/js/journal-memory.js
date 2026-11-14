@@ -19,11 +19,15 @@
    const n=node.getBoundingClientRect(),p=page.getBoundingClientRect(),width=node.offsetWidth/p.width*W;
    defaults={id:'memory-fragment',type:'memory',source:'ruisui-memory-01',page:'right',x:(n.left+n.width/2-p.left)/p.width,y:(n.top+n.height/2-p.top)/p.height,scale:width/120,angle:-3,order:20};
    if(!record){record={...defaults};if(legacy){record.x=legacy.x+legacy.width/2;record.y=legacy.y+legacy.width*.75*(node.offsetHeight/node.offsetWidth)/2;record.scale=legacy.width*W/120;record.angle=legacy.angle;}}
+   // Fabric 的來源節點仍供收藏事件使用，但不能再佔故事的文字流。
+   // 在移動前記住原字級／寬度；不改動實際圖片、預設位置或收藏事件。
+   const sourceWidth=node.offsetWidth,smallFont=parseFloat(getComputedStyle(node.querySelector('small')).fontSize),strongFont=parseFloat(getComputedStyle(node.querySelector('strong')).fontSize);
+   node.style.visibility='hidden';node.style.position='absolute';node.style.left='0';node.style.top='0';node.style.width=sourceWidth+'px';page.append(node);
    busy=true;fabric.Image.fromURL(node.querySelector('img').src,img=>{
     if(dead)return;if(!img?.width){busy=false;report('回憶碎片圖片載入失敗，請重試。');return;}
     img.scaleToWidth(120);img.set({left:0,top:0,originX:'center',originY:'top'});
-    const small=node.querySelector('small'),strong=node.querySelector('strong'),fontScale=120/node.offsetWidth;
-    const labels=[new fabric.Text(small.textContent.trim(),{fontSize:parseFloat(getComputedStyle(small).fontSize)*fontScale,fill:'#71877a',originX:'center',left:0,top:img.getScaledHeight()+5}),new fabric.Text(strong.textContent.trim(),{fontSize:parseFloat(getComputedStyle(strong).fontSize)*fontScale,fill:'#71877a',originX:'center',left:0,top:img.getScaledHeight()+19})];
+    const small=node.querySelector('small'),strong=node.querySelector('strong'),fontScale=120/sourceWidth;
+    const labels=[new fabric.Text(small.textContent.trim(),{fontSize:smallFont*fontScale,fill:'#71877a',originX:'center',left:0,top:img.getScaledHeight()+5}),new fabric.Text(strong.textContent.trim(),{fontSize:strongFont*fontScale,fill:'#71877a',originX:'center',left:0,top:img.getScaledHeight()+19})];
     group=new fabric.Group([img,new fabric.Text(node.querySelector('.memory-fragment-info > span').textContent.trim(),{fontSize:15*fontScale,fill:'#71877a',left:-58,top:img.getScaledHeight()+7}),...labels],{originX:'center',originY:'center',cornerColor:'#b99358',borderColor:'#987847',cornerSize:14,transparentCorners:false,lockScalingFlip:true});
     canvas=new fabric.Canvas(el,{width:W*2,height:H,selection:false,preserveObjectStacking:true,enableRetinaScaling:true});canvas.add(group);
     canvas.on('before:transform',beforeChange);for(const name of ['object:moving','object:scaling','object:rotating'])canvas.on(name,()=>{if(name!=='object:moving')constrain();placement();});canvas.on('object:modified',()=>{spread.snap(group);placement();record=capture();onChange();});
@@ -31,7 +35,7 @@
     node.style.visibility='hidden';busy=false;apply(record);sync(editing);
    });
   }
-  function sync(value){editing=value;const unlocked=GameProgress.hasMemory('ruisui-01');if(unlocked&&(editing||record))initialize();layer.hidden=!unlocked||!canvas;opposite.hidden=!unlocked||!canvas||editing;if(canvas){(editing?spread.host:page).append(layer);layer.classList.toggle('is-editing',editing);canvas.skipTargetFind=!editing;if(!editing){canvas.discardActiveObject();publish();}resize();hit.hidden=editing||!unlocked;}}
+  function sync(value,prepare=false){editing=value;const unlocked=GameProgress.hasMemory('ruisui-01');if(unlocked&&(editing||record||prepare))initialize();layer.hidden=!unlocked||!canvas;opposite.hidden=!unlocked||!canvas||editing;if(canvas){(editing?spread.host:page).append(layer);layer.classList.toggle('is-editing',editing);canvas.skipTargetFind=!editing;if(!editing){canvas.discardActiveObject();publish();}resize();hit.hidden=editing||!unlocked;}}
   ctx.on(ctx.root,'pointerdown',e=>{if(editing&&!e.target.closest('.journal-memory-layer,.pf-actions')){canvas?.discardActiveObject();canvas?.requestRenderAll();}});
   ctx.on(hit,'click',()=>{if(!editing&&GameProgress.hasMemory('ruisui-01'))node.click();});
   for(const type of ['mousedown','touchstart'])ctx.on(layer,type,e=>{if(editing)e.stopPropagation();});

@@ -128,7 +128,7 @@
   }
   function sync(){
    const unlocked=GameProgress.hasMemory('ruisui-01');
-   memoryEditor?.sync(editing&&unlocked);domEditor?.sync(editing&&unlocked);
+   memoryEditor?.sync(editing&&unlocked,domRecords.length>0);domEditor?.sync(editing&&unlocked);
    if(!unlocked){opposite.hidden=true;caption.hidden=true;layer.hidden=true;tools.hidden=true;return;}
    if((editing||records||photo)&&page.clientWidth&&page.clientHeight)ensure();
    if(canvas){(editing?spread.host:page).append(layer);opposite.hidden=editing;layer.hidden=false;layer.classList.toggle('is-editing',editing);canvas.selection=false;canvas.skipTargetFind=!editing;resize();canvas.requestRenderAll();}
