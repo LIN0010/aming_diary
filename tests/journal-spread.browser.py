@@ -56,8 +56,8 @@ try:
    chosen.value.set_files(str(ROOT/'aming-game/images/cow.png'));layer_ready(page);assert page.evaluate('currentCanvas.getObjects().find(o=>o.journalType==="photo").journalPage')=='right'
    # 每個 HTML 文字區塊也要跨頁，仍是原 textarea／故事節點。
    for id in ['aming-story','player-writing']:
-    box=page.locator(f'[data-dom-object="{id}"]');box.scroll_into_view_if_needed();heading=box.locator('h2').bounding_box();page.mouse.click(heading['x']+10,heading['y']+10);handle=box.locator('[data-dom-handle="move"]');b=handle.bounding_box();r=page.locator('.pf-frame').bounding_box();drag(page,b['x']+14,b['y']+14,-r['width']*.5,0,mobile)
-    assert box.evaluate('(e)=>e.closest(".pf-page").classList.contains("--left")')
+    box=page.locator(f'[data-dom-object="{id}"]');box.scroll_into_view_if_needed();heading=box.locator('h2').bounding_box();page.mouse.click(heading['x']+10,heading['y']+10);handle=box.locator('h2' if id=='aming-story' else '[data-dom-handle="move"]');b=handle.bounding_box();r=page.locator('.pf-frame').bounding_box();drag(page,b['x']+14,b['y']+14,-r['width']*.5,0,mobile)
+    assert box.get_attribute('data-journal-page')=='left'
    page.evaluate('(()=>{const c=canvases.find(c=>c.lowerCanvasEl.closest(".journal-decoration-layer")),o=c.getObjects().find(o=>o.journalType==="official-photo");o.scale(7);o.setCoords();c.setActiveObject(o);c.fire("selection:updated");c.requestRenderAll()})()');move_fabric('official-photo','left');move_fabric('official-photo','right')
    page.locator('#travel-note').fill('跨頁保存的心得');page.locator('[data-book="edit"]').click();expect(page.locator('#travel-note')).to_be_hidden()
    saved=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui');assert saved['memoryObject']['page']=='left';assert all(o['page']=='left' for o in saved['domObjects']);assert all(o['page']=='right' for o in saved['objects'])

@@ -101,3 +101,13 @@ objects 與 memoryObject 的 page 支援 left/right，x 是相對其單頁的中
 修正：journal-memory.js 在擷取官方位置、寬度、字級後，將原來源節點移到原單頁中的絕對定位隱藏位置。原圖片、文字與收藏事件不刪除、不複製；Fabric 的預設座標仍使用搬移前量測。journal-layout.js 對舊版只有 domObjects、尚未有 memoryObject 的存檔，也先準備碎片來源再初始化文字框。
 
 不重排或清除自訂座標；恢復預設才重新套用目前正常文字流量測的官方位置。本次無新增 margin/translate 補丁，無修改原故事／心得內容及主進度格式。新增 tests/journal-text-flow.browser.py 驗證首次、編輯、舊資料（保持原值）、儲存重載、寬度調整、恢復預設及往返目錄；跨頁與碎片操作另做回歸。
+
+## 瑞穗阿明日記：HTML 文字控制點測試版
+
+僅 `aming-story` 使用八向金色控制點與上方旋轉點。Fabric 不能直接渲染原生 HTML；此版本擴充既有 JournalDomLayout 的同一組手勢、復原及跨頁邏輯，不新增 Canvas 文字或另一個編輯器。標題及完整故事仍是同一份原始 DOM，字級／行距不縮放；左右／角落調整寬度會重新換行，上下控制點調整最小留白高度，內容可自行增高。超過單頁容量時沿用內頁捲動，無裁切文字。
+
+編輯期間獨立控制點位於既有 spread 暫存層；文字僅拖曳時進入暫存層，控制點不受原書頁捲動裁切；放開拖曳即將原文字節點放回其歸屬單頁，跟隨 StPageFlip 翻動。文字內容的捲動容器本身也在編輯時設定 touch-action:none，避免手機瀏覽器接管拖曳並發出 pointercancel。閱讀時恢復原本捲動／翻頁。
+
+存檔延用 domObjects 的 id、page、x、y、width、angle、order，另可選擇保存 height（相對單頁高度的最小高度）。沒有 height 的舊資料按原本內容高度顯示；還原預設不含自訂 height，不變更文字、照片或進度。玩家心得維持既有三顆 DOM 操作按鈕，本次不擴充。
+
+測試：tests/journal-html-controls.browser.py 使用 Chromium 桌面滑鼠與 852×393 觸控模擬，驗證金色九控制點、寬度換行及字級不變、上下調整、旋轉、跨頁吸附、保存重載、預設還原及閱讀翻頁。另回歸原有文字流／舊存檔、兩組 HTML 互動、所有跨頁物件、照片選檔與回憶碎片。未作 iPhone Safari 實機驗證。

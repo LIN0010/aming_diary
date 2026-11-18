@@ -39,9 +39,11 @@ try:
     target=box.locator('.diary-entry h2' if id=='aming-story' else '.travel-entry small' if id=='player-writing' else 'img').first.bounding_box();x=target['x']+target['width']/2;y=target['y']+target['height']/2
     page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
     expect(box).to_have_class(__import__('re').compile('is-selected'))
-    handle=box.locator('[data-dom-handle="move"]');b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,12,8,mobile)
-    handle=box.locator('[data-dom-handle="resize"]');b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,-18,0,mobile)
-    handle=box.locator('[data-dom-handle="rotate"]');b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,-10,12,mobile)
+    handle=box.locator('h2' if id=='aming-story' else '[data-dom-handle="move"]');handle.scroll_into_view_if_needed();b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,12,8,mobile)
+    handle=page.locator('.journal-story-controls [data-dom-handle="e"]') if id=='aming-story' else box.locator('[data-dom-handle="resize"]');handle.scroll_into_view_if_needed();b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,-18,0,mobile)
+    
+    if id=='player-writing' and box.locator('[data-dom-handle="rotate"]').is_hidden():box.locator('small').click()
+    handle=page.locator('.journal-story-controls [data-dom-handle="rotate"]') if id=='aming-story' else box.locator('[data-dom-handle="rotate"]');handle.scroll_into_view_if_needed();b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,-10,12,mobile)
     assert page.evaluate('testBook.getCurrentPageIndex()')==9
     if id=='aming-story':
      for _ in range(3):tool(page,'undo').click();layer_ready(page) # 各群組獨立測試，避免刻意變形後遮住下一組。
