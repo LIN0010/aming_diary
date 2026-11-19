@@ -8,7 +8,23 @@
  // Shared visual stack. Fabric keeps its native transform/gesture engine; each object
  // has a separate DOM projection so HTML can sit between two objects of one canvas.
  function createStack(ctx,book,host,pages){
-  const entries=new Map();let order=[],editing=false,available=true,selected=null,notify=()=>{};
+  const entries=new Map(),controlViews=new Map();let order=[],editing=false,available=true,selected=null,notify=()=>{};
+  // Fabric renders selection UI on the hidden lower canvas, not on upper-canvas.
+  // Paint only its native controls into a non-interactive, unclipped visual layer;
+  // upper-canvas keeps the existing clipped hit regions and native gesture handling.
+  function controlsFor(canvas){
+   if(controlViews.has(canvas))return;
+   const view=document.createElement('canvas');view.className='journal-stack-controls';view.setAttribute('aria-hidden','true');view.dataset.controlCanvas=canvas.lowerCanvasEl.closest('.journal-memory-layer')?'memory':'decorations';host.append(view);
+   const paint=()=>{
+    const ratio=canvas.getRetinaScaling(),width=Math.round(canvas.getWidth()*ratio),height=Math.round(canvas.getHeight()*ratio);
+    if(view.width!==width)view.width=width;if(view.height!==height)view.height=height;
+    const context=view.getContext('2d');context.setTransform(1,0,0,1,0,0);context.clearRect(0,0,width,height);
+    view.hidden=!editing||!available||!canvas.getActiveObject();
+    if(!view.hidden){context.setTransform(ratio,0,0,ratio,0,0);canvas.drawControls(context);}
+   };
+   controlViews.set(canvas,paint);canvas.on('after:render',paint);paint();
+   ctx.cleanup(()=>{canvas.off('after:render',paint);controlViews.delete(canvas);view.remove();});
+  }
   function ids(){return [...order.filter(id=>entries.has(id)),...[...entries.keys()].filter(id=>!order.includes(id)).sort((a,b)=>(entries.get(a).base||0)-(entries.get(b).base||0))];}
   function rank(id){return 10+ids().indexOf(id)*2;}
   function refresh(){
@@ -22,7 +38,7 @@
     }
    }
    const canvases=new Set([...entries.values()].filter(e=>e.fabric).map(e=>e.canvas));for(const canvas of canvases){canvas.getObjects().slice().sort((a,b)=>rank(a.journalId)-rank(b.journalId)).forEach((o,i)=>canvas.moveTo(o,i));}
-   const caption=book.querySelector('.journal-photo-caption');if(caption)caption.style.zIndex=String(rank('player-polaroid'));notify();
+   const caption=book.querySelector('.journal-photo-caption');if(caption)caption.style.zIndex=String(rank('player-polaroid'));for(const paint of controlViews.values())paint();notify();
   }
   function register(e){const old=entries.get(e.id);if(old?.element!==e.element)old?.dispose?.();entries.set(e.id,e);refresh();return e;}
   function remove(id){entries.get(id)?.dispose?.();entries.delete(id);if(selected===id)selected=null;refresh();}
@@ -41,7 +57,7 @@
    },{passive:false});
    listen('mousemove',event=>{if(editing){canvas.upperCanvasEl.dispatchEvent(new MouseEvent('mousemove',{bubbles:false,clientX:event.clientX,clientY:event.clientY}));element.style.cursor=canvas.upperCanvasEl.style.cursor||'move';}});
    listen('click',()=>{if(!editing&&id==='memory-fragment')activate(true);});
-   canvas.lowerCanvasEl.classList.add('journal-stack-bitmap');return e;
+   canvas.lowerCanvasEl.classList.add('journal-stack-bitmap');controlsFor(canvas);return e;
   }
   return {register,remove,refresh,rank,fabricObject,pick,
    selected(id){selected=id;notify();},

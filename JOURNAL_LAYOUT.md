@@ -129,3 +129,11 @@ Fabric 仍負責原生選取、移動及控制點；投影將單次原生 mouse/
 #save-travel 及原有成功／失敗訊息從 travel-entry 移到 book 內的 journal-save-dock，仍使用原 saveTravelNote。書本展開是固定雙頁舞台，因此 book 的右／下 20px 即右頁的右下角，並非 viewport 固定定位。只在可編輯心得時顯示；闔書／閱讀模式隱藏。右頁編輯物件保留底部控制空間，長文字仍在其 HTML 內容內捲動；不縮小文字、不改動筆記儲存格式。閱讀模式不會因新 UI 擅自將舊物件位置改為底部保留區。
 
 驗證：journal-layers.browser.py 在 1440×900、852×393 人為重疊真實物件，以實際畫面命中與截圖確認跨類型排序，而非只測資料值；檢查四種操作、選取不升層、貼紙、復原、舊版存檔、重新整理、預設還原、鎖定時隱藏，以及跨頁移動心得後的固定儲存座標。另回歸 HTML 控制點、心得輸入、照片選檔／更換、碎片原生操作／收藏及跨頁翻頁。均為本機 Chromium 滑鼠／觸控模擬，不是 iPhone Safari 實機測試。
+
+## Fabric 控制 UI 顯示修正
+
+實際 Fabric 版本的 renderCanvas 會將 drawControls 畫在 lower-canvas；upper-canvas 主要畫選框等暫態內容。分物件顯示隱藏 lower-canvas 後也隱藏了原生控制 UI。修正前量測選取角落：lower 像素為 [185,147,88,255] 但 visibility:hidden；upper 同位置為 [0,0,0,0]。因此原選取／拖曳事件正常不等於玩家能看到控制點。
+
+JournalSpread 在 after:render 時，使用原 Canvas.drawControls 繪製到獨立透明 journal-stack-controls。它不接受指標事件、不使用 clip-path，與既有 HTML 控制點同層，位於物件圖層上方。原 upper-canvas 的控制點命中裁切保留；Fabric 仍負責選取、縮放、旋轉，無新增幾何／拖曳實作。閱讀或取消選取時清空／隱藏，場景釋放時解除監聽。無改動任何布局或進度存檔欄位。
+
+journal-controls-visual.browser.py 在 1440×900 及 852×393（DPR 3）中，檢查照片、探索拍立得、碎片與貼紙位於最底層時的金色外框及九個控制點實際像素，截圖檢視，並以滑鼠／CDP 觸控操作原生縮放與旋轉；另回歸 journal-layers.browser.py 的排序、存讀檔、固定按鈕及場景清理。不代表 iPhone Safari 實機驗證。

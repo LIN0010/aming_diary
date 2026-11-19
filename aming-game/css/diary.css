@@ -2019,6 +2019,8 @@ body {
 
 /* One visual stack across Fabric projections and real HTML; controls are separate. */
 .journal-stack-bitmap { visibility:hidden; }
+.journal-stack-controls { position:absolute; inset:0; width:100%; height:100%; z-index:20000; pointer-events:none; }
+.journal-stack-controls[hidden] { display:none; }
 .journal-stack-object { position:absolute; pointer-events:none; transform-origin:center; }
 .journal-stack-object img { display:block; width:100%; height:100%; pointer-events:none; user-select:none; -webkit-user-drag:none; }
 .journal-stack-object.is-editing { pointer-events:auto; touch-action:none; cursor:move; }
