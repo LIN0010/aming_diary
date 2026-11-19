@@ -31,9 +31,14 @@
    for(const e of entries.values()){
     e.element.dataset.layerId=e.id;e.element.style.zIndex=String(rank(e.id));
     if(e.fabric){
-     const o=e.object,owner=o.journalPage||'left',width=editing?1200:600;
-     const parent=editing?host:pages[owner];if(e.element.parentElement!==parent)parent.append(e.element);
-     Object.assign(e.element.style,{left:(o.left-(editing?0:(owner==='right'?600:0)))/width*100+'%',top:o.top/800*100+'%',width:o.width*o.scaleX/width*100+'%',height:o.height*o.scaleY/800*100+'%',transform:`translate(-50%,-50%) rotate(${o.angle}deg)`});
+     const o=e.object,owner=o.journalPage||'left',parent=editing?host:pages[owner];
+     if(e.element.parentElement!==parent)parent.append(e.element);
+     // The cached raster includes Fabric's rounded export bounds. Map its local
+     // centre with the SAME object matrix as native controls (including origin,
+     // scale, rotation and skew); never squeeze it into object.width/height.
+     const m=o.calcTransformMatrix(),sx=parent.getBoundingClientRect().width/(editing?1200:600),sy=parent.getBoundingClientRect().height/800;
+     const x=m[4]-(editing?0:(owner==='right'?600:0))-m[0]*e.bitmapWidth/2-m[2]*e.bitmapHeight/2,y=m[5]-m[1]*e.bitmapWidth/2-m[3]*e.bitmapHeight/2;
+     Object.assign(e.element.style,{left:'0px',top:'0px',width:e.bitmapWidth+'px',height:e.bitmapHeight+'px',transformOrigin:'0 0',transform:`matrix(${m[0]*sx},${m[1]*sy},${m[2]*sx},${m[3]*sy},${x*sx},${y*sy})`});
      e.element.classList.toggle('is-editing',editing);e.element.hidden=!available;
     }
    }
@@ -45,8 +50,9 @@
   function pick(id){const e=entries.get(id);if(!e)return;selected=id;e.select();refresh();}
   function fabricObject(canvas,o,name,record,activate,provided){
    const id=o.journalId||'memory-fragment',element=provided||document.createElement('div');element.classList.add('journal-stack-object');element.setAttribute('aria-label',name);
-   const img=document.createElement('img');img.alt=name;img.draggable=false;img.src=o.toDataURL({format:'png',withoutTransform:true,multiplier:2,enableRetinaScaling:false});element.replaceChildren(img);
-   const e={id,name,base:record().order,record,element,fabric:true,object:o,canvas,select(){activate();canvas.setActiveObject(o);canvas.requestRenderAll();},dispose(){element.remove();}};
+   const bitmap=o.toCanvasElement({withoutTransform:true,multiplier:2,enableRetinaScaling:false});
+   const img=document.createElement('img');img.alt=name;img.draggable=false;img.src=bitmap.toDataURL('image/png');element.replaceChildren(img);
+   const e={id,name,base:record().order,record,element,fabric:true,object:o,bitmapWidth:bitmap.width/2,bitmapHeight:bitmap.height/2,canvas,select(){activate();canvas.setActiveObject(o);canvas.requestRenderAll();},dispose(){element.remove();}};
    register(e);const listen=(type,fn,options)=>element.addEventListener(type,fn,options);
    // Forward one native start event. Fabric retains its own document move/up
    // listeners, controls, photo-centre click logic and touch coordinate mapping.
@@ -66,7 +72,7 @@
    capture(){return ids();},restore(value){order=Array.isArray(value)?[...new Set(value.filter(id=>typeof id==='string'))]:[];refresh();},
    setMode(value,visible=true){editing=value;available=visible;host.classList.toggle('has-journal-stack',editing);refresh();},
    onUpdate(fn){notify=fn;},get editing(){return editing;},get active(){return selected;},
-   clip(canvas){const o=canvas.getActiveObject(),sx=book.clientWidth/1200,sy=book.clientHeight/800;let path='';if(o){o.setCoords();for(const p of Object.values(o.oCoords)){const pad=15;const x=p.x*sx,y=p.y*sy;path+=`M ${x-pad} ${y-pad} h ${pad*2} v ${pad*2} h ${-pad*2} Z `;}}canvas.upperCanvasEl.style.clipPath=path?`path('${path}')`:'inset(100%)';}
+   clip(canvas){const o=canvas.getActiveObject(),sx=book.getBoundingClientRect().width/1200,sy=book.getBoundingClientRect().height/800;let path='';if(o){o.setCoords();for(const p of Object.values(o.oCoords)){const pad=15;const x=p.x*sx,y=p.y*sy;path+=`M ${x-pad} ${y-pad} h ${pad*2} v ${pad*2} h ${-pad*2} Z `;}}canvas.upperCanvasEl.style.clipPath=path?`path('${path}')`:'inset(100%)';}
   };
  }
  window.JournalSpread={choose,overlap,mount({ctx,left,right}){
@@ -74,7 +80,7 @@
   const pages={left,right},stack=createStack(ctx,book,host,pages);const offset=p=>p==='right'?W:0;
   function fit(object,owner){object.setCoords();let b=object.getBoundingRect(true,true);const bottom=owner==='right'&&stack.editing?H-Math.min(80,pages.right.clientHeight*.25)/(pages.right.clientHeight||H)*H:H;const f=Math.min(1,(W-16)/b.width,(bottom-16)/b.height);if(f<1){object.scale(object.scaleX*f);object.setCoords();b=object.getBoundingRect(true,true);}const x=offset(owner);object.set({left:object.left+Math.max(x+8-b.left,Math.min(0,x+W-8-b.left-b.width)),top:object.top+Math.max(8-b.top,Math.min(0,bottom-8-b.top-b.height))});object.journalPage=owner;object.setCoords();}
   function snap(object){const owner=choose(object.getCoords(true,true),object.journalPage||'left');fit(object,owner);return owner;}
-  function resize(canvas){canvas.setDimensions({width:book.clientWidth+'px',height:book.clientHeight+'px'},{cssOnly:true});canvas.calcOffset();}
+  function resize(canvas){canvas.setDimensions({width:book.getBoundingClientRect().width+'px',height:book.getBoundingClientRect().height+'px'},{cssOnly:true});canvas.calcOffset();}
   function clipCanvas(canvas){if(canvas.lowerCanvasEl.classList.contains('journal-stack-bitmap')){stack.clip(canvas);stack.refresh();return;}const sx=book.clientWidth/(W*2),sy=book.clientHeight/H;let path='';for(const o of canvas.getObjects()){const b=o.getBoundingRect(true,true),pad=canvas.getActiveObject()===o?65:2,x=(b.left-pad)*sx,y=(b.top-pad)*sy,r=(b.left+b.width+pad)*sx,d=(b.top+b.height+pad)*sy;path+=`M ${x} ${y} H ${r} V ${d} H ${x} Z `;}canvas.upperCanvasEl.style.clipPath=`path('${path}')`;}
   ctx.cleanup(()=>host.remove());return {host,pages,offset,fit,snap,resize,clipCanvas,book,choose,stack};
  }};

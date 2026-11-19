@@ -137,3 +137,11 @@ Fabric 仍負責原生選取、移動及控制點；投影將單次原生 mouse/
 JournalSpread 在 after:render 時，使用原 Canvas.drawControls 繪製到獨立透明 journal-stack-controls。它不接受指標事件、不使用 clip-path，與既有 HTML 控制點同層，位於物件圖層上方。原 upper-canvas 的控制點命中裁切保留；Fabric 仍負責選取、縮放、旋轉，無新增幾何／拖曳實作。閱讀或取消選取時清空／隱藏，場景釋放時解除監聽。無改動任何布局或進度存檔欄位。
 
 journal-controls-visual.browser.py 在 1440×900 及 852×393（DPR 3）中，檢查照片、探索拍立得、碎片與貼紙位於最底層時的金色外框及九個控制點實際像素，截圖檢視，並以滑鼠／CDP 觸控操作原生縮放與旋轉；另回歸 journal-layers.browser.py 的排序、存讀檔、固定按鈕及場景清理。不代表 iPhone Safari 實機驗證。
+
+## 原生控制框與投影內容對齊
+
+上一輪檢查了控制 UI 的繪出像素，未充分核對投影內容邊界。本次改為比較三種真實物件的原生 Fabric 渲染與 HTML 投影。原先把 toDataURL(withoutTransform) 的點陣圖壓進 object.width/height，忽略輸出邊界的取整，並另用中心位置＋CSS rotate 組合，無法保證與原生控制層的完整矩陣一致。
+
+投影現在保留 toCanvasElement 輸出的實際邏輯寬高，透過 calcTransformMatrix 及所屬容器的顯示比例建立同一個 CSS matrix。此映射使用原生中心／origin、縮放、角度與斜切，僅扣除由輸出尺寸推導出的點陣圖中心；沒有固定位置補丁。投影盒模型清除 button 的內距／最小尺寸等干擾。命中 Canvas 的 CSS 尺寸和控制點裁切亦使用同一份含小數的視窗尺寸。仍保留原生 Fabric 控制點、統一圖層、原存檔及 HTML 文字。
+
+journal-projection-alignment.browser.py 分別驗證探索拍立得、玩家拍立得、奶盒＋標籤：直接及圖層面板選取、只有一個選取框、金色外框及九個控制點像素、真實縮放／旋轉／移動後的四角映射（容差 0.12 CSS px），並將 HTML 投影截圖與 object.render 的獨立原生參考圖比較。檢查前後截圖、視窗尺寸改變、既有存檔儲存重載及閱讀模式清理。測試包含 1440×900→1280×800、852×393→932×430（觸控／DPR 3）；舊程式在新的邊界檢查下會失敗。另通過 journal-layers.browser.py 回歸。這些為 Chromium 模擬，不代表 iPhone Safari 實機驗證。
