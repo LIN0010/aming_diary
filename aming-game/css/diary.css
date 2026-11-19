@@ -1826,7 +1826,8 @@ body {
 .pf-reading .pf-index-tab:hover { background:linear-gradient(100deg,#cfab96,#e5c5ad 65%,#bea087); }
 .pf-reading .pf-index-tab:focus-visible { outline:2px solid #79583d; outline-offset:-6px; }
 .pf-actions span:empty { display:none; }
-.pf-actions span { max-width:220px; background:#fff3dc; color:#503b2c; }
+.pf-actions span { max-width:220px; color:#503b2c; }
+.pf-actions > span[role="status"] { background:#fff3dc; }
 .pf-column-label { display:none; }
 .pf-reading .pf-column-label { display:block; margin:0 0 10px; font:18px/1.5 serif; }
 .pf-reading .pf-page { padding:18px; }
