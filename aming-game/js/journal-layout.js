@@ -1,11 +1,11 @@
-/* 瑞穗個人裝飾層：HTML 書頁保留；Fabric 只處理玩家照片與貼紙。 */
+/* 瑞穗手帳：Fabric 物件與 HTML 文字共用圖層排序，保留既有布局存檔。 */
 (() => {
  'use strict';
  const KEY='aming-diary-journal-layouts', W=600, H=800;
  const PHOTO_UPLOAD={width:.64,height:.60};
  const ASSETS=Object.freeze({compass:{src:'images/guild-compass.png',label:'指南針貼紙'},journal:{src:'images/guild-journal.png',label:'手帳貼紙'},tape:{src:null,label:'紙膠帶'}});
  const clone=x=>JSON.parse(JSON.stringify(x));
- const paths={done:'m5 12 4 4L20 5',close:'M9 6 3 12l6 6M3 12h13a5 5 0 0 0 5-5',edit:'m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5',photo:'M3 5h18v16H3ZM7 5l2-3h6l2 3M8 13a4 4 0 1 0 8 0 4 4 0 1 0-8 0',sticker:'M3 3h18v12l-6 6H3ZM15 21v-6h6M7 8h2m5 0h2M8 12q4 4 8 0',delete:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',undo:'M9 4 3 10l6 6M3 10h11a7 7 0 0 1 7 7',reset:'M3 11a9 9 0 1 1 2 7M3 3v8h8',more:'m8 4 8 8-8 8'};
+ const paths={done:'m5 12 4 4L20 5',close:'M9 6 3 12l6 6M3 12h13a5 5 0 0 0 5-5',edit:'m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5',photo:'M3 5h18v16H3ZM7 5l2-3h6l2 3M8 13a4 4 0 1 0 8 0 4 4 0 1 0-8 0',sticker:'M3 3h18v12l-6 6H3ZM15 21v-6h6M7 8h2m5 0h2M8 12q4 4 8 0',delete:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',undo:'M9 4 3 10l6 6M3 10h11a7 7 0 0 1 7 7',reset:'M3 11a9 9 0 1 1 2 7M3 3v8h8',layers:'m12 3 10 6-10 6L2 9ZM2 13l10 6 10-6M2 17l10 6 10-6',more:'m8 4 8 8-8 8'};
  function button(node,label,icon){if(node.getAttribute('aria-label')===label&&node.querySelector('svg'))return;node.title=label;node.setAttribute('aria-label',label);node.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[icon]||paths.edit}"/></svg><span class="journal-tool-name"></span>`;node.querySelector('span').textContent=label;}
  window.JournalLayout={button,mount({ctx,page,toolbar,label,input,preview,canEdit,report,groups}){
   let canvas,editing=false,dead=false,busy=0,photo=null,records=null,history=[],dirty=false,protectedSave=false,sequence=0;
@@ -16,15 +16,32 @@
   const element=document.createElement('canvas');element.setAttribute('aria-label','個人旅行照片與貼紙編輯區');layer.append(element);page.append(layer);
   const opposite=document.createElement('img');opposite.className='journal-decoration-opposite';opposite.alt='旅行手帳裝飾';opposite.draggable=false;opposite.hidden=true;spread.pages.right.append(opposite);
   const caption=document.createElement('p');caption.className='journal-photo-caption';caption.textContent=ctx.query('#player-journal .page-date').textContent.trim();caption.hidden=true;page.append(caption);
-  function captionSync(){const o=canvas?.getObjects().find(o=>o.journalType==='photo');if(!o)return;const owner=o.journalPage||'left';(editing?spread.host:spread.pages[owner]).append(caption);const x=o.left-(editing?0:spread.offset(owner));const base=editing?W*2:W;const a=o.angle*Math.PI/180,dy=75*o.scaleX;caption.hidden=layer.hidden;caption.style.left=(x-Math.sin(a)*dy)/base*100+'%';caption.style.top=(o.top+Math.cos(a)*dy)/H*100+'%';caption.style.width=210*o.scaleX/base*100+'%';caption.style.transform=`translate(-50%,-50%) rotate(${o.angle}deg)`;}
+  function captionSync(){const o=canvas?.getObjects().find(o=>o.journalType==='photo');if(!o)return;const owner=o.journalPage||'left';(editing?spread.host:spread.pages[owner]).append(caption);const x=o.left-(editing?0:spread.offset(owner));const base=editing?W*2:W;const a=o.angle*Math.PI/180,dy=75*o.scaleX;caption.hidden=layer.hidden;caption.style.left=(x-Math.sin(a)*dy)/base*100+'%';caption.style.top=(o.top+Math.cos(a)*dy)/H*100+'%';caption.style.zIndex=String(spread.stack.rank('player-polaroid'));caption.style.width=210*o.scaleX/base*100+'%';caption.style.transform=`translate(-50%,-50%) rotate(${o.angle}deg)`;}
   const tools=document.createElement('div');tools.className='journal-layout-tools';tools.hidden=true;tools.setAttribute('role','toolbar');tools.setAttribute('aria-label','手帳裝飾編輯');
   tools.id='journal-edit-tools';
-  for(const [action,name,icon] of [['photo','新增照片','photo'],['stickers','新增貼紙','sticker'],['delete','刪除裝飾','delete'],['undo','復原上一步','undo'],['reset','恢復預設','reset']]){const item=document.createElement('button');item.type='button';item.dataset.layout=action;button(item,name,icon);tools.append(item);}
+  for(const [action,name,icon] of [['photo','新增照片','photo'],['stickers','新增貼紙','sticker'],['layers','圖層','layers'],['delete','刪除裝飾','delete'],['undo','復原上一步','undo'],['reset','恢復預設','reset']]){const item=document.createElement('button');item.type='button';item.dataset.layout=action;button(item,name,icon);tools.append(item);}
   const picker=document.createElement('div');picker.className='journal-sticker-picker';picker.id='journal-sticker-picker';picker.hidden=true;picker.setAttribute('role','group');picker.setAttribute('aria-label','選擇貼紙');
   for(const [id,asset] of Object.entries(ASSETS)){const item=document.createElement('button');item.type='button';item.dataset.layout=id;item.title=asset.label;item.setAttribute('aria-label',asset.label);const img=document.createElement('img');if(id==='tape'){item.className='journal-tape-swatch';}else img.src=asset.src;img.alt='';img.width=28;img.height=28;if(id!=='tape')item.append(img);const name=document.createElement('span');name.className='journal-tool-name';name.textContent=asset.label;item.append(name);picker.append(item);}
   tools.querySelector('[data-layout="stickers"]').after(picker);
   const stickerToggle=tools.querySelector('[data-layout="stickers"]');stickerToggle.setAttribute('aria-controls',picker.id);stickerToggle.setAttribute('aria-expanded','false');
   toolbar.append(tools);
+  const layerPanel=document.createElement('section');layerPanel.className='journal-layer-panel';layerPanel.hidden=true;layerPanel.setAttribute('aria-label','手帳圖層');
+  const layerTitle=document.createElement('strong');layerTitle.textContent='圖層（上方在前）';layerPanel.append(layerTitle);
+  const layerList=document.createElement('div');layerList.className='journal-layer-list';layerPanel.append(layerList);
+  const layerActions=document.createElement('div');layerActions.className='journal-layer-actions';
+  for(const [action,name] of [['up','上移一層'],['down','下移一層'],['top','移至最上層'],['bottom','移至最下層']]){const b=document.createElement('button');b.type='button';b.dataset.stackAction=action;b.textContent=name;layerActions.append(b);}layerPanel.append(layerActions);spread.book.append(layerPanel);
+  const layerToggle=tools.querySelector('[data-layout="layers"]');layerToggle.setAttribute('aria-expanded','false');layerToggle.setAttribute('aria-controls','journal-layer-panel');layerPanel.id='journal-layer-panel';
+  let layerSignature='';
+  function renderLayers(){
+   const list=spread.stack.list(),signature=JSON.stringify(list);if(signature===layerSignature)return;layerSignature=signature;
+   const focusId=layerList.contains(document.activeElement)?document.activeElement.dataset.layerSelect:null;layerList.replaceChildren();
+   for(const item of list.reverse()){const b=document.createElement('button');b.type='button';b.dataset.layerSelect=item.id;b.textContent=item.name+' · '+(item.page==='left'?'左頁':'右頁');b.setAttribute('aria-pressed',String(item.selected));layerList.append(b);if(focusId===item.id)b.focus();}
+   layerActions.querySelectorAll('button').forEach(b=>b.disabled=!spread.stack.active);
+  }
+  spread.stack.onUpdate(renderLayers);
+  ctx.on(layerPanel,'click',e=>{const choice=e.target.closest('[data-layer-select]');if(choice){spread.stack.pick(choice.dataset.layerSelect);updateTools();return;}const action=e.target.closest('[data-stack-action]');if(action){checkpoint();if(spread.stack.move(action.dataset.stackAction))dirty=true;}});
+  ctx.on(layerPanel,'keydown',e=>{if(e.key==='Escape'){layerPanel.hidden=true;layerToggle.setAttribute('aria-expanded','false');layerToggle.focus();}});
+
   ctx.on(tools,'keydown',e=>{if(e.key==='Escape'){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');stickerToggle.focus();}});
   const officialPhoto=groups.find(g=>g.id==='aming-photo').node;
   let legacyPhoto;
@@ -37,7 +54,7 @@
      if(!Array.isArray(saved.objects)||saved.objects.length>30||saved.stationId!=='ruisui'||saved.photo&&!/^data:image\/(jpeg|png|webp);base64,/.test(saved.photo))throw Error('invalid');
      for(const o of saved.objects)if(!o.id||(o.page&&!['left','right'].includes(o.page))||!['photo','sticker','official-photo'].includes(o.type)||o.type==='sticker'&&!Object.hasOwn(ASSETS,o.source)||![o.x,o.y,o.scale,o.angle,o.order].every(Number.isFinite)||o.scale<=0)throw Error('invalid');
      records=saved.objects;photo=saved.photo||null;
-     domRecords=saved.domObjects||[];memoryRecord=saved.memoryObject||null;
+     domRecords=saved.domObjects||[];memoryRecord=saved.memoryObject||null;spread.stack.restore(saved.layerOrder);
     }
    }
   }catch(_){protectedSave=true;report('無法讀取手帳排版，原存檔已保留。');}
@@ -45,7 +62,7 @@
   const legacyMemory=domRecords.find(r=>r.id==='memory-fragment');domRecords=domRecords.filter(r=>r.id!=='memory-fragment');
   try{memoryEditor=JournalMemory.mount({ctx,spread,node:groups.find(g=>g.id==='memory-fragment').node,saved:memoryRecord,legacy:legacyMemory,beforeChange:checkpoint,onChange:()=>{dirty=true;updateTools();},onSelect:()=>{canvas?.discardActiveObject();domEditor?.clear();updateTools();},report});}catch(_){protectedSave=true;report('無法讀取回憶碎片排版，原存檔已保留。');}
   try{domEditor=JournalDomLayout.mount({ctx,spread,groups:groups.filter(g=>!['aming-photo','memory-fragment'].includes(g.id)),saved:domRecords,checkpoint,changed:()=>{dirty=true;canvas?.discardActiveObject();updateTools();},select:()=>{canvas?.discardActiveObject();memoryEditor?.clear();updateTools();}});}catch(_){protectedSave=true;report('無法讀取 HTML 排版，原存檔已保留。');}
-  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&canvas?.getActiveObject()&&!e.target.closest('.pf-actions,.journal-memory-layer')&&!canvas.findTarget(e)&&domEditor?.hitStart(e))e.stopImmediatePropagation();},{capture:true});
+  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&canvas?.getActiveObject()&&!e.target.closest('.pf-actions,.journal-memory-layer,.journal-stack-object,.journal-layer-panel,.journal-save-dock')&&!canvas.findTarget(e)&&domEditor?.hitStart(e))e.stopImmediatePropagation();},{capture:true});
   function defaultRecords(){
    const r=label.getBoundingClientRect(),p=page.getBoundingClientRect();
    return [{id:'player-polaroid',type:'photo',source:'player-photo',x:p.width?(r.left+r.width/2-p.left)/p.width:.65,y:p.height?(r.top+r.height/2-p.top)/p.height:.78,scale:label.offsetWidth/(page.clientWidth||1)*W/240,angle:3,order:0},officialDefault()];
@@ -54,7 +71,7 @@
   // 官方預設值只由原 HTML 位置產生；不以玩家的儲存值回寫。
   let defaults;
   function capture(){return canvas?canvas.getObjects().map((o,order)=>({id:o.journalId,type:o.journalType,source:o.journalSource,page:o.journalPage||'left',x:(o.left-spread.offset(o.journalPage))/W,y:o.top/H,scale:o.scaleX,angle:o.angle,order,...(o.journalType==='official-photo'?{aspect:o.journalAspect}:{})})):clone(records||defaults||[]);}
-  function checkpoint(){history.push({fabric:clone(capture()),dom:domEditor?.capture()||[],memory:memoryEditor?.capture()});if(history.length>30)history.shift();}
+  function checkpoint(){history.push({layers:spread.stack.capture(),fabric:clone(capture()),dom:domEditor?.capture()||[],memory:memoryEditor?.capture()});if(history.length>30)history.shift();}
   function changed(){records=capture();dirty=true;updateTools();}
   function updateTools(){
    const selected=canvas?.getActiveObject();
@@ -92,12 +109,12 @@
    const token=++sequence;busy++;updateTools();
    try{const objects=await Promise.all(next.slice().sort((a,b)=>a.order-b.order).map(object));
     if(dead||token!==sequence)return;
-    canvas.clear();objects.forEach(o=>canvas.add(o));records=capture();resize();canvas.requestRenderAll();if(!editing)publish();
+    for(const o of canvas.getObjects())spread.stack.remove(o.journalId);canvas.clear();objects.forEach(o=>{canvas.add(o);spread.stack.fabricObject(canvas,o,o.journalType==='photo'?'玩家旅行拍立得':o.journalType==='official-photo'?'探索乳牛拍立得':ASSETS[o.journalSource]?.label||'旅行裝飾',()=>capture().find(r=>r.id===o.journalId),()=>{domEditor?.clear();memoryEditor?.clear();});});records=capture();resize();canvas.requestRenderAll();if(!editing)publish();
    }catch(_){report('裝飾圖片載入失敗，請重試。');}
    finally{busy--;if(!dead)updateTools();}
   }
   // StPageFlip 複製 HTML 時不複製 canvas bitmap；閱讀投影用可複製的透明 img。
-  function publish(){if(canvas){opposite.src=canvas.toDataURL({format:'png',enableRetinaScaling:false,left:W,top:0,width:W,height:H});snapshot.src=canvas.toDataURL({format:'png',enableRetinaScaling:false,left:0,top:0,width:W,height:H});}}
+  function publish(){spread.stack.refresh();}
   function resize(){if(!canvas||!page.clientWidth)return;spread.resize(canvas);canvas.getObjects().forEach(o=>{o.set({cornerSize:Math.max(14,14*W/page.clientWidth),touchCornerSize:Math.max(24,24*W/page.clientWidth)});o.setCoords();});canvas.calcOffset();spread.clipCanvas(canvas);captionSync();}
   function ensure(){
    if(canvas)return;
@@ -123,16 +140,16 @@
    canvas.on('before:transform',checkpoint);
    for(const name of ['object:moving','object:scaling','object:rotating'])canvas.on(name,e=>{if(photoPress)photoPress.moved=true;if(name!=='object:moving')bound(e.target);spread.clipCanvas(canvas);captionSync();});
    canvas.on('object:modified',e=>{spread.snap(e.target);spread.clipCanvas(canvas);captionSync();changed();});
-   for(const name of ['selection:created','selection:updated','selection:cleared'])canvas.on(name,()=>{if(canvas.getActiveObject()){domEditor?.clear();memoryEditor?.clear();}spread.clipCanvas(canvas);ctx.root.classList.toggle('journal-fabric-selected',!!canvas.getActiveObject());updateTools();});
+   for(const name of ['selection:created','selection:updated','selection:cleared'])canvas.on(name,()=>{if(canvas.getActiveObject()){spread.stack.selected(canvas.getActiveObject().journalId);domEditor?.clear();memoryEditor?.clear();}else if(canvas.getObjects().some(o=>o.journalId===spread.stack.active))spread.stack.selected(null);spread.clipCanvas(canvas);ctx.root.classList.toggle('journal-fabric-selected',!!canvas.getActiveObject());updateTools();});
    layer.hidden=false;label.classList.add('journal-photo-replaced');ctx.query('#player-journal .page-date').style.visibility='hidden';resize();draw(records);
   }
   function sync(){
-   const unlocked=GameProgress.hasMemory('ruisui-01');
+   const unlocked=GameProgress.hasMemory('ruisui-01');spread.stack.setMode(editing&&unlocked,unlocked);
    memoryEditor?.sync(editing&&unlocked,domRecords.length>0);domEditor?.sync(editing&&unlocked);
    if(!unlocked){opposite.hidden=true;caption.hidden=true;layer.hidden=true;tools.hidden=true;return;}
    if((editing||records||photo)&&page.clientWidth&&page.clientHeight)ensure();
-   if(canvas){(editing?spread.host:page).append(layer);opposite.hidden=editing;layer.hidden=false;layer.classList.toggle('is-editing',editing);canvas.selection=false;canvas.skipTargetFind=!editing;resize();canvas.requestRenderAll();}
-   tools.hidden=!editing;if(!editing){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');}updateTools();
+   if(canvas){(editing?spread.host:page).append(layer);opposite.hidden=true;snapshot.hidden=true;layer.hidden=false;layer.classList.toggle('is-editing',editing);canvas.selection=false;canvas.skipTargetFind=!editing;resize();canvas.requestRenderAll();}
+   tools.hidden=!editing;if(!editing){layerPanel.hidden=true;layerToggle.setAttribute('aria-expanded','false');picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');}updateTools();
   }
   function save(){
    if(busy||memoryEditor?.busy||domEditor?.dragging){report('照片與裝飾準備中，請稍候。');return false;}
@@ -141,7 +158,7 @@
    if(protectedSave){report('原手帳存檔尚無法讀取，請保留本頁。');return false;}
    try{const raw=localStorage.getItem(KEY),data=raw?JSON.parse(raw):{version:1,stations:{}};
     if(data.version!==1||!data.stations)throw Error('unsupported');
-    data.stations.ruisui={stationId:'ruisui',photo,objects:capture(),domObjects:domEditor?.capture()||[],memoryObject:memoryEditor?.capture()};localStorage.setItem(KEY,JSON.stringify(data));dirty=false;report('');return true;
+    data.stations.ruisui={stationId:'ruisui',photo,objects:capture(),domObjects:domEditor?.capture()||[],memoryObject:memoryEditor?.capture(),layerOrder:spread.stack.capture()};localStorage.setItem(KEY,JSON.stringify(data));dirty=false;report('');return true;
    }catch(_){report('手帳排版尚未儲存，請保留本頁並重試。');return false;}
   }
   async function upload(file){
@@ -162,23 +179,24 @@
   ctx.on(tools,'click',async event=>{
    const button=event.target.closest('[data-layout]');if(!button||!editing||busy)return;
    const action=button.dataset.layout,selected=canvas.getActiveObject();
+   if(action==='layers'){layerPanel.hidden=!layerPanel.hidden;layerToggle.setAttribute('aria-expanded',String(!layerPanel.hidden));renderLayers();return;}
    if(action==='photo'){input.click();return;}
    if(action==='stickers'){picker.hidden=!picker.hidden;stickerToggle.setAttribute('aria-expanded',String(!picker.hidden));return;}
-   if(action==='undo'){const previous=history.pop();if(previous){dirty=true;domEditor?.restore(previous.dom);memoryEditor?.restore(previous.memory);await draw(previous.fabric);}return;}
-   if(action==='reset'){if(!window.confirm('恢復官方預設排版？照片、旅行心得與遊戲進度會保留。'))return;checkpoint();dirty=true;domEditor?.reset();memoryEditor?.reset();await draw(clone(defaults));return;}
+   if(action==='undo'){const previous=history.pop();if(previous){dirty=true;spread.stack.restore(previous.layers);domEditor?.restore(previous.dom);memoryEditor?.restore(previous.memory);await draw(previous.fabric);}return;}
+   if(action==='reset'){if(!window.confirm('恢復官方預設排版？照片、旅行心得與遊戲進度會保留。'))return;checkpoint();dirty=true;spread.stack.restore(null);domEditor?.reset();memoryEditor?.reset();await draw(clone(defaults));return;}
    if(Object.hasOwn(ASSETS,action)){
     picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');
     if(canvas.getObjects().length>=21){report('這一頁最多放置 20 張個人貼紙。');return;}
     checkpoint();const next=capture();next.push({id:crypto.randomUUID(),type:'sticker',source:action,x:.4,y:.55,scale:1,angle:-8,order:next.length});dirty=true;await draw(next);canvas.setActiveObject(canvas.getObjects().at(-1));canvas.requestRenderAll();updateTools();return;
    }
    if(!selected)return;checkpoint();
-   if(action==='delete'&&selected.journalType==='sticker'){canvas.remove(selected);canvas.discardActiveObject();}
+   if(action==='delete'&&selected.journalType==='sticker'){spread.stack.remove(selected.journalId);canvas.remove(selected);canvas.discardActiveObject();}
    bound(selected);changed();canvas.requestRenderAll();
   });
   // 只在編輯層終止冒泡，不把整張 HTML 書頁停用。
   for(const type of ['mousedown','touchstart']){ctx.on(layer,type,e=>{if(editing)e.stopPropagation();});ctx.on(tools,type,e=>e.stopPropagation());}
   const observer=new ResizeObserver(()=>{if(!canvas&&(records||photo||editing))sync();else resize();});observer.observe(page);
-  ctx.cleanup(()=>{dead=true;sequence++;observer.disconnect();canvas?.dispose();layer.remove();opposite.remove();caption.remove();tools.remove();});
+  ctx.cleanup(()=>{dead=true;sequence++;observer.disconnect();canvas?.dispose();layer.remove();opposite.remove();caption.remove();tools.remove();layerPanel.remove();});
   return {setMode(value){if(editing!==value){if(value)defaults=defaultRecords();editing=value;canvas?.discardActiveObject();if(!editing)publish();}sync();},save,upload,get dirty(){return dirty;},get busy(){return !!busy||!!memoryEditor?.busy||!!domEditor?.dragging;}};
  }};
 })();

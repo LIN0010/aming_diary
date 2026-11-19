@@ -117,3 +117,15 @@ objects 與 memoryObject 的 page 支援 left/right，x 是相對其單頁的中
 `player-writing` 與 `aming-story` 現在共用 `journal-text-controls`，依 `data-dom-controls` 識別各自的控制點，仍使用同一個 JournalDomLayout 的選取、手勢、跨頁與存檔流程。心得標題／留白可拖曳；textarea 保留正常輸入、文字選取、捲動及既有儲存事件。八向控制點只變更文字框寬度／最小留白高度，不縮小字級；旋轉點與故事一致。舊 domObjects 及 note 資料不遷移、不清除。
 
 測試延伸 journal-html-controls.browser.py 至兩個文字框、桌面與手機橫向觸控：心得輸入後調寬、調高、旋轉、跨頁、完成編輯、重新整理及恢復預設都保留原心得。journal-dom.browser.py 回歸故事不可編輯、心得可編輯、收藏點擊及閱讀翻頁。本機 Chromium 模擬，不代表 iPhone Safari 實機驗證。
+
+## 瑞穗共用圖層與右頁儲存控制
+
+原本同一 Fabric Canvas 的所有圖案只能一起位於 HTML 文字上方或下方，另一個碎片 Canvas 又有獨立 stacking context。現在 JournalSpread.stack 為每個 Fabric 物件建立獨立透明圖片投影；HTML 文字保留原始 DOM。編輯時它們位於同一跨頁暫存層，閱讀時各自回到所屬書頁，以同一組 z-index 排序；不修改 StPageFlip 的書頁層級。單物件投影只生成於新增／更換素材時，拖曳、縮放與旋轉採 CSS 顯示同步，避免每次移動都重畫 PNG。
+
+Fabric 仍負責原生選取、移動及控制點；投影將單次原生 mouse/touch start 轉交原 Canvas，後續沿用 Fabric document move/up 監聽，並同步同一 Canvas 內的命中順序。原 lower-canvas bitmap 不重複顯示，upper-canvas 只接收控制點範圍。控制點、右頁儲存 UI 與外側工具列獨立置頂；選取本身不更改物件的實際 rank。HTML 選取亦不再將內容永久提升到頂層。
+
+原存檔 stations.ruisui 新增選用 layerOrder 字串陣列，由底層到頂層列出物件 ID；它是 Fabric、碎片及 HTML 共用的排序依據。舊資料未含此欄時依原 order 建立相容的預設順序，不清除或遷移玩家內容。圖層面板顯示名稱／頁面，支援選取、上移、下移、最上及最下。新增／刪除貼紙同步更新清單；復原快照包含 layerOrder；恢復預設會一併恢復排序。
+
+#save-travel 及原有成功／失敗訊息從 travel-entry 移到 book 內的 journal-save-dock，仍使用原 saveTravelNote。書本展開是固定雙頁舞台，因此 book 的右／下 20px 即右頁的右下角，並非 viewport 固定定位。只在可編輯心得時顯示；闔書／閱讀模式隱藏。右頁編輯物件保留底部控制空間，長文字仍在其 HTML 內容內捲動；不縮小文字、不改動筆記儲存格式。閱讀模式不會因新 UI 擅自將舊物件位置改為底部保留區。
+
+驗證：journal-layers.browser.py 在 1440×900、852×393 人為重疊真實物件，以實際畫面命中與截圖確認跨類型排序，而非只測資料值；檢查四種操作、選取不升層、貼紙、復原、舊版存檔、重新整理、預設還原、鎖定時隱藏，以及跨頁移動心得後的固定儲存座標。另回歸 HTML 控制點、心得輸入、照片選檔／更換、碎片原生操作／收藏及跨頁翻頁。均為本機 Chromium 滑鼠／觸控模擬，不是 iPhone Safari 實機測試。

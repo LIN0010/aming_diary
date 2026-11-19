@@ -5,13 +5,61 @@
  function clip(poly,axis,value,greater){const out=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],inside=p=>greater?p[axis]>=value:p[axis]<=value,aa=inside(a),bb=inside(b);if(aa)out.push(a);if(aa!==bb){const t=(value-a[axis])/(b[axis]-a[axis]);out.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});}}return out;}
  function overlap(poly,left){let p=poly;for(const [axis,v,g] of [['x',left,true],['x',left+W,false],['y',0,true],['y',H,false]]){if(!p.length)return 0;p=clip(p,axis,v,g);}return area(p);}
  function choose(poly,origin){const l=overlap(poly,0),r=overlap(poly,W);return Math.abs(l-r)<1e-7?origin:l>r?'left':'right';}
+ // Shared visual stack. Fabric keeps its native transform/gesture engine; each object
+ // has a separate DOM projection so HTML can sit between two objects of one canvas.
+ function createStack(ctx,book,host,pages){
+  const entries=new Map();let order=[],editing=false,available=true,selected=null,notify=()=>{};
+  function ids(){return [...order.filter(id=>entries.has(id)),...[...entries.keys()].filter(id=>!order.includes(id)).sort((a,b)=>(entries.get(a).base||0)-(entries.get(b).base||0))];}
+  function rank(id){return 10+ids().indexOf(id)*2;}
+  function refresh(){
+   for(const e of entries.values()){
+    e.element.dataset.layerId=e.id;e.element.style.zIndex=String(rank(e.id));
+    if(e.fabric){
+     const o=e.object,owner=o.journalPage||'left',width=editing?1200:600;
+     const parent=editing?host:pages[owner];if(e.element.parentElement!==parent)parent.append(e.element);
+     Object.assign(e.element.style,{left:(o.left-(editing?0:(owner==='right'?600:0)))/width*100+'%',top:o.top/800*100+'%',width:o.width*o.scaleX/width*100+'%',height:o.height*o.scaleY/800*100+'%',transform:`translate(-50%,-50%) rotate(${o.angle}deg)`});
+     e.element.classList.toggle('is-editing',editing);e.element.hidden=!available;
+    }
+   }
+   const canvases=new Set([...entries.values()].filter(e=>e.fabric).map(e=>e.canvas));for(const canvas of canvases){canvas.getObjects().slice().sort((a,b)=>rank(a.journalId)-rank(b.journalId)).forEach((o,i)=>canvas.moveTo(o,i));}
+   const caption=book.querySelector('.journal-photo-caption');if(caption)caption.style.zIndex=String(rank('player-polaroid'));notify();
+  }
+  function register(e){const old=entries.get(e.id);if(old?.element!==e.element)old?.dispose?.();entries.set(e.id,e);refresh();return e;}
+  function remove(id){entries.get(id)?.dispose?.();entries.delete(id);if(selected===id)selected=null;refresh();}
+  function pick(id){const e=entries.get(id);if(!e)return;selected=id;e.select();refresh();}
+  function fabricObject(canvas,o,name,record,activate,provided){
+   const id=o.journalId||'memory-fragment',element=provided||document.createElement('div');element.classList.add('journal-stack-object');element.setAttribute('aria-label',name);
+   const img=document.createElement('img');img.alt=name;img.draggable=false;img.src=o.toDataURL({format:'png',withoutTransform:true,multiplier:2,enableRetinaScaling:false});element.replaceChildren(img);
+   const e={id,name,base:record().order,record,element,fabric:true,object:o,canvas,select(){activate();canvas.setActiveObject(o);canvas.requestRenderAll();},dispose(){element.remove();}};
+   register(e);const listen=(type,fn,options)=>element.addEventListener(type,fn,options);
+   // Forward one native start event. Fabric retains its own document move/up
+   // listeners, controls, photo-centre click logic and touch coordinate mapping.
+   for(const type of ['mousedown','touchstart'])listen(type,event=>{
+    if(!editing)return;event.preventDefault();event.stopPropagation();pick(id);
+    const forwarded=type==='mousedown'?new MouseEvent(type,{bubbles:true,cancelable:true,clientX:event.clientX,clientY:event.clientY,button:event.button,buttons:event.buttons}):new TouchEvent(type,{bubbles:true,cancelable:true,touches:event.touches,targetTouches:event.targetTouches,changedTouches:event.changedTouches});
+    canvas.upperCanvasEl.dispatchEvent(forwarded);
+   },{passive:false});
+   listen('mousemove',event=>{if(editing){canvas.upperCanvasEl.dispatchEvent(new MouseEvent('mousemove',{bubbles:false,clientX:event.clientX,clientY:event.clientY}));element.style.cursor=canvas.upperCanvasEl.style.cursor||'move';}});
+   listen('click',()=>{if(!editing&&id==='memory-fragment')activate(true);});
+   canvas.lowerCanvasEl.classList.add('journal-stack-bitmap');return e;
+  }
+  return {register,remove,refresh,rank,fabricObject,pick,
+   selected(id){selected=id;notify();},
+   list(){return ids().map(id=>{const e=entries.get(id);return {id,name:e.name,page:e.record()?.page||'left',selected:id===selected};});},
+   move(action){const list=ids(),i=list.indexOf(selected);if(i<0)return false;const target=action==='top'?list.length-1:action==='bottom'?0:action==='up'?Math.min(i+1,list.length-1):Math.max(0,i-1);list.splice(i,1);list.splice(target,0,selected);order=list;refresh();return true;},
+   capture(){return ids();},restore(value){order=Array.isArray(value)?[...new Set(value.filter(id=>typeof id==='string'))]:[];refresh();},
+   setMode(value,visible=true){editing=value;available=visible;host.classList.toggle('has-journal-stack',editing);refresh();},
+   onUpdate(fn){notify=fn;},get editing(){return editing;},get active(){return selected;},
+   clip(canvas){const o=canvas.getActiveObject(),sx=book.clientWidth/1200,sy=book.clientHeight/800;let path='';if(o){o.setCoords();for(const p of Object.values(o.oCoords)){const pad=15;const x=p.x*sx,y=p.y*sy;path+=`M ${x-pad} ${y-pad} h ${pad*2} v ${pad*2} h ${-pad*2} Z `;}}canvas.upperCanvasEl.style.clipPath=path?`path('${path}')`:'inset(100%)';}
+  };
+ }
  window.JournalSpread={choose,overlap,mount({ctx,left,right}){
   const book=ctx.query('.pf-book'),host=document.createElement('div');host.className='journal-spread-edit';book.append(host);
-  const pages={left,right};const offset=p=>p==='right'?W:0;
-  function fit(object,owner){object.setCoords();let b=object.getBoundingRect(true,true);const f=Math.min(1,(W-16)/b.width,(H-16)/b.height);if(f<1){object.scale(object.scaleX*f);object.setCoords();b=object.getBoundingRect(true,true);}const x=offset(owner);object.set({left:object.left+Math.max(x+8-b.left,Math.min(0,x+W-8-b.left-b.width)),top:object.top+Math.max(8-b.top,Math.min(0,H-8-b.top-b.height))});object.journalPage=owner;object.setCoords();}
+  const pages={left,right},stack=createStack(ctx,book,host,pages);const offset=p=>p==='right'?W:0;
+  function fit(object,owner){object.setCoords();let b=object.getBoundingRect(true,true);const bottom=owner==='right'&&stack.editing?H-Math.min(80,pages.right.clientHeight*.25)/(pages.right.clientHeight||H)*H:H;const f=Math.min(1,(W-16)/b.width,(bottom-16)/b.height);if(f<1){object.scale(object.scaleX*f);object.setCoords();b=object.getBoundingRect(true,true);}const x=offset(owner);object.set({left:object.left+Math.max(x+8-b.left,Math.min(0,x+W-8-b.left-b.width)),top:object.top+Math.max(8-b.top,Math.min(0,bottom-8-b.top-b.height))});object.journalPage=owner;object.setCoords();}
   function snap(object){const owner=choose(object.getCoords(true,true),object.journalPage||'left');fit(object,owner);return owner;}
   function resize(canvas){canvas.setDimensions({width:book.clientWidth+'px',height:book.clientHeight+'px'},{cssOnly:true});canvas.calcOffset();}
-  function clipCanvas(canvas){const sx=book.clientWidth/(W*2),sy=book.clientHeight/H;let path='';for(const o of canvas.getObjects()){const b=o.getBoundingRect(true,true),pad=canvas.getActiveObject()===o?65:2,x=(b.left-pad)*sx,y=(b.top-pad)*sy,r=(b.left+b.width+pad)*sx,d=(b.top+b.height+pad)*sy;path+=`M ${x} ${y} H ${r} V ${d} H ${x} Z `;}canvas.upperCanvasEl.style.clipPath=`path('${path}')`;}
-  ctx.cleanup(()=>host.remove());return {host,pages,offset,fit,snap,resize,clipCanvas,book,choose};
+  function clipCanvas(canvas){if(canvas.lowerCanvasEl.classList.contains('journal-stack-bitmap')){stack.clip(canvas);stack.refresh();return;}const sx=book.clientWidth/(W*2),sy=book.clientHeight/H;let path='';for(const o of canvas.getObjects()){const b=o.getBoundingRect(true,true),pad=canvas.getActiveObject()===o?65:2,x=(b.left-pad)*sx,y=(b.top-pad)*sy,r=(b.left+b.width+pad)*sx,d=(b.top+b.height+pad)*sy;path+=`M ${x} ${y} H ${r} V ${d} H ${x} Z `;}canvas.upperCanvasEl.style.clipPath=`path('${path}')`;}
+  ctx.cleanup(()=>host.remove());return {host,pages,offset,fit,snap,resize,clipCanvas,book,choose,stack};
  }};
 })();

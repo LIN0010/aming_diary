@@ -8,11 +8,11 @@
   layer.append(image,el,hit);page.append(layer);const opposite=document.createElement('img');opposite.className='journal-memory-opposite';opposite.alt='瑞穗回憶碎片';opposite.hidden=true;spread.pages.left.append(opposite);
   let canvas,group,record=saved||null,defaults,editing=false,busy=false,dead=false;
   if(record&&(!['x','y','scale','angle'].every(k=>Number.isFinite(record[k]))||record.scale<=0||!['left','right'].includes(record.page)))throw Error('invalid-memory-layout');
-  function capture(){return group?{id:'memory-fragment',type:'memory',source:'ruisui-memory-01',page:group.journalPage||'right',x:(group.left-spread.offset(group.journalPage||'right'))/W,y:group.top/H,scale:group.scaleX,angle:group.angle,order:20}:record?{...record}:null;}
+  function capture(){return group?{id:'memory-fragment',type:'memory',source:'ruisui-memory-01',page:group.journalPage||'right',x:(group.left-spread.offset(group.journalPage||'right'))/W,y:group.top/H,scale:group.scaleX,angle:group.angle,order:record?.order??20}:record?{...record}:null;}
   function constrain(){group.scale(Math.max(.25,Math.min(3,group.scaleX)));spread.fit(group,group.journalPage||'right');record=capture();}
-  function placement(){if(!group)return;spread.clipCanvas(canvas);const owner=group.journalPage||'right',b=group.getBoundingRect(true,true);spread.pages[owner].append(hit);Object.assign(hit.style,{left:(b.left-spread.offset(owner))/W*100+'%',top:b.top/H*100+'%',width:b.width/W*100+'%',height:b.height/H*100+'%'});}
+  function placement(){if(group){spread.clipCanvas(canvas);spread.stack.refresh();}}
   function resize(){if(!canvas||!page.clientWidth)return;spread.resize(canvas);group?.set({cornerSize:Math.max(14,14*W/page.clientWidth),touchCornerSize:Math.max(24,24*W/page.clientWidth)});group?.setCoords();canvas.calcOffset();placement();}
-  function publish(){if(canvas){image.src=canvas.toDataURL({format:'png',enableRetinaScaling:false,left:W,top:0,width:W,height:H});opposite.src=canvas.toDataURL({format:'png',enableRetinaScaling:false,left:0,top:0,width:W,height:H});}}
+  function publish(){spread.stack.refresh();}
   function apply(next){if(!next)return;record={...next};if(group){group.set({left:record.x*W+spread.offset(record.page),top:record.y*H,scaleX:record.scale,scaleY:record.scale,angle:record.angle});group.journalPage=record.page||'right';constrain();canvas.requestRenderAll();placement();if(!editing)publish();}}
   function initialize(){
    if(canvas||busy||!ctx.root.classList.contains('pf-reading')||!node.getBoundingClientRect().width)return;
@@ -29,18 +29,17 @@
     const small=node.querySelector('small'),strong=node.querySelector('strong'),fontScale=120/sourceWidth;
     const labels=[new fabric.Text(small.textContent.trim(),{fontSize:smallFont*fontScale,fill:'#71877a',originX:'center',left:0,top:img.getScaledHeight()+5}),new fabric.Text(strong.textContent.trim(),{fontSize:strongFont*fontScale,fill:'#71877a',originX:'center',left:0,top:img.getScaledHeight()+19})];
     group=new fabric.Group([img,new fabric.Text(node.querySelector('.memory-fragment-info > span').textContent.trim(),{fontSize:15*fontScale,fill:'#71877a',left:-58,top:img.getScaledHeight()+7}),...labels],{originX:'center',originY:'center',cornerColor:'#b99358',borderColor:'#987847',cornerSize:14,transparentCorners:false,lockScalingFlip:true});
-    canvas=new fabric.Canvas(el,{width:W*2,height:H,selection:false,preserveObjectStacking:true,enableRetinaScaling:true});canvas.add(group);
+    canvas=new fabric.Canvas(el,{width:W*2,height:H,selection:false,preserveObjectStacking:true,enableRetinaScaling:true});group.journalId='memory-fragment';canvas.add(group);spread.stack.fabricObject(canvas,group,'回憶碎片',capture,(read)=>{if(read)node.click();else onSelect();},hit);
     canvas.on('before:transform',beforeChange);for(const name of ['object:moving','object:scaling','object:rotating'])canvas.on(name,()=>{if(name!=='object:moving')constrain();placement();});canvas.on('object:modified',()=>{spread.snap(group);placement();record=capture();onChange();});
-    canvas.on('selection:created',()=>{onSelect();placement();});canvas.on('selection:updated',()=>{onSelect();placement();});canvas.on('selection:cleared',placement);
+    canvas.on('selection:created',()=>{spread.stack.selected('memory-fragment');onSelect();placement();});canvas.on('selection:updated',()=>{spread.stack.selected('memory-fragment');onSelect();placement();});canvas.on('selection:cleared',()=>{if(spread.stack.active==='memory-fragment')spread.stack.selected(null);placement();});
     node.style.visibility='hidden';busy=false;apply(record);sync(editing);
    });
   }
-  function sync(value,prepare=false){editing=value;const unlocked=GameProgress.hasMemory('ruisui-01');if(unlocked&&(editing||record||prepare))initialize();layer.hidden=!unlocked||!canvas;opposite.hidden=!unlocked||!canvas||editing;if(canvas){(editing?spread.host:page).append(layer);layer.classList.toggle('is-editing',editing);canvas.skipTargetFind=!editing;if(!editing){canvas.discardActiveObject();publish();}resize();hit.hidden=editing||!unlocked;}}
-  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&!e.target.closest('.journal-memory-layer,.pf-actions')){canvas?.discardActiveObject();canvas?.requestRenderAll();}});
-  ctx.on(hit,'click',()=>{if(!editing&&GameProgress.hasMemory('ruisui-01'))node.click();});
+  function sync(value,prepare=false){editing=value;const unlocked=GameProgress.hasMemory('ruisui-01');if(unlocked&&(editing||record||prepare))initialize();layer.hidden=!unlocked||!canvas;opposite.hidden=true;if(canvas){(editing?spread.host:page).append(layer);layer.classList.toggle('is-editing',editing);canvas.skipTargetFind=!editing;if(!editing){canvas.discardActiveObject();publish();}resize();image.hidden=true;spread.stack.refresh();}}
+  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&!e.target.closest('.journal-memory-layer,.pf-actions,.journal-layer-panel')){canvas?.discardActiveObject();canvas?.requestRenderAll();}});
   for(const type of ['mousedown','touchstart'])ctx.on(layer,type,e=>{if(editing)e.stopPropagation();});
   const observer=new ResizeObserver(resize);observer.observe(page);
-  ctx.cleanup(()=>{dead=true;observer.disconnect();canvas?.dispose();layer.remove();hit.remove();opposite.remove();});
+  ctx.cleanup(()=>{dead=true;observer.disconnect();spread.stack.remove('memory-fragment');canvas?.dispose();layer.remove();hit.remove();opposite.remove();});
   return {finalize(){if(!group)return false;const old=JSON.stringify(capture());spread.snap(group);placement();return old!==JSON.stringify(capture());},sync,capture,restore:apply,reset(){apply(defaults);},clear(){canvas?.discardActiveObject();canvas?.requestRenderAll();},get selected(){return !!canvas?.getActiveObject();},get busy(){return busy;}};
  }};
 })();

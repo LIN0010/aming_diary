@@ -21,13 +21,13 @@
     const controls=g.text?[['nw','左上調整'],['n','上方調整'],['ne','右上調整'],['w','左側調整寬度'],['e','右側調整寬度'],['sw','左下調整'],['s','下方調整'],['se','右下調整'],['rotate','旋轉']]:[['move','移動'],['resize','調整寬度與大小'],['rotate','旋轉']];
     for(const [action,label] of controls){const h=document.createElement('button');h.type='button';h.dataset.domHandle=action;h.setAttribute('aria-label',g.name+label);h.title=label;if(!g.text)h.textContent=action==='move'?'✥':action==='resize'?'↘':'↻';handles.append(h);}
     if(g.side==='right'){if(!rightPaper){const surface=document.createElement('div');surface.className='journal-dom-surface';rightPaper=document.createElement('div');rightPaper.className='journal-dom-paper';surface.append(rightPaper);g.page.append(surface);}rightPaper.append(box);}
-    box.append(handles);const item={...g,box,content,slot,handles,record:{...g.record}};if(g.text){handles.classList.add('journal-text-controls');handles.hidden=true;spread.host.append(handles);ctx.on(handles,'pointerdown',e=>start(e,item));}items.push(item);defaults.push({...g.record});
+    box.append(handles);const item={...g,box,content,slot,handles,record:{...g.record}};if(g.text){handles.classList.add('journal-text-controls');handles.hidden=true;spread.host.append(handles);ctx.on(handles,'pointerdown',e=>start(e,item));}items.push(item);spread.stack.register({id:g.id,name:g.name,base:g.record.order,record:()=>item.record,element:box,select:()=>choose(item)});defaults.push({...g.record});
     ctx.on(box,'pointerdown',e=>start(e,item));
     const keyControl=e=>{const action=e.target.dataset.domHandle;if(!editing||!action||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();checkpoint();choose(item);const delta=['ArrowLeft','ArrowUp'].includes(e.key)?-1:1;if(action==='rotate')item.record.angle+=delta*5;else if(action==='resize'||['nw','ne','w','e','sw','se'].includes(action))item.record.width+=delta*.02;else if(['n','s'].includes(action))item.record.height=Math.max(.05,(item.record.height||item.box.offsetHeight/item.page.clientHeight)+delta*.02);else item.record[e.key.includes('Left')||e.key.includes('Right')?'x':'y']+=delta*.02;apply(item);changed();};ctx.on(box,'keydown',keyControl);if(g.text)ctx.on(handles,'keydown',keyControl);
    }
    initialized=true;if(pending.length)restore(pending);else items.forEach(apply);
   }
-  function place(item){const owner=item.record.page||'right';item.page=spread.pages[owner];item.side=owner;(owner==='right'&&rightPaper?rightPaper:item.page).append(item.box);}
+  function place(item){const owner=item.record.page||'right';item.page=spread.pages[owner];item.side=owner;const parent=editing?spread.host:owner==='right'&&rightPaper?rightPaper:item.page;if(item.box.parentElement!==parent)parent.append(item.box);}
   function apply(item){
    if(gesture?.item===item&&gesture.action==='move')return;
    const {record:r,box,page}=item,w=page.clientWidth,h=page.clientHeight;if(!w||!h)return;
@@ -36,21 +36,23 @@
    const sin=Math.abs(Math.sin(r.angle*Math.PI/180)),cos=Math.cos(r.angle*Math.PI/180);
    if(!item.text){const ratio=item.width/item.height;r.width=Math.min(r.width,(w-16)/(cos+sin/ratio)/w,(h-16)/(sin+cos/ratio)/w);}
    box.dataset.journalPage=item.side;
-   box.style.width=r.width*100+'%';box.style.zIndex=String(editing&&active===item?100:r.order);
-   const maxHeight=item.text?Math.min(h-20,(h-20-r.width*w*sin)/cos,sin>.001?(w-16-r.width*w*cos)/sin:h-20):h-20;
+   const origin=editing?spread.offset(item.side)/1200*spread.book.clientWidth:0;
+   box.style.width=editing?r.width*w+'px':r.width*100+'%';box.style.zIndex=String(spread.stack.rank(item.id));
+   const usable=h-(item.side==='right'?80:20);
+   const maxHeight=item.text?Math.min(item.side==='right'&&editing?Math.max(80,usable-r.y*h):usable,(h-20-r.width*w*sin)/cos,sin>.001?(w-16-r.width*w*cos)/sin:h-20):h-20;
    box.style.setProperty('--dom-max-height',Math.max(80,maxHeight)+'px');
    if(item.text)item.content.style.minHeight=r.height?Math.min(r.height*h,Math.max(80,maxHeight))+'px':'';
-   r.x=Math.max(8/w,Math.min(1-r.width-8/w,r.x));r.y=item.side==='right'?Math.max(8/h,r.y):Math.max(8/h,Math.min(Math.max(8/h,(h-box.offsetHeight-8)/h),r.y));
-   box.style.left=r.x*100+'%';box.style.top=r.y*h+'px';box.style.transform=`rotate(${r.angle}deg)`;
+   r.x=Math.max(8/w,Math.min(1-r.width-8/w,r.x));r.y=item.side==='right'&&!editing?Math.max(8/h,r.y):Math.max(8/h,Math.min(Math.max(8/h,((item.side==='right'&&editing?usable:h)-box.offsetHeight-8)/h),r.y));
+   box.style.left=editing?origin+r.x*w+'px':r.x*100+'%';box.style.top=r.y*h+'px';box.style.transform=`rotate(${r.angle}deg)`;
    const bounds=box.getBoundingClientRect(),paper=page.getBoundingClientRect();
-   r.x+=(Math.max(paper.left+8-bounds.left,Math.min(0,paper.right-8-bounds.right)))/w;if(item.side!=='right')r.y+=(Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-8-bounds.bottom)))/h;
-   box.style.left=r.x*100+'%';box.style.top=r.y*h+'px';
+   r.x+=(Math.max(paper.left+8-bounds.left,Math.min(0,paper.right-8-bounds.right)))/w;if(item.side!=='right'||editing)r.y+=(Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-(item.side==='right'&&editing?80:0)-8-bounds.bottom)))/h;
+   box.style.left=editing?origin+r.x*w+'px':r.x*100+'%';box.style.top=r.y*h+'px';
    positionControls();
    if(rightPaper)rightPaper.style.height=Math.max(h,...items.filter(g=>g.side==='right').map(g=>g.record.y*h+g.box.offsetHeight+24))+'px';
   }
   function positionControls(){for(const g of items){if(!g.text)continue;g.handles.hidden=!editing||active!==g;if(g.handles.hidden)continue;const b=g.box.getBoundingClientRect(),p=spread.book.getBoundingClientRect();Object.assign(g.handles.style,{width:g.box.offsetWidth+'px',height:g.box.offsetHeight+'px',left:(b.left+b.width/2-g.box.offsetWidth/2-p.left)+'px',top:(b.top+b.height/2-g.box.offsetHeight/2-p.top)+'px',transform:`rotate(${g.record.angle}deg)`});}}
-  function choose(item){active=item;items.forEach(g=>(g.box.classList.toggle('is-selected',g===item),g.box.style.zIndex=String(g===item?100:g.record.order)));positionControls();select();}
-  function clear(){active=null;positionControls();items.forEach(g=>(g.box.classList.remove('is-selected'),g.box.style.zIndex=String(g.record.order)));}
+  function choose(item){active=item;items.forEach(g=>(g.box.classList.toggle('is-selected',g===item),g.box.style.zIndex=String(spread.stack.rank(g.id))));spread.stack.selected(item.id);positionControls();select();}
+  function clear(){if(active&&spread.stack.active===active.id)spread.stack.selected(null);active=null;positionControls();items.forEach(g=>(g.box.classList.remove('is-selected'),g.box.style.zIndex=String(spread.stack.rank(g.id))));}
   function start(e,item){
    if(!editing||e.button>0)return;
    const control=e.target.closest('input,textarea,a,button:not([data-dom-handle])');
@@ -91,19 +93,19 @@
     if(type==='pointercancel')g.item.record={...g.record};else{g.item.record.page=owner;g.item.record.x=(parseFloat(box.style.left)/r.width*1200-spread.offset(owner))/600;g.item.record.y=parseFloat(box.style.top)/r.height;}
     place(g.item);apply(g.item);
     // 移動後必須完整落在單頁內；超長 HTML 保持字級，以內部捲動閱讀。
-    const paper=g.item.page.getBoundingClientRect(),bounds=box.getBoundingClientRect();g.item.record.y+=Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-8-bounds.bottom))/paper.height;g.item.record.y=Math.max(8/paper.height,g.item.record.y);box.style.top=g.item.record.y*paper.height+'px';
+    const paper=g.item.page.getBoundingClientRect(),bounds=box.getBoundingClientRect();g.item.record.y+=Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-(g.item.side==='right'&&editing?80:0)-8-bounds.bottom))/paper.height;g.item.record.y=Math.max(8/paper.height,g.item.record.y);box.style.top=g.item.record.y*paper.height+'px';
    }
-   positionControls();changed();
+   positionControls();spread.stack.refresh();changed();
   });
-  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&!e.target.closest('.journal-dom-object,.journal-text-controls,.pf-actions'))clear();});
+  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&!e.target.closest('.journal-dom-object,.journal-text-controls,.pf-actions,.journal-layer-panel'))clear();});
   function capture(){return initialized?items.map(g=>({...g.record})):pending.map(r=>({...r}));}
   function restore(records){pending=records.map(r=>({...r}));if(initialized){items.forEach(g=>{g.record={...(records.find(r=>r.id===g.id)||defaults.find(r=>r.id===g.id))};place(g);apply(g);});}clear();}
-  function sync(value){editing=value;const unlocked=GameProgress.hasMemory('ruisui-01');if(value||pending.length)initialize();items.forEach(g=>{g.box.hidden=!unlocked;g.box.classList.toggle('is-editing',editing);if(!editing)(g.box.classList.remove('is-selected'),g.box.style.zIndex=String(g.record.order));apply(g);});if(!editing)active=null;positionControls();}
+  function sync(value){editing=value;const unlocked=GameProgress.hasMemory('ruisui-01');if(value||pending.length)initialize();items.forEach(g=>{place(g);g.box.hidden=!unlocked;g.box.classList.toggle('is-editing',editing);if(!editing)(g.box.classList.remove('is-selected'),g.box.style.zIndex=String(spread.stack.rank(g.id)));apply(g);});if(!editing)active=null;positionControls();}
   ctx.on(ctx.root,'scroll',positionControls,{capture:true});
   const observer=new ResizeObserver(()=>items.forEach(apply));groups.forEach(g=>observer.observe(g.node.closest('.pf-page')));
   // 心得隨輸入增高；保留 textarea、原節點與其所有既有儲存事件。
-  const note=ctx.id('travel-note');ctx.on(note,'input',()=>{note.style.height='auto';note.style.height=Math.max(120,note.scrollHeight)+'px';});
-  ctx.cleanup(()=>observer.disconnect());
+  const note=ctx.id('travel-note');ctx.on(note,'input',()=>{note.style.height='auto';note.style.height=Math.max(120,note.scrollHeight)+'px';items.forEach(apply);});
+  ctx.cleanup(()=>{observer.disconnect();items.forEach(g=>spread.stack.remove(g.id));});
   return {hitStart(e){const item=items.slice().sort((a,b)=>b.record.order-a.record.order).find(g=>{const r=g.box.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;});if(item){start(e,item);return true;}return false;},sync,capture,restore,clear,reset(){restore(defaults);},get selected(){return !!active;},get dragging(){return !!gesture;}};
  }};
 })();

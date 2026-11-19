@@ -35,6 +35,9 @@ try:
    page.wait_for_function('canvases.length===2')
    def move_fabric(kind,destination,memory=False):
     page.evaluate('(memory)=>window.currentCanvas=canvases.find(c=>!!c.lowerCanvasEl.closest(".journal-memory-layer")===memory)',memory)
+    object_id=page.evaluate('(kind)=>currentCanvas.getObjects().find(o=>kind==="memory"||o.journalType===kind).journalId',kind)
+    # With real mixed layers, use the panel to expose an object hidden by an earlier drag.
+    page.locator('[data-layout="layers"]').click();page.locator(f'[data-layer-select="{object_id}"]').click();page.locator('[data-stack-action="top"]').click();page.locator('[data-layout="layers"]').click()
     q=page.evaluate('(kind)=>{const o=currentCanvas.getObjects().find(o=>kind==="memory"||o.journalType===kind);return {x:o.left,y:o.top}}',kind);r=page.locator('.pf-frame').bounding_box()
     x=r['x']+q['x']/1200*r['width'];y=r['y']+q['y']/800*r['height'];target=r['x']+r['width']*(.25 if destination=='left' else .75)
     drag(page,x,y,target-x,0,mobile)
@@ -51,15 +54,17 @@ try:
    move_fabric('official-photo','right');move_fabric('photo','right');move_fabric('memory','left',True);tool(page,'compass').click();layer_ready(page);move_fabric('sticker','right');move_fabric('memory','right',True);move_fabric('memory','left',True)
    # 玩家照片移至右頁後仍可直接點中央更換，保留右頁歸屬。
    page.evaluate('window.currentCanvas=canvases.find(c=>c.lowerCanvasEl.closest(".journal-decoration-layer"))');r=page.locator('.pf-frame').bounding_box();q=page.evaluate('(()=>{const o=currentCanvas.getObjects().find(o=>o.journalType==="photo");return {x:o.left,y:o.top}})()')
+   page.locator('[data-layout="layers"]').click();page.locator('[data-layer-select="player-polaroid"]').click();page.locator('[data-stack-action="top"]').click();page.locator('[data-layout="layers"]').click()
    with page.expect_file_chooser() as chosen:
     x=r['x']+q['x']/1200*r['width'];y=r['y']+q['y']/800*r['height'];page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
    chosen.value.set_files(str(ROOT/'aming-game/images/cow.png'));layer_ready(page);assert page.evaluate('currentCanvas.getObjects().find(o=>o.journalType==="photo").journalPage')=='right'
    # 每個 HTML 文字區塊也要跨頁，仍是原 textarea／故事節點。
    for id in ['aming-story','player-writing']:
+    page.locator('[data-layout="layers"]').click();page.locator(f'[data-layer-select="{id}"]').click();page.locator('[data-stack-action="top"]').click();page.locator('[data-layout="layers"]').click()
     box=page.locator(f'[data-dom-object="{id}"]');box.scroll_into_view_if_needed();heading=box.locator('h2').bounding_box();page.mouse.click(heading['x']+10,heading['y']+10);handle=box.locator('h2');b=handle.bounding_box();r=page.locator('.pf-frame').bounding_box();drag(page,b['x']+14,b['y']+14,-r['width']*.5,0,mobile)
     assert box.get_attribute('data-journal-page')=='left'
-   page.evaluate('(()=>{const c=canvases.find(c=>c.lowerCanvasEl.closest(".journal-decoration-layer")),o=c.getObjects().find(o=>o.journalType==="official-photo");o.scale(7);o.setCoords();c.setActiveObject(o);c.fire("selection:updated");c.requestRenderAll()})()');move_fabric('official-photo','left');move_fabric('official-photo','right')
-   page.locator('#travel-note').fill('跨頁保存的心得');page.locator('[data-book="edit"]').click();expect(page.locator('#travel-note')).to_be_hidden()
+   page.evaluate('(()=>{const c=canvases.find(c=>c.lowerCanvasEl.closest(".journal-decoration-layer")),o=c.getObjects().find(o=>o.journalType==="official-photo");o.scale(7);o.setCoords();c.setActiveObject(o);c.fire("selection:updated");c.requestRenderAll()})()');page.locator('[data-layout="layers"]').click();page.locator('[data-layer-select="aming-photo"]').click();page.locator('[data-stack-action="top"]').click();page.locator('[data-layout="layers"]').click();move_fabric('official-photo','left');move_fabric('official-photo','right')
+   page.locator('#travel-note').fill('跨頁保存的心得');page.locator('[data-layout="layers"]').click();page.locator('[data-layer-select="memory-fragment"]').click();page.locator('[data-stack-action="top"]').click();page.locator('[data-layout="layers"]').click();page.locator('[data-book="edit"]').click();expect(page.locator('#travel-note')).to_be_hidden()
    saved=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui');assert saved['memoryObject']['page']=='left';assert all(o['page']=='left' for o in saved['domObjects']);assert all(o['page']=='right' for o in saved['objects'])
    page.locator('.journal-memory-hit').click();expect(page.locator('#memory-drawer')).to_have_class(__import__('re').compile('show'));page.locator('#close-memory').click();expect(page.locator('#memory-overlay')).to_be_hidden()
    page.wait_for_function("location.hash.includes('station=ruisui')");page.reload();ready(page);expect(page.locator('#travel-note-reading')).to_have_text('跨頁保存的心得');assert page.locator('.journal-memory-hit').evaluate('(e)=>e.closest(".pf-page").classList.contains("--left")')
