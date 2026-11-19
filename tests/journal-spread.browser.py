@@ -11,7 +11,7 @@ class Quiet(SimpleHTTPRequestHandler):
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(ROOT/'aming-game')));Thread(target=server.serve_forever,daemon=True).start()
 def ready(page,index=9):page.wait_for_function('(i)=>window.testBook&&testBook.getCurrentPageIndex()===i&&testBook.getState()==="read"&&!document.querySelector(".pf-book").hasAttribute("aria-busy")',arg=index)
 def tool(page,action):
- if action in ['compass','journal'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
+ if action in ['conductor-hat','old-station'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
  point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
@@ -51,7 +51,7 @@ try:
     assert page.evaluate('(()=>{const o=currentCanvas.getActiveObject(),b=o.getBoundingRect(true,true);return b.left<600&&b.left+b.width>600&&o.journalPage==="left"})()')
     expected=page.evaluate('JournalSpread.choose(currentCanvas.getActiveObject().getCoords(true,true),"left")');page.screenshot(path='/workspace/work/spread-drag-seam.png');page.mouse.up()
     assert page.evaluate('currentCanvas.getObjects().find(o=>o.journalType==="official-photo").journalPage')==expected
-   move_fabric('official-photo','right');move_fabric('photo','right');move_fabric('memory','left',True);tool(page,'compass').click();layer_ready(page);move_fabric('sticker','right');move_fabric('memory','right',True);move_fabric('memory','left',True)
+   move_fabric('official-photo','right');move_fabric('photo','right');move_fabric('memory','left',True);tool(page,'conductor-hat').click();layer_ready(page);move_fabric('sticker','right');move_fabric('memory','right',True);move_fabric('memory','left',True)
    # 玩家照片移至右頁後仍可直接點中央更換，保留右頁歸屬。
    page.evaluate('window.currentCanvas=canvases.find(c=>c.lowerCanvasEl.closest(".journal-decoration-layer"))');r=page.locator('.pf-frame').bounding_box();q=page.evaluate('(()=>{const o=currentCanvas.getObjects().find(o=>o.journalType==="photo");return {x:o.left,y:o.top}})()')
    page.locator('[data-layout="layers"]').click();page.locator('[data-layer-select="player-polaroid"]').click();page.locator('[data-stack-action="top"]').click();page.locator('[data-layout="layers"]').click()

@@ -145,3 +145,13 @@ journal-controls-visual.browser.py 在 1440×900 及 852×393（DPR 3）中，�
 投影現在保留 toCanvasElement 輸出的實際邏輯寬高，透過 calcTransformMatrix 及所屬容器的顯示比例建立同一個 CSS matrix。此映射使用原生中心／origin、縮放、角度與斜切，僅扣除由輸出尺寸推導出的點陣圖中心；沒有固定位置補丁。投影盒模型清除 button 的內距／最小尺寸等干擾。命中 Canvas 的 CSS 尺寸和控制點裁切亦使用同一份含小數的視窗尺寸。仍保留原生 Fabric 控制點、統一圖層、原存檔及 HTML 文字。
 
 journal-projection-alignment.browser.py 分別驗證探索拍立得、玩家拍立得、奶盒＋標籤：直接及圖層面板選取、只有一個選取框、金色外框及九個控制點像素、真實縮放／旋轉／移動後的四角映射（容差 0.12 CSS px），並將 HTML 投影截圖與 object.render 的獨立原生參考圖比較。檢查前後截圖、視窗尺寸改變、既有存檔儲存重載及閱讀模式清理。測試包含 1440×900→1280×800、852×393→932×430（觸控／DPR 3）；舊程式在新的邊界檢查下會失敗。另通過 journal-layers.browser.py 回歸。這些為 Chromium 模擬，不代表 iPhone Safari 實機驗證。
+
+## 正式鐵道旅行貼紙素材庫
+
+六張圖片沿用使用者已上傳的原檔，實際位於 aming-game/images/（不是 images/stickers/railway/），均為含透明通道的 RGBA PNG：sticker-conductor-hat.png、sticker-train-rear.png、sticker-vintage-train.png、sticker-rail-crossing.png、sticker-rail-lantern.png、sticker-old-station.png。未搬移、轉檔、覆蓋或新增替代素材。
+
+ASSETS 保留 compass、journal、tape 並標記 legacy；這些來源繼續通過舊存檔驗證及使用原尺寸載入，但不產生新增按鈕。AVAILABLE_ASSETS 僅包含六張正式貼紙。新貼紙依原始長寬比等比例放進 110×130 邏輯單位的初始範圍，不增加白底、框或其他 Fabric 物件。繼續使用既有 sticker 型別、source ID、跨頁吸附、圖層、控制點、歷史及存檔流程。
+
+新增貼紙的縮圖面板以三欄顯示，含 44px contain 縮圖及可換行的繁體中文名稱；面板位於書本外層，避免被右側工具列的捲動容器裁切，不延長整條工具列。圖層面板與貼紙面板互斥，Esc／再次點工具按鈕可關閉；閱讀模式也會關閉。沒有更動心得、儲存按鈕、故事、探索照片、碎片及 StPageFlip。
+
+journal-railway-stickers.browser.py 驗證六張圖片載入、三欄、透明像素及原圖比例；逐張以滑鼠／觸控選取、移動、縮放、旋轉、跨頁至右頁及操作四種圖層順序。另載入包含 compass、journal、tape 的舊布局，檢查新舊九張貼紙保存與重載、刪除與復原、恢復預設再復原，確認心得保留。尺寸 1440×900 及 852×393，為 Chromium 模擬，未作 iPhone Safari 實機測試。現有引用示範新增按鈕的測試已更新至正式來源；舊來源相容性由上述專門存檔情境覆蓋。

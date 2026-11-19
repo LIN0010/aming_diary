@@ -1934,10 +1934,15 @@ body {
 .journal-decoration-layer.is-editing,.journal-decoration-layer.is-editing .upper-canvas { pointer-events:auto; }
 .journal-decoration-layer:not(.is-editing) .upper-canvas { pointer-events:none; }
 .pf-book .journal-photo-replaced { visibility:hidden; }
-.journal-layout-tools,.journal-sticker-picker { display:flex; flex-direction:column; gap:6px; align-items:center; }
-.journal-sticker-picker { padding:4px 0; border-block:1px solid #c9b58f; }
+.journal-layout-tools { display:flex; flex-direction:column; gap:6px; align-items:center; }
+.journal-sticker-picker { position:absolute; right:0; top:0; z-index:40000; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; width:280px; max-width:calc(100vw - 48px); max-height:calc(var(--game-height,100dvh) - 80px); box-sizing:border-box; overflow:auto; padding:12px; background:rgba(255,248,230,.97); border:1px solid #cdb892; border-radius:12px; box-shadow:0 6px 22px #4b36252b; }
+.journal-sticker-picker button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-width:0; min-height:90px; padding:6px 4px; border:1px solid #d2c1a2; border-radius:8px; background:#fffaf0; color:#604a36; font:inherit; font-size:12px; line-height:1.4; cursor:pointer; }
+.journal-sticker-picker .journal-tool-name { width:100%; white-space:normal; overflow-wrap:anywhere; text-align:center; font-size:12px; }
+.journal-sticker-picker button:hover { background:#eee0c6; }
+.journal-sticker-picker button:focus-visible { outline:2px solid #987847; outline-offset:-2px; }
+.journal-sticker-picker button:disabled { opacity:.45; cursor:default; }
 .journal-sticker-picker[hidden] { display:none; }
-.journal-sticker-picker img { width:28px; height:28px; object-fit:contain; }
+.journal-sticker-picker img { width:44px; height:44px; object-fit:contain; }
 .journal-layout-status { position:absolute; left:0; right:0; bottom:0; z-index:30; padding:8px; background:#fff3d8; color:#604a36; text-align:center; }
 .journal-decoration-layer[hidden],.journal-layout-tools[hidden],.journal-tool-toggle[hidden],.journal-layout-status[hidden] { display:none; }
 .journal-decoration-preview { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; user-select:none; -webkit-user-drag:none; }

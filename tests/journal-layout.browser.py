@@ -12,7 +12,7 @@ server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(ROOT/'ami
 def ready(page,index=9):page.wait_for_function('(i)=>window.testBook&&testBook.getCurrentPageIndex()===i&&testBook.getState()==="read"&&!document.querySelector(".pf-book").hasAttribute("aria-busy")',arg=index)
 def tool(page,action):
  if page.locator(".journal-layout-tools").is_hidden() and page.locator(".journal-tool-toggle").is_visible():page.locator(".journal-tool-toggle").click()
- if action in ['compass','journal'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
+ if action in ['conductor-hat','old-station'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
  point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
@@ -44,7 +44,7 @@ try:
    # 照片與拍立得為同一組，實際拖動及旋轉縮放後一起保存。
    r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();initial=page.evaluate('({x:testCanvas.getObjects()[0].left/testCanvas.getWidth(),y:testCanvas.getObjects()[0].top/800})');drag(page,r['x']+r['width']*initial['x'],r['y']+r['height']*initial['y'],-r['width']*.10,-r['height']*.06,mobile)
    control(page,'mtr',22,10,mobile);control(page,'tr',12,-12,mobile)
-   tool(page,'compass').click();layer_ready(page);tool(page,'journal').click();layer_ready(page)
+   tool(page,'conductor-hat').click();layer_ready(page);tool(page,'old-station').click();layer_ready(page)
    # 圖示在左、繁中在右，標籤同一行且按鈕位於書頁外。
    for action,label in [('photo','新增照片'),('stickers','新增貼紙'),('delete','刪除裝飾'),('undo','復原上一步'),('reset','恢復預設')]:
     b=page.locator(f'[data-layout="{action}"]');expect(b).to_have_attribute('aria-label',label);icon=b.locator('svg').bounding_box();text=b.locator('.journal-tool-name').bounding_box();assert icon['x']+icon['width']<=text['x'] and abs(icon['y']+icon['height']/2-text['y']-text['height']/2)<2
@@ -56,9 +56,9 @@ try:
    drag(page,x,y,r['width']*.18,-r['height']*.12,mobile);assert page.evaluate('testBook.getCurrentPageIndex()')==9
    control(page,'mtr',22,10,mobile);control(page,'tr',12,-12,mobile);tool(page,'undo').click();layer_ready(page)
    tool(page,'delete').click() if tool(page,'delete').is_enabled() else None
-   tool(page,'compass').click();layer_ready(page)
+   tool(page,'conductor-hat').click();layer_ready(page)
    count=page.evaluate('testCanvas.getObjects().length');tool(page,'delete').click();assert page.evaluate('testCanvas.getObjects().length')==count-1
-   tool(page,'compass').click();layer_ready(page)
+   tool(page,'conductor-hat').click();layer_ready(page)
    r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box();x=r['x']+r['width']*.92;y=r['y']+r['height']*.08
    page.touchscreen.tap(x,y) if mobile else page.mouse.click(x,y)
    assert page.evaluate('testCanvas.getActiveObject()==null');expect(tool(page,'delete')).to_be_disabled()
@@ -84,7 +84,7 @@ try:
    page.wait_for_function('document.querySelector(".journal-decoration-preview").naturalWidth===600')
    page.screenshot(path=f'/workspace/work/fabric-read-{w}.png')
    # 儲存失敗不得離開編輯模式；重試保留草稿。
-   page.locator('[data-book="edit"]').click();layer_ready(page);tool(page,'journal').click();layer_ready(page);page.screenshot(path=f'/workspace/work/fabric-edit-{w}.png')
+   page.locator('[data-book="edit"]').click();layer_ready(page);tool(page,'old-station').click();layer_ready(page);page.screenshot(path=f'/workspace/work/fabric-edit-{w}.png')
    page.evaluate("()=>{window.originalSet=Storage.prototype.setItem;Storage.prototype.setItem=function(){throw new DOMException('full','QuotaExceededError')};}")
    page.locator('[data-book="edit"]').click();expect(page.locator('[data-book="edit"]')).to_have_text('完成編輯');expect(page.locator('.journal-layout-status')).to_be_visible()
    page.evaluate('()=>{Storage.prototype.setItem=originalSet;}');page.locator('[data-book="edit"]').click();expect(page.locator('[data-book="edit"]')).to_have_text('編輯手帳')

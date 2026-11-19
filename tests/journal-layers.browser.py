@@ -11,7 +11,7 @@ class Quiet(SimpleHTTPRequestHandler):
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory=str(ROOT/'aming-game')));Thread(target=server.serve_forever,daemon=True).start()
 def ready(page,index=9):page.wait_for_function('(i)=>window.testBook&&testBook.getCurrentPageIndex()===i&&testBook.getState()==="read"&&!document.querySelector(".pf-book").hasAttribute("aria-busy")',arg=index)
 def tool(page,action):
- if action in ['compass','journal'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
+ if action in ['conductor-hat','old-station'] and page.locator('.journal-sticker-picker').is_hidden():page.locator('[data-layout="stickers"]').click()
  return page.locator(f'[data-layout="{action}"]')
 def control(page,name,dx,dy,mobile):
  point=page.evaluate('(name)=>{const o=testCanvas.getActiveObject();o.setCoords();return {x:o.oCoords[name].x,y:o.oCoords[name].y}}',name);r=page.locator('.journal-decoration-layer .upper-canvas').bounding_box()
@@ -32,7 +32,7 @@ try:
    bundle=(ROOT/'aming-game/vendor/page-flip/page-flip.browser.js').read_text();page.route('**/page-flip.browser.js',lambda r:r.fulfill(body=bundle+';const Orig=St.PageFlip;St.PageFlip=class extends Orig{constructor(...a){super(...a);window.testBook=this;window.engineCount=(window.engineCount||0)+1;}};',content_type='application/javascript'))
    page.goto(f'http://127.0.0.1:{server.server_port}/game.html#/diary?station=ruisui');ready(page);page.evaluate('GameProgress.completeRuisui()');page.locator('[data-book="edit"]').click();layer_ready(page)
    page.locator('[data-layout="layers"]').click();expect(page.locator('[data-layer-select]')).to_have_count(5)
-   tool(page,'compass').click();layer_ready(page);expect(page.locator('[data-layer-select]')).to_have_count(6);page.locator('[data-stack-action="top"]').click();assert page.locator('[data-layer-select]').first.inner_text().startswith('指南針貼紙');tool(page,'undo').click();layer_ready(page);tool(page,'undo').click();layer_ready(page);expect(page.locator('[data-layer-select]')).to_have_count(5)
+   tool(page,'conductor-hat').click();layer_ready(page);page.locator('[data-layout="layers"]').click();expect(page.locator('[data-layer-select]')).to_have_count(6);page.locator('[data-stack-action="top"]').click();assert page.locator('[data-layer-select]').first.inner_text().startswith('站長帽');tool(page,'undo').click();layer_ready(page);tool(page,'undo').click();layer_ready(page);expect(page.locator('[data-layer-select]')).to_have_count(5)
    page.locator('[data-layer-select="aming-story"]').click();page.locator('[data-stack-action="up"]').click();page.locator('[data-book="edit"]').click()
    # Seed a legacy-style layout with overlapping, real objects; preserve all content.
    page.evaluate('()=>{const k="aming-diary-journal-layouts",d=JSON.parse(localStorage.getItem(k)),s=d.stations.ruisui;delete s.layerOrder;s.objects.forEach(o=>Object.assign(o,{page:"right",x:.5,y:.35,angle:0,scale:.6}));Object.assign(s.memoryObject,{page:"right",x:.5,y:.35,angle:0,scale:1});s.domObjects.forEach(o=>Object.assign(o,{page:"right",x:.2,y:.2,width:.6,angle:0}));localStorage.setItem(k,JSON.stringify(d));}')

@@ -3,7 +3,19 @@
  'use strict';
  const KEY='aming-diary-journal-layouts', W=600, H=800;
  const PHOTO_UPLOAD={width:.64,height:.60};
- const ASSETS=Object.freeze({compass:{src:'images/guild-compass.png',label:'指南針貼紙'},journal:{src:'images/guild-journal.png',label:'手帳貼紙'},tape:{src:null,label:'紙膠帶'}});
+ // Legacy entries are load-only: old layout source IDs must remain valid.
+ const ASSETS=Object.freeze({
+  compass:{src:'images/guild-compass.png',label:'指南針貼紙',legacy:true},
+  journal:{src:'images/guild-journal.png',label:'手帳貼紙',legacy:true},
+  tape:{src:null,label:'紙膠帶',legacy:true},
+  'conductor-hat':{src:'images/sticker-conductor-hat.png',label:'站長帽'},
+  'train-rear':{src:'images/sticker-train-rear.png',label:'列車車尾'},
+  'vintage-train':{src:'images/sticker-vintage-train.png',label:'復古列車'},
+  'rail-crossing':{src:'images/sticker-rail-crossing.png',label:'平交道號誌'},
+  'rail-lantern':{src:'images/sticker-rail-lantern.png',label:'復古鐵道煤油燈'},
+  'old-station':{src:'images/sticker-old-station.png',label:'木造車站'}
+ });
+ const AVAILABLE_ASSETS=Object.freeze(Object.fromEntries(Object.entries(ASSETS).filter(([,asset])=>!asset.legacy)));
  const clone=x=>JSON.parse(JSON.stringify(x));
  const paths={done:'m5 12 4 4L20 5',close:'M9 6 3 12l6 6M3 12h13a5 5 0 0 0 5-5',edit:'m16 3 5 5-12 12-6 1 1-6ZM14 5l5 5',photo:'M3 5h18v16H3ZM7 5l2-3h6l2 3M8 13a4 4 0 1 0 8 0 4 4 0 1 0-8 0',sticker:'M3 3h18v12l-6 6H3ZM15 21v-6h6M7 8h2m5 0h2M8 12q4 4 8 0',delete:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7',undo:'M9 4 3 10l6 6M3 10h11a7 7 0 0 1 7 7',reset:'M3 11a9 9 0 1 1 2 7M3 3v8h8',layers:'m12 3 10 6-10 6L2 9ZM2 13l10 6 10-6M2 17l10 6 10-6',more:'m8 4 8 8-8 8'};
  function button(node,label,icon){if(node.getAttribute('aria-label')===label&&node.querySelector('svg'))return;node.title=label;node.setAttribute('aria-label',label);node.innerHTML=`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[icon]||paths.edit}"/></svg><span class="journal-tool-name"></span>`;node.querySelector('span').textContent=label;}
@@ -21,8 +33,8 @@
   tools.id='journal-edit-tools';
   for(const [action,name,icon] of [['photo','新增照片','photo'],['stickers','新增貼紙','sticker'],['layers','圖層','layers'],['delete','刪除裝飾','delete'],['undo','復原上一步','undo'],['reset','恢復預設','reset']]){const item=document.createElement('button');item.type='button';item.dataset.layout=action;button(item,name,icon);tools.append(item);}
   const picker=document.createElement('div');picker.className='journal-sticker-picker';picker.id='journal-sticker-picker';picker.hidden=true;picker.setAttribute('role','group');picker.setAttribute('aria-label','選擇貼紙');
-  for(const [id,asset] of Object.entries(ASSETS)){const item=document.createElement('button');item.type='button';item.dataset.layout=id;item.title=asset.label;item.setAttribute('aria-label',asset.label);const img=document.createElement('img');if(id==='tape'){item.className='journal-tape-swatch';}else img.src=asset.src;img.alt='';img.width=28;img.height=28;if(id!=='tape')item.append(img);const name=document.createElement('span');name.className='journal-tool-name';name.textContent=asset.label;item.append(name);picker.append(item);}
-  tools.querySelector('[data-layout="stickers"]').after(picker);
+  for(const [id,asset] of Object.entries(AVAILABLE_ASSETS)){const item=document.createElement('button');item.type='button';item.dataset.layout=id;item.title=asset.label;item.setAttribute('aria-label',asset.label);const img=document.createElement('img');img.src=asset.src;img.alt='';img.width=44;img.height=44;item.append(img);const name=document.createElement('span');name.className='journal-tool-name';name.textContent=asset.label;item.append(name);picker.append(item);}
+  spread.book.append(picker);
   const stickerToggle=tools.querySelector('[data-layout="stickers"]');stickerToggle.setAttribute('aria-controls',picker.id);stickerToggle.setAttribute('aria-expanded','false');
   toolbar.append(tools);
   const layerPanel=document.createElement('section');layerPanel.className='journal-layer-panel';layerPanel.hidden=true;layerPanel.setAttribute('aria-label','手帳圖層');
@@ -42,7 +54,7 @@
   ctx.on(layerPanel,'click',e=>{const choice=e.target.closest('[data-layer-select]');if(choice){spread.stack.pick(choice.dataset.layerSelect);updateTools();return;}const action=e.target.closest('[data-stack-action]');if(action){checkpoint();if(spread.stack.move(action.dataset.stackAction))dirty=true;}});
   ctx.on(layerPanel,'keydown',e=>{if(e.key==='Escape'){layerPanel.hidden=true;layerToggle.setAttribute('aria-expanded','false');layerToggle.focus();}});
 
-  ctx.on(tools,'keydown',e=>{if(e.key==='Escape'){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');stickerToggle.focus();}});
+  const closePicker=e=>{if(e.key==='Escape'){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');stickerToggle.focus();}};ctx.on(tools,'keydown',closePicker);ctx.on(picker,'keydown',closePicker);
   const officialPhoto=groups.find(g=>g.id==='aming-photo').node;
   let legacyPhoto;
   let domRecords=[],memoryRecord=null;
@@ -62,7 +74,7 @@
   const legacyMemory=domRecords.find(r=>r.id==='memory-fragment');domRecords=domRecords.filter(r=>r.id!=='memory-fragment');
   try{memoryEditor=JournalMemory.mount({ctx,spread,node:groups.find(g=>g.id==='memory-fragment').node,saved:memoryRecord,legacy:legacyMemory,beforeChange:checkpoint,onChange:()=>{dirty=true;updateTools();},onSelect:()=>{canvas?.discardActiveObject();domEditor?.clear();updateTools();},report});}catch(_){protectedSave=true;report('無法讀取回憶碎片排版，原存檔已保留。');}
   try{domEditor=JournalDomLayout.mount({ctx,spread,groups:groups.filter(g=>!['aming-photo','memory-fragment'].includes(g.id)),saved:domRecords,checkpoint,changed:()=>{dirty=true;canvas?.discardActiveObject();updateTools();},select:()=>{canvas?.discardActiveObject();memoryEditor?.clear();updateTools();}});}catch(_){protectedSave=true;report('無法讀取 HTML 排版，原存檔已保留。');}
-  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&canvas?.getActiveObject()&&!e.target.closest('.pf-actions,.journal-memory-layer,.journal-stack-object,.journal-layer-panel,.journal-save-dock')&&!canvas.findTarget(e)&&domEditor?.hitStart(e))e.stopImmediatePropagation();},{capture:true});
+  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&canvas?.getActiveObject()&&!e.target.closest('.pf-actions,.journal-memory-layer,.journal-stack-object,.journal-layer-panel,.journal-save-dock,.journal-sticker-picker')&&!canvas.findTarget(e)&&domEditor?.hitStart(e))e.stopImmediatePropagation();},{capture:true});
   function defaultRecords(){
    const r=label.getBoundingClientRect(),p=page.getBoundingClientRect();
    return [{id:'player-polaroid',type:'photo',source:'player-photo',x:p.width?(r.left+r.width/2-p.left)/p.width:.65,y:p.height?(r.top+r.height/2-p.top)/p.height:.78,scale:label.offsetWidth/(page.clientWidth||1)*W/240,angle:3,order:0},officialDefault()];
@@ -77,7 +89,8 @@
    const selected=canvas?.getActiveObject();
    tools.querySelector('[data-layout="delete"]').disabled=!!busy||domEditor?.selected||!selected||selected.journalType!=='sticker';
    tools.querySelector('[data-layout="undo"]').disabled=!!busy||!history.length;
-   for(const name of ['reset','photo','stickers',...Object.keys(ASSETS)])tools.querySelector(`[data-layout="${name}"]`).disabled=!!busy;
+   for(const name of ['reset','photo','stickers'])tools.querySelector(`[data-layout="${name}"]`).disabled=!!busy;
+   picker.querySelectorAll('button').forEach(b=>b.disabled=!!busy);
    layer.setAttribute('aria-busy',String(!!busy));
   }
   function bound(o){o.scale(Math.max(.12,Math.min(2.5,o.scaleX)));spread.fit(o,o.journalPage||'left');}
@@ -96,7 +109,7 @@
     parts.push(new fabric.Rect({left:-35,top:-97,width:70,height:18,angle:-4,fill:'rgba(201,183,153,.65)'}));
     result=new fabric.Group(parts,{originX:'center',originY:'center'});
    }else if(record.source==='tape'){result=new fabric.Rect({width:100,height:26,fill:'rgba(201,183,153,.65)',originX:'center',originY:'center'});}
-   else{result=await image(ASSETS[record.source].src);result.scaleToWidth(90);result=new fabric.Group([result],{originX:'center',originY:'center'});}
+   else{result=await image(ASSETS[record.source].src);if(ASSETS[record.source].legacy)result.scaleToWidth(90);else result.scale(Math.min(110/result.width,130/result.height));result=new fabric.Group([result],{originX:'center',originY:'center'});}
    result.set({left:record.x*W+spread.offset(record.page),top:record.y*H,scaleX:record.scale,scaleY:record.scale,angle:record.angle,cornerColor:'#b99358',borderColor:'#987847',cornerSize:14,transparentCorners:false,lockScalingFlip:true});
    if(record.type==='photo'&&!photo){
     // 與 photoCenter 共用範圍，僅在既有群組內加入底色，不改變群組外框或尺寸。
@@ -176,15 +189,15 @@
    }catch(_){report('無法讀取這張照片，請改用 JPEG、PNG 或 WebP。');}
    finally{if(url)URL.revokeObjectURL(url);busy--;if(!dead)updateTools();input.value='';}
   }
-  ctx.on(tools,'click',async event=>{
+  const handleTool=async event=>{
    const button=event.target.closest('[data-layout]');if(!button||!editing||busy)return;
    const action=button.dataset.layout,selected=canvas.getActiveObject();
-   if(action==='layers'){layerPanel.hidden=!layerPanel.hidden;layerToggle.setAttribute('aria-expanded',String(!layerPanel.hidden));renderLayers();return;}
+   if(action==='layers'){picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');layerPanel.hidden=!layerPanel.hidden;layerToggle.setAttribute('aria-expanded',String(!layerPanel.hidden));renderLayers();return;}
    if(action==='photo'){input.click();return;}
-   if(action==='stickers'){picker.hidden=!picker.hidden;stickerToggle.setAttribute('aria-expanded',String(!picker.hidden));return;}
+   if(action==='stickers'){layerPanel.hidden=true;layerToggle.setAttribute('aria-expanded','false');picker.hidden=!picker.hidden;stickerToggle.setAttribute('aria-expanded',String(!picker.hidden));return;}
    if(action==='undo'){const previous=history.pop();if(previous){dirty=true;spread.stack.restore(previous.layers);domEditor?.restore(previous.dom);memoryEditor?.restore(previous.memory);await draw(previous.fabric);}return;}
    if(action==='reset'){if(!window.confirm('恢復官方預設排版？照片、旅行心得與遊戲進度會保留。'))return;checkpoint();dirty=true;spread.stack.restore(null);domEditor?.reset();memoryEditor?.reset();await draw(clone(defaults));return;}
-   if(Object.hasOwn(ASSETS,action)){
+   if(Object.hasOwn(AVAILABLE_ASSETS,action)){
     picker.hidden=true;stickerToggle.setAttribute('aria-expanded','false');
     if(canvas.getObjects().length>=21){report('這一頁最多放置 20 張個人貼紙。');return;}
     checkpoint();const next=capture();next.push({id:crypto.randomUUID(),type:'sticker',source:action,x:.4,y:.55,scale:1,angle:-8,order:next.length});dirty=true;await draw(next);canvas.setActiveObject(canvas.getObjects().at(-1));canvas.requestRenderAll();updateTools();return;
@@ -192,11 +205,11 @@
    if(!selected)return;checkpoint();
    if(action==='delete'&&selected.journalType==='sticker'){spread.stack.remove(selected.journalId);canvas.remove(selected);canvas.discardActiveObject();}
    bound(selected);changed();canvas.requestRenderAll();
-  });
+  };ctx.on(tools,'click',handleTool);ctx.on(picker,'click',handleTool);
   // 只在編輯層終止冒泡，不把整張 HTML 書頁停用。
   for(const type of ['mousedown','touchstart']){ctx.on(layer,type,e=>{if(editing)e.stopPropagation();});ctx.on(tools,type,e=>e.stopPropagation());}
   const observer=new ResizeObserver(()=>{if(!canvas&&(records||photo||editing))sync();else resize();});observer.observe(page);
-  ctx.cleanup(()=>{dead=true;sequence++;observer.disconnect();canvas?.dispose();layer.remove();opposite.remove();caption.remove();tools.remove();layerPanel.remove();});
+  ctx.cleanup(()=>{dead=true;sequence++;observer.disconnect();canvas?.dispose();layer.remove();opposite.remove();caption.remove();tools.remove();picker.remove();layerPanel.remove();});
   return {setMode(value){if(editing!==value){if(value)defaults=defaultRecords();editing=value;canvas?.discardActiveObject();if(!editing)publish();}sync();},save,upload,get dirty(){return dirty;},get busy(){return !!busy||!!memoryEditor?.busy||!!domEditor?.dragging;}};
  }};
 })();
