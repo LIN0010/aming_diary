@@ -15,15 +15,15 @@
    for(const g of measurements){
     const slot=document.createElement('div');slot.className='journal-dom-slot';slot.style.cssText=`width:${g.width}px;height:${g.height}px;order:${g.style.order};float:${g.style.cssFloat};margin:${g.style.margin};flex:${g.style.flex};visibility:hidden;pointer-events:none;`;
     g.node.before(slot);
-    const box=document.createElement('section');box.className='journal-dom-object '+(g.text?'is-text':'is-picture');box.dataset.domObject=g.id;if(g.id==='aming-story')box.classList.add('has-text-controls');box.style.setProperty('--dom-photo-ratio',g.width/g.height);box.setAttribute('aria-label',g.name);box.tabIndex=-1;
+    const box=document.createElement('section');box.className='journal-dom-object '+(g.text?'is-text':'is-picture');box.dataset.domObject=g.id;if(g.text)box.classList.add('has-text-controls');box.style.setProperty('--dom-photo-ratio',g.width/g.height);box.setAttribute('aria-label',g.name);box.tabIndex=-1;
     const content=document.createElement('div');content.className='journal-dom-content';content.append(g.node);box.append(content);g.page.append(box);
-    const handles=document.createElement('div');handles.className='journal-dom-handles';
-    const controls=g.id==='aming-story'?[['nw','左上調整'],['n','上方調整'],['ne','右上調整'],['w','左側調整寬度'],['e','右側調整寬度'],['sw','左下調整'],['s','下方調整'],['se','右下調整'],['rotate','旋轉']]:[['move','移動'],['resize','調整寬度與大小'],['rotate','旋轉']];
-    for(const [action,label] of controls){const h=document.createElement('button');h.type='button';h.dataset.domHandle=action;h.setAttribute('aria-label',g.name+label);h.title=label;if(g.id!=='aming-story')h.textContent=action==='move'?'✥':action==='resize'?'↘':'↻';handles.append(h);}
+    const handles=document.createElement('div');handles.className='journal-dom-handles';handles.dataset.domControls=g.id;
+    const controls=g.text?[['nw','左上調整'],['n','上方調整'],['ne','右上調整'],['w','左側調整寬度'],['e','右側調整寬度'],['sw','左下調整'],['s','下方調整'],['se','右下調整'],['rotate','旋轉']]:[['move','移動'],['resize','調整寬度與大小'],['rotate','旋轉']];
+    for(const [action,label] of controls){const h=document.createElement('button');h.type='button';h.dataset.domHandle=action;h.setAttribute('aria-label',g.name+label);h.title=label;if(!g.text)h.textContent=action==='move'?'✥':action==='resize'?'↘':'↻';handles.append(h);}
     if(g.side==='right'){if(!rightPaper){const surface=document.createElement('div');surface.className='journal-dom-surface';rightPaper=document.createElement('div');rightPaper.className='journal-dom-paper';surface.append(rightPaper);g.page.append(surface);}rightPaper.append(box);}
-    box.append(handles);const item={...g,box,content,slot,handles,record:{...g.record}};if(g.id==='aming-story'){handles.classList.add('journal-story-controls');handles.hidden=true;spread.host.append(handles);ctx.on(handles,'pointerdown',e=>start(e,item));}items.push(item);defaults.push({...g.record});
+    box.append(handles);const item={...g,box,content,slot,handles,record:{...g.record}};if(g.text){handles.classList.add('journal-text-controls');handles.hidden=true;spread.host.append(handles);ctx.on(handles,'pointerdown',e=>start(e,item));}items.push(item);defaults.push({...g.record});
     ctx.on(box,'pointerdown',e=>start(e,item));
-    const keyControl=e=>{const action=e.target.dataset.domHandle;if(!editing||!action||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();checkpoint();choose(item);const delta=['ArrowLeft','ArrowUp'].includes(e.key)?-1:1;if(action==='rotate')item.record.angle+=delta*5;else if(action==='resize'||['nw','ne','w','e','sw','se'].includes(action))item.record.width+=delta*.02;else if(['n','s'].includes(action))item.record.height=Math.max(.05,(item.record.height||item.box.offsetHeight/item.page.clientHeight)+delta*.02);else item.record[e.key.includes('Left')||e.key.includes('Right')?'x':'y']+=delta*.02;apply(item);changed();};ctx.on(box,'keydown',keyControl);if(g.id==='aming-story')ctx.on(handles,'keydown',keyControl);
+    const keyControl=e=>{const action=e.target.dataset.domHandle;if(!editing||!action||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();checkpoint();choose(item);const delta=['ArrowLeft','ArrowUp'].includes(e.key)?-1:1;if(action==='rotate')item.record.angle+=delta*5;else if(action==='resize'||['nw','ne','w','e','sw','se'].includes(action))item.record.width+=delta*.02;else if(['n','s'].includes(action))item.record.height=Math.max(.05,(item.record.height||item.box.offsetHeight/item.page.clientHeight)+delta*.02);else item.record[e.key.includes('Left')||e.key.includes('Right')?'x':'y']+=delta*.02;apply(item);changed();};ctx.on(box,'keydown',keyControl);if(g.text)ctx.on(handles,'keydown',keyControl);
    }
    initialized=true;if(pending.length)restore(pending);else items.forEach(apply);
   }
@@ -39,7 +39,7 @@
    box.style.width=r.width*100+'%';box.style.zIndex=String(editing&&active===item?100:r.order);
    const maxHeight=item.text?Math.min(h-20,(h-20-r.width*w*sin)/cos,sin>.001?(w-16-r.width*w*cos)/sin:h-20):h-20;
    box.style.setProperty('--dom-max-height',Math.max(80,maxHeight)+'px');
-   if(item.id==='aming-story')item.content.style.minHeight=r.height?Math.min(r.height*h,Math.max(80,maxHeight))+'px':'';
+   if(item.text)item.content.style.minHeight=r.height?Math.min(r.height*h,Math.max(80,maxHeight))+'px':'';
    r.x=Math.max(8/w,Math.min(1-r.width-8/w,r.x));r.y=item.side==='right'?Math.max(8/h,r.y):Math.max(8/h,Math.min(Math.max(8/h,(h-box.offsetHeight-8)/h),r.y));
    box.style.left=r.x*100+'%';box.style.top=r.y*h+'px';box.style.transform=`rotate(${r.angle}deg)`;
    const bounds=box.getBoundingClientRect(),paper=page.getBoundingClientRect();
@@ -48,7 +48,7 @@
    positionControls();
    if(rightPaper)rightPaper.style.height=Math.max(h,...items.filter(g=>g.side==='right').map(g=>g.record.y*h+g.box.offsetHeight+24))+'px';
   }
-  function positionControls(){for(const g of items){if(g.id!=='aming-story')continue;g.handles.hidden=!editing||active!==g;if(g.handles.hidden)continue;const b=g.box.getBoundingClientRect(),p=spread.book.getBoundingClientRect();Object.assign(g.handles.style,{width:g.box.offsetWidth+'px',height:g.box.offsetHeight+'px',left:(b.left+b.width/2-g.box.offsetWidth/2-p.left)+'px',top:(b.top+b.height/2-g.box.offsetHeight/2-p.top)+'px',transform:`rotate(${g.record.angle}deg)`});}}
+  function positionControls(){for(const g of items){if(!g.text)continue;g.handles.hidden=!editing||active!==g;if(g.handles.hidden)continue;const b=g.box.getBoundingClientRect(),p=spread.book.getBoundingClientRect();Object.assign(g.handles.style,{width:g.box.offsetWidth+'px',height:g.box.offsetHeight+'px',left:(b.left+b.width/2-g.box.offsetWidth/2-p.left)+'px',top:(b.top+b.height/2-g.box.offsetHeight/2-p.top)+'px',transform:`rotate(${g.record.angle}deg)`});}}
   function choose(item){active=item;items.forEach(g=>(g.box.classList.toggle('is-selected',g===item),g.box.style.zIndex=String(g===item?100:g.record.order)));positionControls();select();}
   function clear(){active=null;positionControls();items.forEach(g=>(g.box.classList.remove('is-selected'),g.box.style.zIndex=String(g.record.order)));}
   function start(e,item){
@@ -68,7 +68,7 @@
   ctx.on(window,'pointermove',e=>{
    if(!gesture)return;e.preventDefault();const g=gesture,r=g.item.record,dx=e.clientX-g.x,dy=e.clientY-g.y;
    if(g.action==='move'){g.item.box.style.left=g.left+dx+'px';g.item.box.style.top=g.top+dy+'px';positionControls();return;}
-   if(g.item.id==='aming-story'&&['nw','n','ne','w','e','sw','s','se'].includes(g.action)){
+   if(g.item.text&&['nw','n','ne','w','e','sw','s','se'].includes(g.action)){
     // 在文字框自身座標中改寬度／留白高度，HTML 自行換行，絕不縮放字級。
     const a=g.record.angle*Math.PI/180,localX=dx*Math.cos(a)+dy*Math.sin(a),localY=-dx*Math.sin(a)+dy*Math.cos(a),west=g.action.includes('w'),east=g.action.includes('e'),north=g.action.includes('n'),south=g.action.includes('s');
     const width=Math.max(Math.min(160,g.page.width-16),Math.min(g.page.width-16,g.width+(west?-localX:east?localX:0)));
@@ -95,7 +95,7 @@
    }
    positionControls();changed();
   });
-  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&!e.target.closest('.journal-dom-object,.journal-story-controls,.pf-actions'))clear();});
+  ctx.on(ctx.root,'pointerdown',e=>{if(editing&&!e.target.closest('.journal-dom-object,.journal-text-controls,.pf-actions'))clear();});
   function capture(){return initialized?items.map(g=>({...g.record})):pending.map(r=>({...r}));}
   function restore(records){pending=records.map(r=>({...r}));if(initialized){items.forEach(g=>{g.record={...(records.find(r=>r.id===g.id)||defaults.find(r=>r.id===g.id))};place(g);apply(g);});}clear();}
   function sync(value){editing=value;const unlocked=GameProgress.hasMemory('ruisui-01');if(value||pending.length)initialize();items.forEach(g=>{g.box.hidden=!unlocked;g.box.classList.toggle('is-editing',editing);if(!editing)(g.box.classList.remove('is-selected'),g.box.style.zIndex=String(g.record.order));apply(g);});if(!editing)active=null;positionControls();}

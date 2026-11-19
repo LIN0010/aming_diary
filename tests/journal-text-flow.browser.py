@@ -50,7 +50,7 @@ try:
    page.evaluate('()=>{const k="aming-diary-journal-layouts",d=JSON.parse(localStorage.getItem(k));delete d.stations.ruisui.memoryObject;d.stations.ruisui.domObjects.forEach(o=>o.x+=.01);localStorage.setItem(k,JSON.stringify(d));}')
    legacy=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts"))');page.reload();ready(page);check();assert page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts"))')==legacy
    page.locator('[data-book="edit"]').click();layer_ready(page)
-   box=page.locator('[data-dom-object="aming-story"]');box.locator('h2').click();handle=page.locator('.journal-story-controls [data-dom-handle="e"]');b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,-12,0,w<1000)
+   box=page.locator('[data-dom-object="aming-story"]');box.locator('h2').click();handle=page.locator('[data-dom-controls="aming-story"] [data-dom-handle="e"]');b=handle.bounding_box();drag(page,b['x']+14,b['y']+14,-12,0,w<1000)
    page.locator('[data-book="edit"]').click();assert page.locator('.diary-entry p').all_text_contents()==original
    page.locator('[data-book="edit"]').click();tool(page,'reset').click();layer_ready(page);page.locator('[data-book="edit"]').click();check();assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='保存玩家的完整心得'
    page.locator('.pf-index-tab').click();ready(page,1);page.locator('#ruisui-journal').click();ready(page);check();assert page.evaluate('engineCount')==1;assert not errors,errors

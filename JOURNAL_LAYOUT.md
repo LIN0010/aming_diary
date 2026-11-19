@@ -111,3 +111,9 @@ objects 與 memoryObject 的 page 支援 left/right，x 是相對其單頁的中
 存檔延用 domObjects 的 id、page、x、y、width、angle、order，另可選擇保存 height（相對單頁高度的最小高度）。沒有 height 的舊資料按原本內容高度顯示；還原預設不含自訂 height，不變更文字、照片或進度。玩家心得維持既有三顆 DOM 操作按鈕，本次不擴充。
 
 測試：tests/journal-html-controls.browser.py 使用 Chromium 桌面滑鼠與 852×393 觸控模擬，驗證金色九控制點、寬度換行及字級不變、上下調整、旋轉、跨頁吸附、保存重載、預設還原及閱讀翻頁。另回歸原有文字流／舊存檔、兩組 HTML 互動、所有跨頁物件、照片選檔與回憶碎片。未作 iPhone Safari 實機驗證。
+
+## 我的旅行心得共用 HTML 控制點
+
+`player-writing` 與 `aming-story` 現在共用 `journal-text-controls`，依 `data-dom-controls` 識別各自的控制點，仍使用同一個 JournalDomLayout 的選取、手勢、跨頁與存檔流程。心得標題／留白可拖曳；textarea 保留正常輸入、文字選取、捲動及既有儲存事件。八向控制點只變更文字框寬度／最小留白高度，不縮小字級；旋轉點與故事一致。舊 domObjects 及 note 資料不遷移、不清除。
+
+測試延伸 journal-html-controls.browser.py 至兩個文字框、桌面與手機橫向觸控：心得輸入後調寬、調高、旋轉、跨頁、完成編輯、重新整理及恢復預設都保留原心得。journal-dom.browser.py 回歸故事不可編輯、心得可編輯、收藏點擊及閱讀翻頁。本機 Chromium 模擬，不代表 iPhone Safari 實機驗證。
