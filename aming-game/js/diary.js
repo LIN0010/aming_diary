@@ -14,9 +14,6 @@ const closeMemory =
 const travelNote =
     ctx.id("travel-note");
 
-const saveTravel =
-    ctx.id("save-travel");
-
 const savedMessage =
     document.createElement("div");
 	
@@ -89,16 +86,15 @@ JournalLayout.button(controls.querySelector('[data-book="close"]'),'闔上日記
 const toolToggle=document.createElement('button');toolToggle.type='button';toolToggle.className='journal-tool-toggle';JournalLayout.button(toolToggle,'編輯工具','more');toolToggle.setAttribute('aria-controls','journal-edit-tools');toolToggle.setAttribute('aria-expanded','false');controls.append(toolToggle);
 ctx.on(toolToggle,'click',()=>{const open=controls.classList.toggle('tools-expanded');toolToggle.setAttribute('aria-expanded',String(open));});
 const noteReading=document.createElement('div');noteReading.id='travel-note-reading';noteReading.className='travel-note-reading';
-travelNote.before(noteReading);travelNote.hidden=true;travelNote.readOnly=true;saveTravel.hidden=true;
-const saveDock=document.createElement('div');saveDock.className='journal-save-dock';saveDock.hidden=true;saveDock.append(saveTravel);book.append(saveDock);
+travelNote.before(noteReading);travelNote.hidden=true;travelNote.readOnly=true;
 function syncJournalMode(){
  const editing=journalEditor.mode==='edit',unlocked=GameProgress.hasMemory('ruisui-01');
  const text=GameProgress.snapshot().notes[journalEditor.station]||'';
  noteReading.textContent=text||'尚未留下旅行心得。';noteReading.classList.toggle('is-empty',!text);
- noteReading.hidden=editing;travelNote.hidden=!editing;travelNote.readOnly=!editing;saveTravel.hidden=!editing;
+ noteReading.hidden=editing;travelNote.hidden=!editing;travelNote.readOnly=!editing;
  ctx.id('player-photo-input').disabled=!editing||!unlocked;
  ctx.query('.player-photo').setAttribute('aria-disabled',String(!editing||!unlocked));
- saveDock.hidden=!editing||!unlocked;book.dataset.journalMode=journalEditor.mode;
+ book.dataset.journalMode=journalEditor.mode;
  layoutEditor?.setMode(editing);
  toolToggle.hidden=!editing;if(!editing){controls.classList.remove('tools-expanded');toolToggle.setAttribute('aria-expanded','false');}
  JournalLayout.button(editToggle,editing?'完成編輯':'編輯手帳',editing?'done':'edit');editToggle.setAttribute('aria-pressed',String(editing));
@@ -109,7 +105,7 @@ function changeJournalMode(next){
  if(next==='edit'){
   if(!readingActive||engine.getCurrentPageIndex()!==9||!GameProgress.hasMemory('ruisui-01'))return false;
   travelNote.value=GameProgress.snapshot().notes[journalEditor.station]||'';
- }else if(journalEditor.mode==='edit'&&(!layoutEditor?.save()||!saveTravelNote()))return false;
+ }else if(journalEditor.mode==='edit'&&(!saveTravelNote()||!layoutEditor?.save()))return false;
  journalEditor.mode=next;syncJournalMode();return true;
 }
 diaryIndex.before(book);book.append(indexBookmark,frame,controls);stationDiary.remove();
@@ -396,7 +392,7 @@ savedMessage.className =
 savedMessage.textContent =
     "✓ 已記錄這段旅程";
 
-saveDock.appendChild(savedMessage);
+controls.appendChild(savedMessage);
 
 
 let noteDirty = false;
@@ -423,7 +419,6 @@ ctx.on(travelNote, "input", () => {
     noteTimer = ctx.delay(saveTravelNote, 650);
 });
 ctx.on(travelNote, "blur", () => { if (noteDirty) saveTravelNote(); });
-ctx.on(saveTravel, "click", saveTravelNote);
 ctx.on(window, "beforeunload", event => {
     if (layoutEditor.busy || (layoutEditor.dirty && !layoutEditor.save()) || (noteDirty && !saveTravelNote())) {
         event.preventDefault();

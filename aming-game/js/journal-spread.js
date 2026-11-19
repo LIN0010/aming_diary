@@ -36,9 +36,12 @@
      // The cached raster includes Fabric's rounded export bounds. Map its local
      // centre with the SAME object matrix as native controls (including origin,
      // scale, rotation and skew); never squeeze it into object.width/height.
-     const m=o.calcTransformMatrix(),sx=parent.getBoundingClientRect().width/(editing?1200:600),sy=parent.getBoundingClientRect().height/800;
-     const x=m[4]-(editing?0:(owner==='right'?600:0))-m[0]*e.bitmapWidth/2-m[2]*e.bitmapHeight/2,y=m[5]-m[1]*e.bitmapWidth/2-m[3]*e.bitmapHeight/2;
-     Object.assign(e.element.style,{left:'0px',top:'0px',width:e.bitmapWidth+'px',height:e.bitmapHeight+'px',transformOrigin:'0 0',transform:`matrix(${m[0]*sx},${m[1]*sy},${m[2]*sx},${m[3]*sy},${x*sx},${y*sy})`});
+     const frame=book.getBoundingClientRect(),paper=parent.getBoundingClientRect(),m=o.calcTransformMatrix(),sx=frame.width/1200,sy=frame.height/800;
+     const x=m[4]-m[0]*e.bitmapWidth/2-m[2]*e.bitmapHeight/2,y=m[5]-m[1]*e.bitmapWidth/2-m[3]*e.bitmapHeight/2;
+     // PageFlip may round each page independently. Keep one book coordinate plane
+     // in both modes, compensating only for the actual page origin and CSS border.
+     const offsetX=editing?0:paper.left-frame.left+parent.clientLeft,offsetY=editing?0:paper.top-frame.top+parent.clientTop;
+     Object.assign(e.element.style,{left:'0px',top:'0px',width:e.bitmapWidth+'px',height:e.bitmapHeight+'px',transformOrigin:'0 0',transform:`matrix(${m[0]*sx},${m[1]*sy},${m[2]*sx},${m[3]*sy},${x*sx-offsetX},${y*sy-offsetY})`});
      e.element.classList.toggle('is-editing',editing);e.element.hidden=!available;
     }
    }
@@ -78,7 +81,7 @@
  window.JournalSpread={choose,overlap,mount({ctx,left,right}){
   const book=ctx.query('.pf-book'),host=document.createElement('div');host.className='journal-spread-edit';book.append(host);
   const pages={left,right},stack=createStack(ctx,book,host,pages);const offset=p=>p==='right'?W:0;
-  function fit(object,owner){object.setCoords();let b=object.getBoundingRect(true,true);const bottom=owner==='right'&&stack.editing?H-Math.min(80,pages.right.clientHeight*.25)/(pages.right.clientHeight||H)*H:H;const f=Math.min(1,(W-16)/b.width,(bottom-16)/b.height);if(f<1){object.scale(object.scaleX*f);object.setCoords();b=object.getBoundingRect(true,true);}const x=offset(owner);object.set({left:object.left+Math.max(x+8-b.left,Math.min(0,x+W-8-b.left-b.width)),top:object.top+Math.max(8-b.top,Math.min(0,bottom-8-b.top-b.height))});object.journalPage=owner;object.setCoords();}
+  function fit(object,owner){object.setCoords();let b=object.getBoundingRect(true,true);const f=Math.min(1,(W-16)/b.width,(H-16)/b.height);if(f<1){object.scale(object.scaleX*f);object.setCoords();b=object.getBoundingRect(true,true);}const x=offset(owner);object.set({left:object.left+Math.max(x+8-b.left,Math.min(0,x+W-8-b.left-b.width)),top:object.top+Math.max(8-b.top,Math.min(0,H-8-b.top-b.height))});object.journalPage=owner;object.setCoords();}
   function snap(object){const owner=choose(object.getCoords(true,true),object.journalPage||'left');fit(object,owner);return owner;}
   function resize(canvas){canvas.setDimensions({width:book.getBoundingClientRect().width+'px',height:book.getBoundingClientRect().height+'px'},{cssOnly:true});canvas.calcOffset();}
   function clipCanvas(canvas){if(canvas.lowerCanvasEl.classList.contains('journal-stack-bitmap')){stack.clip(canvas);stack.refresh();return;}const sx=book.clientWidth/(W*2),sy=book.clientHeight/H;let path='';for(const o of canvas.getObjects()){const b=o.getBoundingRect(true,true),pad=canvas.getActiveObject()===o?65:2,x=(b.left-pad)*sx,y=(b.top-pad)*sy,r=(b.left+b.width+pad)*sx,d=(b.top+b.height+pad)*sy;path+=`M ${x} ${y} H ${r} V ${d} H ${x} Z `;}canvas.upperCanvasEl.style.clipPath=`path('${path}')`;}

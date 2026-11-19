@@ -49,22 +49,19 @@ try:
    page.locator('[data-stack-action="bottom"]').click();assert page.locator('[data-layer-select]').last.get_attribute('data-layer-select')=='aming-photo'
    page.locator('[data-stack-action="up"]').click();assert page.locator('[data-layer-select]').nth(3).get_attribute('data-layer-select')=='aming-photo'
    page.locator('[data-layout="layers"]').click()
-   # Save UI is outside the movable note, remains relative to right page / book.
-   before=page.locator('#save-travel').bounding_box();book=page.locator('.pf-book').bounding_box();assert abs(before['x']+before['width']-(book['x']+book['width']-20))<2
-   assert abs(before['y']+before['height']-(book['y']+book['height']-20))<2
-   assert page.locator('.travel-entry #save-travel').count()==0
+   # Saving now uses the toolbar; there is no separate floating save control.
+   book=page.locator('.pf-book').bounding_box();assert page.locator('#save-travel,.journal-save-dock').count()==0
    page.locator('[data-layout="layers"]').click();page.locator('[data-layer-select="player-writing"]').click();page.locator('[data-stack-action="top"]').click();page.locator('[data-layout="layers"]').click()
    controls=page.locator('[data-dom-controls="player-writing"]');b=controls.locator('[data-dom-handle="rotate"]').bounding_box();drag(page,b['x']+b['width']/2,b['y']+b['height']/2,12,8,mobile)
    heading=page.locator('[data-dom-object="player-writing"] h2').bounding_box();drag(page,heading['x']+10,heading['y']+10,-book['width']*.5,0,mobile)
-   page.locator('#travel-note').fill('圖層與固定按鈕保存測試');page.locator('#save-travel').click();assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='圖層與固定按鈕保存測試'
-   after=page.locator('#save-travel').bounding_box();assert all(abs(before[k]-after[k])<1 for k in before),(before,after)
-   page.locator('[data-book="edit"]').click();expect(page.locator('#save-travel')).to_be_hidden();saved=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui');assert len(saved['layerOrder'])==5
-   page.reload();ready(page);expect(page.locator('#save-travel')).to_be_hidden();assert page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui')==saved
+   page.locator('#travel-note').fill('圖層與完成編輯保存測試')
+   page.locator('[data-book="edit"]').click();assert page.locator('#save-travel').count()==0;saved=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui');assert len(saved['layerOrder'])==5
+   page.reload();ready(page);assert page.locator('#save-travel').count()==0;assert page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui')==saved
    page.locator('[data-book="edit"]').click();layer_ready(page);page.locator('[data-layout="layers"]').click();assert page.locator('[data-layer-select]').all_text_contents()[0].startswith('我的旅行心得')
    page.locator('[data-layout="layers"]').click();tool(page,'reset').click();layer_ready(page);page.locator('[data-book="edit"]').click()
-   assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='圖層與固定按鈕保存測試'
+   assert page.evaluate('GameProgress.snapshot().notes.ruisui')=='圖層與完成編輯保存測試'
    reset=page.evaluate('JSON.parse(localStorage.getItem("aming-diary-journal-layouts")).stations.ruisui.layerOrder');assert reset==['player-polaroid','aming-photo','aming-story','player-writing','memory-fragment'],reset
-   page.evaluate('GameProgress.reset()');expect(page.locator('#save-travel')).to_be_hidden();expect(page.locator('.journal-stack-object').first).to_be_hidden()
-   assert page.evaluate('engineCount')==1;page.evaluate("location.hash='#/home'");page.wait_for_selector('#home-screen');assert page.locator('.journal-save-dock').count()==0;assert not errors,errors;c.close();print('PASS mixed-object visual stack, all ordering actions, no selection promotion, save dock, persistence/reset',w,h,flush=True)
+   page.evaluate('GameProgress.reset()');assert page.locator('#save-travel').count()==0;expect(page.locator('.journal-stack-object').first).to_be_hidden()
+   assert page.evaluate('engineCount')==1;page.evaluate("location.hash='#/home'");page.wait_for_selector('#home-screen');assert page.locator('.journal-save-dock').count()==0;assert not errors,errors;c.close();print('PASS mixed-object visual stack, all ordering actions, no selection promotion, finish editing, persistence/reset',w,h,flush=True)
   browser.close()
 finally:server.shutdown();server.server_close()

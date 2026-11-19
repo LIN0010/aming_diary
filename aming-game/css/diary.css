@@ -1145,75 +1145,8 @@ body {
 
 /* 儲存按鈕 */
 
-.save-travel {
-    align-self: flex-end;
-
-    margin-top: 16px;
-
-    padding:
-        9px
-        17px;
-
-    border:
-        1px solid
-        rgba(97, 127, 112, .28);
-
-    border-radius: 16px;
-
-    background:
-        rgba(97, 127, 112, .10);
-
-    color: #617f70;
-
-    font-family: inherit;
-
-    font-size: 10px;
-
-    letter-spacing: .1em;
-
-    cursor: pointer;
-
-    transition:
-        transform .2s ease,
-        background .2s ease;
-}
-
-.save-travel:hover {
-    transform: translateY(-2px);
-
-    background:
-        rgba(97, 127, 112, .18);
-}
-
-
-/* 儲存後的小提示 */
-
-.travel-saved {
-    position: absolute;
-
-    right: 0;
-    bottom: 45px;
-
-    color: #71877a;
-
-    font-size: 9px;
-
-    letter-spacing: .1em;
-
-    opacity: 0;
-
-    transform: translateY(5px);
-
-    transition:
-        opacity .25s ease,
-        transform .25s ease;
-}
-
-.travel-saved.show {
-    opacity: 1;
-
-    transform: translateY(0);
-}
+.travel-saved { display:none; margin:0; color:#71877a; font-size:9px; letter-spacing:.1em; }
+.travel-saved.show { display:block; }
 
 /* ==========================
    日記目錄 / 詳細頁切換
@@ -1920,7 +1853,7 @@ body {
 /* 心得閱讀視圖與既有 textarea 分離，紙張橫線沿用原間距。 */
 .travel-note-reading { min-height:180px; padding:4px 2px; white-space:pre-wrap; overflow-wrap:anywhere; color:#5d534a; font:15px/34px "DFKai-SB","KaiTi",serif; letter-spacing:.06em; background:repeating-linear-gradient(to bottom,transparent 0,transparent 33px,rgba(117,104,86,.11) 34px); cursor:default; }
 .travel-note-reading.is-empty { color:#a09686; }
-.pf-book #travel-note[hidden],.pf-book #travel-note-reading[hidden],.pf-book #save-travel[hidden],.pf-actions [data-book="edit"][hidden] { display:none !important; }
+.pf-book #travel-note[hidden],.pf-book #travel-note-reading[hidden],.pf-actions [data-book="edit"][hidden] { display:none !important; }
 
 .pf-book[data-journal-mode="read"] .player-photo { cursor:default; }
 
@@ -2033,10 +1966,6 @@ body {
 .journal-stack-object[data-layer-id="memory-fragment"] { pointer-events:auto; cursor:pointer; }
 .has-journal-stack .journal-decoration-layer,.has-journal-stack .journal-memory-layer { z-index:10000; }
 .journal-text-controls { z-index:20000; }
-.journal-save-dock { position:absolute; right:20px; bottom:20px; z-index:30000; display:flex; flex-direction:column-reverse; align-items:flex-end; max-width:calc(50% - 32px); pointer-events:auto; }
-.journal-save-dock[hidden] { display:none; }
-.journal-save-dock .save-travel { transform:none; transition:background .2s ease; margin:0; min-height:40px; background:#e3e7d7; }
-.journal-save-dock .travel-saved { position:static; margin:0 0 4px; }
 .journal-layer-panel { position:absolute; right:0; top:0; width:250px; max-width:70vw; max-height:calc(var(--app-height,100dvh) - 60px); display:flex; flex-direction:column; gap:8px; padding:14px; box-sizing:border-box; background:rgba(255,248,230,.97); border:1px solid #cdb892; border-radius:12px; box-shadow:0 6px 22px #4b36252b; color:#604a36; z-index:40000; }
 .journal-layer-panel[hidden] { display:none; }
 .journal-layer-list { display:flex; flex-direction:column; gap:4px; min-height:0; overflow:auto; }

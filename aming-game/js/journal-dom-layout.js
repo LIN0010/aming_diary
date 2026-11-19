@@ -38,15 +38,15 @@
    box.dataset.journalPage=item.side;
    const origin=editing?spread.offset(item.side)/1200*spread.book.clientWidth:0;
    box.style.width=editing?r.width*w+'px':r.width*100+'%';box.style.zIndex=String(spread.stack.rank(item.id));
-   const usable=h-(item.side==='right'?80:20);
-   const maxHeight=item.text?Math.min(item.side==='right'&&editing?Math.max(80,usable-r.y*h):usable,(h-20-r.width*w*sin)/cos,sin>.001?(w-16-r.width*w*cos)/sin:h-20):h-20;
+   const usable=h-20;
+   const maxHeight=item.text?Math.min(Math.max(80,usable-r.y*h),(h-20-r.width*w*sin)/cos,sin>.001?(w-16-r.width*w*cos)/sin:h-20):h-20;
    box.style.setProperty('--dom-max-height',Math.max(80,maxHeight)+'px');
    if(item.text)item.content.style.minHeight=r.height?Math.min(r.height*h,Math.max(80,maxHeight))+'px':'';
-   r.x=Math.max(8/w,Math.min(1-r.width-8/w,r.x));r.y=item.side==='right'&&!editing?Math.max(8/h,r.y):Math.max(8/h,Math.min(Math.max(8/h,((item.side==='right'&&editing?usable:h)-box.offsetHeight-8)/h),r.y));
-   box.style.left=editing?origin+r.x*w+'px':r.x*100+'%';box.style.top=r.y*h+'px';box.style.transform=`rotate(${r.angle}deg)`;
+   r.x=Math.max(8/w,Math.min(1-r.width-8/w,r.x));r.y=Math.max(8/h,Math.min(Math.max(8/h,(h-box.offsetHeight-8)/h),r.y));
+   box.style.left=(editing?origin+r.x*w:r.x*w-page.clientLeft)+'px';box.style.top=(r.y*h-(editing?0:page.clientTop))+'px';box.style.transform=`rotate(${r.angle}deg)`;
    const bounds=box.getBoundingClientRect(),paper=page.getBoundingClientRect();
-   r.x+=(Math.max(paper.left+8-bounds.left,Math.min(0,paper.right-8-bounds.right)))/w;if(item.side!=='right'||editing)r.y+=(Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-(item.side==='right'&&editing?80:0)-8-bounds.bottom)))/h;
-   box.style.left=editing?origin+r.x*w+'px':r.x*100+'%';box.style.top=r.y*h+'px';
+   r.x+=(Math.max(paper.left+8-bounds.left,Math.min(0,paper.right-8-bounds.right)))/w;r.y+=(Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-8-bounds.bottom)))/h;
+   box.style.left=(editing?origin+r.x*w:r.x*w-page.clientLeft)+'px';box.style.top=(r.y*h-(editing?0:page.clientTop))+'px';
    positionControls();
    if(rightPaper)rightPaper.style.height=Math.max(h,...items.filter(g=>g.side==='right').map(g=>g.record.y*h+g.box.offsetHeight+24))+'px';
   }
@@ -90,10 +90,10 @@
     const box=g.item.box,r=spread.book.getBoundingClientRect(),b=box.getBoundingClientRect(),a=g.item.record.angle*Math.PI/180,cx=(b.left+b.width/2-r.left)/r.width*1200,cy=(b.top+b.height/2-r.top)/r.height*800,w=box.offsetWidth/r.width*1200,h=box.offsetHeight/r.height*800;
     const poly=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>({x:cx+x*Math.cos(a)-y*Math.sin(a),y:cy+x*Math.sin(a)+y*Math.cos(a)}));
     const owner=type==='pointercancel'?(g.record.page||g.item.side):spread.choose(poly,g.record.page||g.item.side);
-    if(type==='pointercancel')g.item.record={...g.record};else{g.item.record.page=owner;g.item.record.x=(parseFloat(box.style.left)/r.width*1200-spread.offset(owner))/600;g.item.record.y=parseFloat(box.style.top)/r.height;}
+    if(type==='pointercancel')g.item.record={...g.record};else{g.item.record.page=owner;g.item.record.x=(parseFloat(box.style.left)-spread.offset(owner)/1200*spread.book.clientWidth)/spread.pages[owner].clientWidth;g.item.record.y=parseFloat(box.style.top)/spread.pages[owner].clientHeight;}
     place(g.item);apply(g.item);
     // 移動後必須完整落在單頁內；超長 HTML 保持字級，以內部捲動閱讀。
-    const paper=g.item.page.getBoundingClientRect(),bounds=box.getBoundingClientRect();g.item.record.y+=Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-(g.item.side==='right'&&editing?80:0)-8-bounds.bottom))/paper.height;g.item.record.y=Math.max(8/paper.height,g.item.record.y);box.style.top=g.item.record.y*paper.height+'px';
+    const paper=g.item.page.getBoundingClientRect(),bounds=box.getBoundingClientRect();g.item.record.y+=Math.max(paper.top+8-bounds.top,Math.min(0,paper.bottom-8-bounds.bottom))/g.item.page.clientHeight;g.item.record.y=Math.max(8/g.item.page.clientHeight,g.item.record.y);box.style.top=g.item.record.y*g.item.page.clientHeight+'px';
    }
    positionControls();spread.stack.refresh();changed();
   });

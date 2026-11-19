@@ -155,3 +155,11 @@ ASSETS 保留 compass、journal、tape 並標記 legacy；這些來源繼續通�
 新增貼紙的縮圖面板以三欄顯示，含 44px contain 縮圖及可換行的繁體中文名稱；面板位於書本外層，避免被右側工具列的捲動容器裁切，不延長整條工具列。圖層面板與貼紙面板互斥，Esc／再次點工具按鈕可關閉；閱讀模式也會關閉。沒有更動心得、儲存按鈕、故事、探索照片、碎片及 StPageFlip。
 
 journal-railway-stickers.browser.py 驗證六張圖片載入、三欄、透明像素及原圖比例；逐張以滑鼠／觸控選取、移動、縮放、旋轉、跨頁至右頁及操作四種圖層順序。另載入包含 compass、journal、tape 的舊布局，檢查新舊九張貼紙保存與重載、刪除與復原、恢復預設再復原，確認心得保留。尺寸 1440×900 及 852×393，為 Chromium 模擬，未作 iPhone Safari 實機測試。現有引用示範新增按鈕的測試已更新至正式來源；舊來源相容性由上述專門存檔情境覆蓋。
+
+## 完成編輯統一儲存（取代右下角按鈕）
+
+移除 diary.html 的 #save-travel、JS 的專用 dock／點擊監聽及對應 CSS，既有 saveTravelNote 與布局保存格式保留。完成編輯先檢查心得寫入成功，再檢查照片、貼紙、圖層及 HTML 布局保存成功，兩者成功才切回閱讀。任一失敗都留在編輯模式，沿用 layout-status 或已移到工具列的 travel-saved 提示，保留目前輸入與物件。原本自動保存、離站及離頁保護保留；未新增儲存格式或清除資料。
+
+移除 spread.fit 與 DOM 排版中為右下按鈕保留的 80px 空間，編輯／閱讀採相同頁面邊界與文字高度計算。剩餘 80 的用途為文字框最小高度／旋轉安全量，並非底部保留區。原生投影在兩個模式都以完整書本平面縮放，閱讀時扣除實際父頁原點與 CSS 邊框；避免手機每半頁取整造成微移。HTML 文字亦換算紙張邊框及一致的 client 座標，跨頁放手後不再混用 border-box 與 client 尺寸。這些為顯示座標換算，不改動既有存檔欄位或控制點／圖層實作。
+
+journal-finish-editing.browser.py 檢查 1440×900、852×393：按鈕／dock 不存在、貼紙可移到右頁下緣並縮放、照片保存、心得完成後重新編輯、切換模式的所有物件實際座標一致、重載精確還原，以及分別攔截布局與進度 key 寫入時的保留草稿／重試成功。另回歸 journal-layers.browser.py、journal-projection-alignment.browser.py、journal-spread.browser.py。以上是 Chromium 模擬，未進行 iPhone Safari 實機驗證。
